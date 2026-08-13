@@ -1,0 +1,26 @@
+%% ============================================================================
+%% Diagram 4 - CI/CD pipeline
+%% Purpose: how a commit becomes a deployed, verified application
+%% ============================================================================
+flowchart TD
+    DEV[Developer] -->|git push to main| GH[GitHub]
+    GH -->|triggers Deploy workflow| CH[Checkout]
+    CH --> AWS_CREDS[Configure AWS credentials<br/>GitHub secrets]
+    AWS_CREDS --> TEST[Backend tests + npm audit]
+    TEST --> LOGIN[ECR login]
+    LOGIN --> BUILD[Build + push backend image]
+    LOGIN --> BUILDF[Build + push frontend image]
+    BUILD --> SCAN[Trivy scan CRITICAL/HIGH]
+    BUILDF --> SCANF[Trivy scan CRITICAL/HIGH]
+    SCAN -->|pass| DEPLOY
+    SCANF -->|pass| DEPLOY
+    DEPLOY[Update SSM image params<br/>+ start ASG instance refresh]
+    DEPLOY --> SMOKE[Smoke test against ALB]
+    SMOKE -->|healthy| DONE[Deployed ✓]
+
+    FAIL[Scan finds issues] --> BLOCK[Pipeline fails - nothing deployed]
+
+    TRIVY_TRIGGER[PR / push to develop] --> CI
+    subgraph CI[CI workflow]
+        A[Unit tests] --> B[Frontend build] --> C[Docker build] --> D[Trivy scan] --> E[Terraform validate]
+    end

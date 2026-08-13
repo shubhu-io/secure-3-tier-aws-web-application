@@ -1,0 +1,68 @@
+# ===========================================================================
+# 06-secure-ntier-cloud-platform - .gitignore
+# NEVER commit secrets, state files, or build artifacts.
+# ===========================================================================
+
+# --- Secrets & Credentials --------------------------------------------------
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+*.keystore
+credentials.json
+*credentials*
+secrets.yaml
+*.tfvars
+!.terraform.tfvars.example
+*.tfvars.json
+
+# --- Terraform --------------------------------------------------------------
+.terraform/
+*.tfstate
+*.tfstate.*
+.terraform.lock.hcl
+crash.log
+override.tf
+override.tf.json
+terraform.tfvars
+
+# --- Node / Frontend --------------------------------------------------------
+node_modules/
+npm-debug.log*
+yarn-error.log*
+dist/
+build/
+coverage/
+.vite/
+
+# --- Docker --------------------------------------------------------------
+*.pid
+
+# --- Logs -------------------------------------------------------------------
+logs/
+*.log
+*.log.*
+
+# --- OS / Editor ------------------------------------------------------------
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# --- Large / Generated ------------------------------------------------------
+screenshots/*.png
+screenshots/*.jpg
+screenshots/*.jpeg
+*.tar
+*.zip
+*.tgz
+
+# --- Cloud-native local caches ----------------------------------------------
+.terraform.tfstate.lock.info
+terraform.tfstate.backup

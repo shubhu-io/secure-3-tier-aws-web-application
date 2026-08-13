@@ -1,0 +1,18 @@
+%% ============================================================================
+%% Diagram 6 - Deployment flow
+%% Purpose: full deployment from commit to verified release
+%% ============================================================================
+flowchart LR
+    C[git commit] --> P[git push to main]
+    P --> F[Fetch code in pipeline]
+    F --> BT[Build + test]
+    BT --> SC[Security scan<br/>npm audit + Trivy]
+    SC -->|clean| IMG[Build Docker images]
+    IMG --> ECR[Push to Amazon ECR]
+    ECR --> SSM[Update SSM image params]
+    SSM --> REF[Start ASG instance refresh]
+    REF --> NEW[New instances pull new images]
+    NEW --> HC[ALB health checks pass]
+    HC -->|healthy| OK[Release ✓]
+    HC -->|unhealthy| RB[Rollback: set SSM params to previous tag + refresh]
+    RB --> NEW

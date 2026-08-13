@@ -1,0 +1,66 @@
+name: Bug report
+description: Report a problem with the platform, pipeline, or infrastructure
+title: "[Bug] "
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting. Fill in as much as you can — screenshots are
+        captured per `screenshots/README.md` (never fabricated).
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: Describe the problem and what you expected instead.
+      placeholder: e.g. ALB returns 503 after a deploy
+    validations:
+      required: true
+  - type: input
+    id: env
+    attributes:
+      label: Environment
+      description: environment + region, e.g. dev / eu-west-1
+      placeholder: dev / eu-west-1
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      description: Numbered steps or commands.
+      placeholder: |
+        1. git push to main
+        2. deploy pipeline runs
+        3. ...
+    validations:
+      required: false
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Logs / output
+      description: Relevant logs (from CloudWatch, pipeline console, /var/log/user-data.log).
+      placeholder: Paste logs here.
+    validations:
+      required: false
+  - type: checkboxes
+    id: area
+    attributes:
+      label: Affected area
+      options:
+        - label: Terraform / AWS resources
+        - label: GitHub Actions / Jenkins
+        - label: Docker / application
+        - label: Security / WAF / secrets
+        - label: Monitoring / alarms
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severity
+      options:
+        - "P0 - production down"
+        - "P1 - degraded"
+        - "P2 - annoying"
+        - "P3 - cosmetic"
+    validations:
+      required: true

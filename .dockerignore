@@ -1,0 +1,21 @@
+# Build context is the repository root for the Docker builds.
+
+# Dependencies and build artifacts
+**/node_modules
+**/dist
+**/build
+**/coverage
+
+# Terraform / cloud state
+**/.terraform
+**/*.tfstate
+**/*.tfstate.*
+**/terraform.tfvars
+
+# Local files
+**/.env
+**/.git
+**/screenshots
+*.pem
+*.log
+.DS_Store

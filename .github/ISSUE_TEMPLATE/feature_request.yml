@@ -1,0 +1,45 @@
+name: Feature request
+description: Propose an improvement or new capability
+title: "[Feature] "
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Before requesting, check the **Future improvements** section of the README —
+        it may already be planned.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem / motivation
+      description: What need is not met today?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed change
+      description: Describe the feature and how it would work.
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      multiple: true
+      options:
+        - AWS / Terraform
+        - Application / Docker
+        - CI/CD
+        - Security
+        - Monitoring / operations
+        - Documentation
+    validations:
+      required: true
+  - type: textarea
+    id: impact
+    attributes:
+      label: Effort / impact notes
+      description: Anything about cost, risk, or compatibility to consider.
+    validations:
+      required: false

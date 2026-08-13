@@ -1,0 +1,43 @@
+%% ============================================================================
+%% Diagram 2 - Network architecture
+%% Purpose: VPC + subnet layout, CIDR blocks, routing, NACLs
+%% ============================================================================
+flowchart LR
+    subgraph VPC["VPC 10.0.0.0/16"]
+        subgraph PUB["PUBLIC TIER"]
+            direction TB
+            RT_PUB[Route table:<br/>0.0.0.0/0 -> IGW]
+            NACL_PUB[NACL: allow 80/443 in,<br/>ephemeral return, all out]
+            PUB_A["Public-A 10.0.1.0/24"]
+            PUB_B["Public-B 10.0.2.0/24"]
+            ALB[ALB + NAT Gateway]
+        end
+
+        subgraph APP["APPLICATION TIER (private)"]
+            direction TB
+            RT_APP[Route table:<br/>0.0.0.0/0 -> NAT]
+            NACL_APP[NACL: allow 80 from public subnets,<br/>ephemeral return, all out]
+            APP_A["App-A 10.0.11.0/24"]
+            APP_B["App-B 10.0.12.0/24"]
+            EC2[EC2 in ASG]
+        end
+
+        subgraph DBT["DATABASE TIER (private)"]
+            direction TB
+            RT_DB[Route table:<br/>no default route - isolated]
+            NACL_DB[NACL: allow 5432 from app subnets,<br/>VPC ephemeral only]
+            DB_A["DB-A 10.0.21.0/24"]
+            DB_B["DB-B 10.0.22.0/24"]
+            RDS[(RDS PostgreSQL)]
+        end
+    end
+
+    IGW[Internet Gateway]
+
+    IGW --> RT_PUB
+    RT_PUB --> ALB
+    ALB -->|"TCP 80"| NACL_APP
+    NACL_APP --> EC2
+    EC2 -->|"TCP 5432"| NACL_DB
+    NACL_DB --> RDS
+    NACL_APP -.outbound.-> NAT --> IGW

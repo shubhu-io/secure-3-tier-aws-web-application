@@ -1,0 +1,23 @@
+# ============================================================================
+# CODEOWNERS - who must review changes in each part of the repository.
+# Format: <pattern> <owner> (GitHub username, team @org/team, or email)
+# Unmatched paths default to the repository's default reviewer rules.
+# ============================================================================
+
+# Infrastructure - everyone agrees the Terraform is sacred
+/terraform/          @<YOUR_GITHUB_ORG>/platform-core @<YOUR_GITHUB_USER>
+/security/           @<YOUR_GITHUB_ORG>/platform-core
+/monitoring/         @<YOUR_GITHUB_ORG>/platform-core
+
+# Application + containers
+/application/        @<YOUR_GITHUB_ORG>/app-team
+/docker/             @<YOUR_GITHUB_ORG>/app-team
+
+# CI/CD
+/.github/workflows/  @<YOUR_GITHUB_ORG>/platform-core
+/cicd/               @<YOUR_GITHUB_ORG>/platform-core
+
+# Docs - anyone can review, ops owns the content
+/docs/               @<YOUR_GITHUB_ORG>/platform-core
+/README.md           @<YOUR_GITHUB_ORG>/platform-core
+/CHANGELOG.md        @<YOUR_GITHUB_ORG>/platform-core

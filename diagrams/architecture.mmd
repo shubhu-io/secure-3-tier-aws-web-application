@@ -1,0 +1,44 @@
+%% ============================================================================
+%% Diagram 1 - Overall architecture
+%% Purpose: end-to-end view of the platform from the user to the database
+%% Render in Mermaid Live Editor or with a Mermaid CLI: mermaid-cli
+%% ============================================================================
+flowchart TD
+    U[Internet User] --> R53[Route 53 DNS<br/>app.example.com]
+    R53 --> WAF[AWS WAF<br/>managed rules: SQLi, XSS, bad bots]
+    WAF --> ALB[Application Load Balancer<br/>HTTPS :443, HTTP->HTTPS redirect]
+
+    subgraph VPC["VPC 10.0.0.0/16"]
+        subgraph PUB["Public subnets 10.0.1.0/24, 10.0.2.0/24"]
+            ALB
+            NAT[["NAT Gateway"]]
+        end
+        subgraph APP["Private app subnets 10.0.11.0/24, 10.0.12.0/24"]
+            A1[EC2 App AZ-a<br/>Docker: nginx + node]
+            A2[EC2 App AZ-b<br/>Docker: nginx + node]
+        end
+        subgraph DBT["Private DB subnets 10.0.21.0/24, 10.0.22.0/24"]
+            RDS[(RDS PostgreSQL<br/>encrypted, private)]
+        end
+
+        IGW[Internet Gateway]
+
+        A1 --> RDS
+        A2 --> RDS
+        NAT -.outbound only.-> IGW
+        APP -.packages via NAT.-> NAT
+    end
+
+    ALB --> A1
+    ALB --> A2
+    IGW --> ALB
+
+    ASG[Auto Scaling Group<br/>min 2 / max 4 across AZs] -.launches and replaces.-> A1
+    ASG -.launches and replaces.-> A2
+
+    CW[CloudWatch<br/>alarms + logs] -.metrics/logs from.-> ALB
+    CW -.metrics/logs from.-> A1
+    CW -.metrics/logs from.-> RDS
+
+    SM[AWS Secrets Manager<br/>DB credentials] -.read at boot.-> A1
+    SM -.read at boot.-> A2

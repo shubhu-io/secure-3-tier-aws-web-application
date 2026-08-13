@@ -1,0 +1,74 @@
+name: Deploy
+
+# Runs when code lands on main.
+# Full pipeline: test -> build -> trivy -> push ECR -> update SSM params
+#              -> trigger ASG instance refresh -> smoke test
+#
+# Required GitHub repository secrets:
+#   AWS_ACCESS_KEY_ID       IAM user keys (attach the CI/CD IAM policy)
+#   AWS_SECRET_ACCESS_KEY
+#   AWS_REGION              e.g. eu-west-1
+#   ALB_URL                 e.g. http://secure-ntier-dev-alb-xxxx.eu-west-1.elb.amazonaws.com
+#   ECR_PROJECT             e.g. secure-ntier
+#   ECR_ENV                 e.g. dev
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    name: Build, push, deploy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Backend tests
+        working-directory: application/backend
+        run: |
+          npm ci
+          npm test
+          npm audit --audit-level=high
+
+      - name: Login to ECR
+        run: bash cicd/scripts/ecr-login.sh "${{ secrets.AWS_REGION }}"
+
+      - name: Build + push backend image
+        run: bash cicd/scripts/build-and-push.sh backend "${{ github.sha }}" "${{ secrets.AWS_REGION }}" "${{ secrets.ECR_PROJECT }}" "${{ secrets.ECR_ENV }}"
+
+      - name: Build + push frontend image
+        run: bash cicd/scripts/build-and-push.sh frontend "${{ github.sha }}" "${{ secrets.AWS_REGION }}" "${{ secrets.ECR_PROJECT }}" "${{ secrets.ECR_ENV }}"
+
+      - name: Trivy scan backend image
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: "${{ secrets.ECR_PROJECT }}-${{ secrets.ECR_ENV }}-backend:${{ github.sha }}"
+          format: table
+          exit-code: 1
+          ignore-unfixed: true
+          severity: CRITICAL,HIGH
+
+      - name: Trivy scan frontend image
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: "${{ secrets.ECR_PROJECT }}-${{ secrets.ECR_ENV }}-frontend:${{ github.sha }}"
+          format: table
+          exit-code: 1
+          ignore-unfixed: true
+          severity: CRITICAL,HIGH
+
+      - name: Update deploy parameters + trigger instance refresh
+        run: bash cicd/scripts/deploy-ec2.sh "${{ github.sha }}" "${{ secrets.AWS_REGION }}" "${{ secrets.ECR_ENV }}" "${{ secrets.ECR_PROJECT }}"
+
+      - name: Smoke test (wait for healthy app)
+        env:
+          ALB_URL: ${{ secrets.ALB_URL }}
+          ATTEMPTS: "36"
+        run: bash cicd/scripts/smoke-test.sh

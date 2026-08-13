@@ -1,0 +1,62 @@
+{
+  "widgets": [
+    {
+      "type": "metric",
+      "x": 0,
+      "y": 0,
+      "width": 12,
+      "height": 6,
+      "properties": {
+        "title": "CPU",
+        "period": 300,
+        "stat": "Average",
+        "view": "timeSeries",
+        "metrics": [
+          ["AWS/EC2", "CPUUtilization", { "stat": "Average" }],
+          ["AWS/RDS", "CPUUtilization", { "stat": "Average" }]
+        ]
+      }
+    },
+    {
+      "type": "metric",
+      "x": 12,
+      "y": 0,
+      "width": 12,
+      "height": 6,
+      "properties": {
+        "title": "ALB requests and errors",
+        "period": 300,
+        "stat": "Sum",
+        "view": "timeSeries",
+        "metrics": [
+          ["AWS/ApplicationELB", "RequestCount", { "stat": "Sum" }],
+          ["AWS/ApplicationELB", "HTTPCode_Target_5XX_Count", { "stat": "Sum" }]
+        ]
+      }
+    },
+    {
+      "type": "metric",
+      "x": 0,
+      "y": 6,
+      "width": 12,
+      "height": 6,
+      "properties": {
+        "title": "Healthy hosts",
+        "period": 300,
+        "stat": "Average",
+        "view": "timeSeries",
+        "metrics": [["AWS/ApplicationELB", "HealthyHostCount", { "stat": "Average" }]]
+      }
+    },
+    {
+      "type": "text",
+      "x": 12,
+      "y": 6,
+      "width": 12,
+      "height": 6,
+      "properties": {
+        "markdown": "### Overview\n\n**Metric → Alarm → SNS → Email**"
+      }
+    }
+  ]
+}

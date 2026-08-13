@@ -1,0 +1,40 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "SSMReadImageParams",
+      "Effect": "Allow",
+      "Action": ["ssm:GetParameter"],
+      "Resource": [
+        "arn:aws:ssm:eu-west-1:*:parameter/secure-ntier/dev/backend-image",
+        "arn:aws:ssm:eu-west-1:*:parameter/secure-ntier/dev/frontend-image"
+      ]
+    },
+    {
+      "Sid": "ReadDbSecret",
+      "Effect": "Allow",
+      "Action": ["secretsmanager:GetSecretValue", "secretsmanager:DescribeSecret"],
+      "Resource": ["arn:aws:secretsmanager:eu-west-1:*:secret:secure-ntier-dev-db-credentials-*"]
+    },
+    {
+      "Sid": "EcrPull",
+      "Effect": "Allow",
+      "Action": [
+        "ecr:GetAuthorizationToken",
+        "ecr:BatchGetImage",
+        "ecr:GetDownloadUrlForLayer"
+      ],
+      "Resource": ["*"]
+    },
+    {
+      "Sid": "CloudWatchLogs",
+      "Effect": "Allow",
+      "Action": [
+        "logs:CreateLogStream",
+        "logs:PutLogEvents",
+        "logs:DescribeLogStreams"
+      ],
+      "Resource": ["arn:aws:logs:eu-west-1:*:log-group:/secure-ntier-dev/*:*"]
+    }
+  ]
+}

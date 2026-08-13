@@ -1,0 +1,58 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "EcrAuth",
+      "Effect": "Allow",
+      "Action": ["ecr:GetAuthorizationToken"],
+      "Resource": ["*"]
+    },
+    {
+      "Sid": "EcrPush",
+      "Effect": "Allow",
+      "Action": [
+        "ecr:BatchCheckLayerAvailability",
+        "ecr:GetDownloadUrlForLayer",
+        "ecr:BatchGetImage",
+        "ecr:PutImage",
+        "ecr:InitiateLayerUpload",
+        "ecr:UploadLayerPart",
+        "ecr:CompleteLayerUpload"
+      ],
+      "Resource": [
+        "arn:aws:ecr:eu-west-1:*:repository/secure-ntier-dev-backend",
+        "arn:aws:ecr:eu-west-1:*:repository/secure-ntier-dev-frontend"
+      ]
+    },
+    {
+      "Sid": "UpdateImageParams",
+      "Effect": "Allow",
+      "Action": ["ssm:PutParameter", "ssm:GetParameter"],
+      "Resource": [
+        "arn:aws:ssm:eu-west-1:*:parameter/secure-ntier/dev/backend-image",
+        "arn:aws:ssm:eu-west-1:*:parameter/secure-ntier/dev/frontend-image"
+      ]
+    },
+    {
+      "Sid": "TriggerInstanceRefresh",
+      "Effect": "Allow",
+      "Action": [
+        "autoscaling:StartInstanceRefresh",
+        "autoscaling:DescribeAutoScalingGroups",
+        "autoscaling:DescribeInstanceRefreshes"
+      ],
+      "Resource": ["*"]
+    },
+    {
+      "Sid": "HealthChecks",
+      "Effect": "Allow",
+      "Action": [
+        "elasticloadbalancing:DescribeTargetGroups",
+        "elasticloadbalancing:DescribeTargetHealth",
+        "cloudwatch:GetMetricStatistics",
+        "cloudwatch:GetMetricData"
+      ],
+      "Resource": ["*"]
+    }
+  ]
+}

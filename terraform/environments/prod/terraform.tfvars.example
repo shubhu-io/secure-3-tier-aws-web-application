@@ -1,0 +1,35 @@
+# ============================================================================
+# PROD environment values
+# Copy to terraform.tfvars and fill in YOUR values. Never commit terraform.tfvars.
+# ============================================================================
+
+project_name = "secure-ntier"
+environment  = "prod"
+aws_region   = "eu-west-1"          # <YOUR_REGION>
+
+vpc_cidr           = "10.0.0.0/16"
+public_subnet_cidrs = ["10.0.1.0/24", "10.0.2.0/24"]
+app_subnet_cidrs    = ["10.0.11.0/24", "10.0.12.0/24"]
+db_subnet_cidrs     = ["10.0.21.0/24", "10.0.22.0/24"]
+
+nat_gateway_count = 2   # one NAT per AZ for HA
+
+instance_type          = "t3.medium"
+asg_min_size           = 2
+asg_max_size           = 6
+asg_desired_capacity   = 2
+
+db_instance_class     = "db.t3.medium"
+db_multi_az           = true
+db_allocated_storage  = 50
+db_name               = "appdb"
+db_username           = "app_user"
+backup_retention_days = 30
+deletion_protection   = true
+skip_final_snapshot   = false   # always snapshot before destroy in prod
+
+domain_name = "app.example.com"      # <YOUR_DOMAIN> - REQUIRED for HTTPS in prod
+
+notification_email = "ops@example.com"    # <YOUR_EMAIL>
+
+repositories = ["backend", "frontend"]

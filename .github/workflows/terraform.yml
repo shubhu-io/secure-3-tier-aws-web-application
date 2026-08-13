@@ -1,0 +1,207 @@
+# ============================================================================
+# Infrastructure pipeline (GitOps for Terraform)
+#
+#   PR opened/updated  →  plan dev + comment on the PR
+#   Push to main       →  plan + apply dev   (safe, low-cost environment)
+#   Manual dispatch    →  plan + apply prod  (explicit, gated by auto_apply)
+#
+# Applies ONLY to changes under terraform/ to avoid re-planning the whole
+# repo on every application commit.
+#
+# Required repository secrets (same as the deploy workflow):
+#   AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_REGION
+# ============================================================================
+name: Terraform
+
+on:
+  pull_request:
+    paths: ["terraform/**", ".github/workflows/terraform.yml"]
+  push:
+    branches: [main]
+    paths: ["terraform/**", ".github/workflows/terraform.yml"]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Environment to plan+apply"
+        required: true
+        default: "dev"
+        type: choice
+        options: [dev, prod]
+      auto_apply:
+        description: "Apply the plan (true) or plan only (false)"
+        required: true
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+  pull-requests: write
+
+env:
+  TF_VERSION: "1.9.8"
+
+jobs:
+  # ==========================================================================
+  # No-AWS sanity check - runs fmt + validate without downloading providers
+  # or touching the remote backend. Fast feedback on every PR.
+  # ==========================================================================
+  validate-only:
+    name: terraform validate (no AWS)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
+      - name: fmt
+        working-directory: terraform
+        run: terraform fmt -check -recursive
+
+      - name: init (no backend) + validate
+        working-directory: terraform
+        run: |
+          terraform init -backend=false -input=false
+          terraform validate -no-color
+
+  # ==========================================================================
+  # Real plan against the remote backend for a single target env.
+  # Reused (with different inputs) by plan-dev / apply-dev / apply-prod.
+  # ==========================================================================
+  plan:
+    name: terraform plan
+    runs-on: ubuntu-latest
+    outputs:
+      stdout: ${{ steps.plan.outputs.stdout }}
+    env:
+      TARGET_ENV: ${{ inputs.environment || 'dev' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
+      - name: Terraform Init
+        working-directory: terraform
+        run: terraform init -backend-config="environments/${{ env.TARGET_ENV }}/backend.hcl" -input=false
+
+      - name: Terraform Validate
+        working-directory: terraform
+        run: terraform validate -no-color
+
+      - name: Terraform Plan
+        id: plan
+        working-directory: terraform
+        run: terraform plan -no-color -input=false -var-file="environments/${{ env.TARGET_ENV }}/terraform.tfvars" -out=tfplan.bin
+
+      - name: Save plan artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: tfplan-${{ env.TARGET_ENV }}
+          path: terraform/tfplan.bin
+          if-no-files-found: error
+
+      - name: Comment plan on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        env:
+          PLAN: ${{ steps.plan.outputs.stdout }}
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `## Terraform Plan — ${process.env.TARGET_ENV}
+              <details><summary>Show plan</summary>
+              \`\`\`hcl
+              ${process.env.PLAN}
+              \`\`\`
+              </details>`
+            });
+
+  # ==========================================================================
+  # Apply to dev on merge to main. Plans a fresh run to always match HEAD.
+  # ==========================================================================
+  apply-dev:
+    name: terraform apply (dev)
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [validate-only, plan]
+    runs-on: ubuntu-latest
+    environment: dev
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
+      - name: Terraform init + plan + apply (dev)
+        working-directory: terraform
+        run: |
+          terraform init -backend-config="environments/dev/backend.hcl" -input=false
+          terraform plan -no-color -input=false -var-file="environments/dev/terraform.tfvars" -out=tfplan.bin
+          terraform apply -no-color -input=false -auto-approve tfplan.bin
+
+      - name: Terraform output
+        working-directory: terraform
+        run: terraform output
+
+  # ==========================================================================
+  # Apply to prod - only via explicit manual dispatch with auto_apply=true.
+  # Plans first so the log records what will change before apply runs.
+  # ==========================================================================
+  apply-prod:
+    name: terraform apply (prod)
+    if: github.event_name == 'workflow_dispatch' && inputs.environment == 'prod' && inputs.auto_apply == true
+    needs: [validate-only, plan]
+    runs-on: ubuntu-latest
+    environment: prod
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
+      - name: Terraform init + plan + apply (prod)
+        working-directory: terraform
+        run: |
+          terraform init -backend-config="environments/prod/backend.hcl" -input=false
+          terraform plan -no-color -input=false -var-file="environments/prod/terraform.tfvars" -out=tfplan.bin
+          terraform apply -no-color -input=false -auto-approve tfplan.bin
+
+      - name: Terraform output
+        working-directory: terraform
+        run: terraform output

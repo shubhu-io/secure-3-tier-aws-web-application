@@ -1,0 +1,23 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "CreateManualSnapshot",
+      "Effect": "Allow",
+      "Action": ["rds:CreateDBSnapshot"],
+      "Resource": "arn:aws:rds:eu-west-1:*:snapshot:*"
+    },
+    {
+      "Sid": "DescribeSnapshots",
+      "Effect": "Allow",
+      "Action": ["rds:DescribeDBSnapshots"],
+      "Resource": "*"
+    },
+    {
+      "Sid": "RestoreFromSnapshot",
+      "Effect": "Allow",
+      "Action": ["rds:RestoreDBInstanceFromDBSnapshot"],
+      "Resource": "arn:aws:rds:eu-west-1:*:db:*"
+    }
+  ]
+}
