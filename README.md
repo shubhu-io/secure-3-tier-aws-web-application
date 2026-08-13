@@ -1,4 +1,4 @@
-# 06 — End-to-End Automated & Secure n-Tier Cloud Infrastructure with Application Deployment
+# End-to-End Automated & Secure n-Tier Cloud Infrastructure with Application Deployment
 
 > A production-inspired, fully automated AWS platform: **React + Node/Express + PostgreSQL**
 > running on an **n-tier VPC** (public / private app / private DB), deployed through a
