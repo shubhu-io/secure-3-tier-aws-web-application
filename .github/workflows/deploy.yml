@@ -47,7 +47,7 @@ jobs:
         run: bash cicd/scripts/build-and-push.sh frontend "${{ github.sha }}" "${{ secrets.AWS_REGION }}" "${{ secrets.ECR_PROJECT }}" "${{ secrets.ECR_ENV }}"
 
       - name: Trivy scan backend image
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: "${{ secrets.ECR_PROJECT }}-${{ secrets.ECR_ENV }}-backend:${{ github.sha }}"
           format: table
@@ -56,7 +56,7 @@ jobs:
           severity: CRITICAL,HIGH
 
       - name: Trivy scan frontend image
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: "${{ secrets.ECR_PROJECT }}-${{ secrets.ECR_ENV }}-frontend:${{ github.sha }}"
           format: table

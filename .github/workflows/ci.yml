@@ -69,7 +69,7 @@ jobs:
         run: docker build -f docker/frontend/Dockerfile -t secure-ntier-frontend:ci .
 
       - name: Trivy scan backend image
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: secure-ntier-backend:ci
           format: table
@@ -78,7 +78,7 @@ jobs:
           severity: CRITICAL,HIGH
 
       - name: Trivy scan frontend image
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: secure-ntier-frontend:ci
           format: table
