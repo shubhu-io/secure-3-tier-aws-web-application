@@ -12,11 +12,13 @@ pipeline, and application code in this repository.
 | [`architecture.mmd`](./architecture.mmd) | End-to-end platform: user → Route 53 → WAF → ALB → EC2/ASG → RDS, plus supporting services (NAT, Secrets Manager, CloudWatch) |
 | [`network.mmd`](./network.mmd) | VPC + subnet layout with CIDR blocks, route tables, and NACLs per tier |
 | [`security.mmd`](./security.mmd) | Defense-in-depth: WAF → ALB SG → App SG → DB SG, encryption, IAM, secrets, auditing |
-| [`cicd.mmd`](./cicd.mmd) | CI/CD pipeline: commit → test → scan → build → ECR → deploy → smoke test; failure blocks the release |
+| [`cicd.mmd`](./cicd.mmd) | CI/CD pipeline (manifest-driven): commit → validate → test/scan → build → ECR → deploy EC2/EKS → smoke test; failure blocks the release |
+| [`stack.mmd`](./stack.mmd) | `stack.json` manifest: how one source of truth drives CI/CD, Terraform, and Kubernetes, and how a new service is added |
 | [`request-flow.mmd`](./request-flow.mmd) | Sequence diagram of one browser request through every layer |
 | [`deployment-flow.mmd`](./deployment-flow.mmd) | Deployment lifecycle including a rollback branch |
 | [`failure-flow.mmd`](./failure-flow.mmd) | Sequence diagram of EC2 failure and self-healing by the ASG |
 | [`disaster-recovery.mmd`](./disaster-recovery.mmd) | RPO / RTO targets and how data + infrastructure are recovered |
+| [`kubernetes.mmd`](./kubernetes.mmd) | The EKS deployment path: NLB → frontend → backend → RDS, plus HPA/PDB/secrets |
 
 ## How to render
 

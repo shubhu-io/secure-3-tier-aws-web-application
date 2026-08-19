@@ -1,5 +1,5 @@
 # ===========================================================================
-# 06-secure-ntier-cloud-platform - .gitignore
+# secure-ntier-cloud-platform - .gitignore
 # NEVER commit secrets, state files, or build artifacts.
 # ===========================================================================
 
@@ -17,14 +17,13 @@ credentials.json
 *credentials*
 secrets.yaml
 *.tfvars
-!.terraform.tfvars.example
+!terraform.tfvars.example
 *.tfvars.json
 
 # --- Terraform --------------------------------------------------------------
 .terraform/
 *.tfstate
 *.tfstate.*
-.terraform.lock.hcl
 crash.log
 override.tf
 override.tf.json

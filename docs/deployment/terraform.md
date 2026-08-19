@@ -119,11 +119,12 @@ The apply can take **10-20 minutes** (RDS provisioning is the slow part).
 
 ## 6. First-apply expectation: instances may be "unhealthy" at first
 
-The SSM image parameters are empty until the CI/CD pipeline pushes images.
-New instances retry `docker compose up` for up to 5 minutes, then the ASG
-replaces them and they retry again. This is **by design** — the pipeline
-populates the parameters on the first deploy (next section). Don't panic at
-"0 healthy targets" before your first pipeline run.
+The SSM image parameters start with a placeholder value (`pending`) until the
+CI/CD pipeline pushes images. New instances retry `docker compose up` for up
+to 5 minutes, then the ASG replaces them and they retry again. This is
+**by design** — the pipeline populates the parameters on the first deploy
+(next section). Don't panic at "0 healthy targets" before your first pipeline
+run.
 
 ## 7. Confirm SNS email subscription
 
@@ -135,8 +136,14 @@ subscription. Click the link in "AWS Notification - Subscription Confirmation".
 Keep the Terraform outputs handy:
 
 - `alb_dns_name` → the app URL (HTTP) — this becomes the `ALB_URL` CI secret.
-- `backend_image_param` / `frontend_image_param` → used by the pipeline.
-- `ecr_repository_urls` → the two ECR repo URLs.
+- `image_params` → map of service → SSM parameter name holding its deployed
+  image (the pipeline updates these per service).
+- `ecr_repository_urls` → the ECR repo URLs (one per service).
+- `jenkins_url` / `jenkins_public_ip` → only when `enable_jenkins = true`.
+
+> Optional engines: `enable_eks = true` provisions the EKS cluster (see
+> [`docs/deployment/eks.md`](./eks.md)); `enable_jenkins = true` provisions the
+> self-hosted CI/CD controller (see [`docs/deployment/jenkins.md`](./jenkins.md)).
 
 ## 9. Verify the infrastructure
 

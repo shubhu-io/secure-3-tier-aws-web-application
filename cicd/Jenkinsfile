@@ -4,17 +4,20 @@
 // Trigger: GitHub webhook to this job (push to main) or manual build with a
 //          parameter. Mirrors `.github/workflows/deploy.yml` exactly:
 //
-//   Checkout → Test → Audit → Frontend build → Docker build → Trivy scan
-//     → ECR login → Push backend/frontend → SSM pointer → instance refresh
-//     → Smoke test
+//   Checkout → CI (test + audit + build + trivy, per stack.json service)
+//     → ECR login → Push every service → SSM pointer → instance refresh
+//     → (optional) Deploy to EKS → Smoke test
 //
 // Agent requirements (see cicd/jenkins/README.md for setup):
-//   - a Linux agent labelled "docker" with: bash, git, docker, AWS CLI v2
-//   - node/npm and trivy run inside containers (no agent-side install)
+//   - a Linux agent labelled "docker" with: bash, git, docker, AWS CLI v2, jq
+//   - kubectl (only needed when DEPLOY_EKS=true)
+//   - node/npm, trivy etc. run inside containers (no agent-side installs)
 //
-// Credentials (Jenkins → Manage Jenkins → Credentials → Global):
+// Credentials (Jenkins → Manage Jenkins → Credentials → Global) - OPTIONAL:
 //   aws-access-key-id      (Secret text) = AWS Access Key ID
 //   aws-secret-access-key  (Secret text) = AWS Secret Access Key
+// If these two credentials are absent, the pipeline falls back to the agent's
+// AWS instance role (the Terraform Jenkins module provides one automatically).
 // ============================================================================
 
 pipeline {
@@ -41,15 +44,17 @@ pipeline {
            description: 'Image tag to build & deploy. Empty = current git SHA.')
     string(name: 'ALB_URL', defaultValue: '',
            description: 'URL to smoke-test after deploy, e.g. http://...elb.amazonaws.com . Empty = skip smoke test.')
+    booleanParam(name: 'DEPLOY_EKS', defaultValue: false,
+           description: 'Also deploy to the EKS cluster (requires Terraform enable_eks=true + kubectl on the agent)')
+    string(name: 'K8S_CLUSTER', defaultValue: '',
+           description: 'EKS cluster name. Empty = <project>-<env>-eks.')
   }
 
   environment {
-    AWS_ACCESS_KEY_ID     = credentials('aws-access-key-id')
-    AWS_SECRET_ACCESS_KEY = credentials('aws-secret-access-key')
-    AWS_DEFAULT_REGION    = "${params.REGION}"
-    ECR_REGION            = "${params.REGION}"
-    ENV                   = "${params.ENVIRONMENT}"
-    PROJECT               = "${params.PROJECT}"
+    AWS_DEFAULT_REGION = "${params.REGION}"
+    ECR_REGION         = "${params.REGION}"
+    ENV                = "${params.ENVIRONMENT}"
+    PROJECT            = "${params.PROJECT}"
   }
 
   stages {
@@ -60,65 +65,26 @@ pipeline {
           // Resolve the tag: explicit parameter wins, else short git SHA.
           env.IMAGE_TAG = params.IMAGE_TAG ?: GIT_COMMIT.take(7)
           echo "Building image tag: ${env.IMAGE_TAG}"
+
+          // AWS credentials are OPTIONAL. When the Jenkins credentials exist
+          // they are used; otherwise the pipeline relies on the agent's AWS
+          // instance role (IMDSv2) - no keys anywhere.
+          try {
+            env.AWS_ACCESS_KEY_ID = credentials('aws-access-key-id')
+            env.AWS_SECRET_ACCESS_KEY = credentials('aws-secret-access-key')
+            echo "Using Jenkins credentials 'aws-access-key-id' + 'aws-secret-access-key'"
+          } catch (Exception e) {
+            echo "No 'aws-access-key-id' credential found - using the agent's AWS instance role"
+          }
         }
       }
     }
 
-    stage('Backend tests + audit') {
-      // node and npm run inside a container; npm ci needs the lockfile.
+    stage('CI (test + audit + build + scan)') {
+      // Generic: runs every service's ci_steps in its declared toolchain
+      // container, builds its image and trivy-scans it - driven by stack.json.
       steps {
-        sh """
-          docker run --rm \
-            -v "${WORKSPACE}:/workspace" -w /workspace \
-            node:20-alpine sh -c '
-              cd application/backend &&
-              npm ci &&
-              npm test &&
-              npm audit --audit-level=high
-            '
-        """
-      }
-    }
-
-    stage('Frontend build') {
-      steps {
-        sh """
-          docker run --rm \
-            -v "${WORKSPACE}:/workspace" -w /workspace \
-            node:20-alpine sh -c '
-              cd application/frontend &&
-              npm ci &&
-              npm run build
-            '
-        """
-      }
-    }
-
-    stage('Docker build') {
-      steps {
-        sh "docker build -f docker/backend/Dockerfile  -t ${PROJECT}-${ENV}-backend:ci ."
-        sh "docker build -f docker/frontend/Dockerfile -t ${PROJECT}-${ENV}-frontend:ci ."
-      }
-    }
-
-    stage('Trivy scan') {
-      // Scans the exact images from the previous stage. Docker socket is
-      // mounted so trivy can read local images. Fails on CRITICAL/HIGH.
-      steps {
-        sh """
-          docker run --rm \
-            -v /var/run/docker.sock:/var/run/docker.sock \
-            aquasec/trivy:latest image \
-              --ignore-unfixed --exit-code 1 --severity CRITICAL,HIGH \
-              ${PROJECT}-${ENV}-backend:ci
-        """
-        sh """
-          docker run --rm \
-            -v /var/run/docker.sock:/var/run/docker.sock \
-            aquasec/trivy:latest image \
-              --ignore-unfixed --exit-code 1 --severity CRITICAL,HIGH \
-              ${PROJECT}-${ENV}-frontend:ci
-        """
+        sh "bash cicd/scripts/stack-ci.sh ${PROJECT}"
       }
     }
 
@@ -131,8 +97,7 @@ pipeline {
     stage('Push images') {
       when { expression { params.AUTO_DEPLOY == true } }
       steps {
-        sh "bash cicd/scripts/build-and-push.sh backend ${env.IMAGE_TAG} ${ECR_REGION} ${PROJECT} ${ENV}"
-        sh "bash cicd/scripts/build-and-push.sh frontend ${env.IMAGE_TAG} ${ECR_REGION} ${PROJECT} ${ENV}"
+        sh "bash cicd/scripts/stack-push.sh ${env.IMAGE_TAG} ${ECR_REGION} ${PROJECT} ${ENV}"
       }
     }
 
@@ -140,6 +105,16 @@ pipeline {
       when { expression { params.AUTO_DEPLOY == true } }
       steps {
         sh "bash cicd/scripts/deploy-ec2.sh ${env.IMAGE_TAG} ${ECR_REGION} ${ENV} ${PROJECT}"
+      }
+    }
+
+    stage('Deploy to EKS (kubectl)') {
+      when { expression { params.AUTO_DEPLOY == true && params.DEPLOY_EKS == true } }
+      steps {
+        script {
+          env.K8S_CLUSTER = params.K8S_CLUSTER ?: "${params.PROJECT}-${params.ENVIRONMENT}-eks"
+        }
+        sh "bash cicd/scripts/deploy-eks.sh ${env.IMAGE_TAG} ${ECR_REGION} ${ENV} ${PROJECT} ${env.K8S_CLUSTER}"
       }
     }
 
@@ -156,10 +131,12 @@ pipeline {
   post {
     always {
       // Tidy the locally-built CI images so the agent never fills up.
-      sh """
-        docker rmi ${PROJECT}-${ENV}-backend:ci \
-             ${PROJECT}-${ENV}-frontend:ci 2>/dev/null || true
-      """
+      script {
+        def services = sh(script: "bash cicd/scripts/stack-info.sh list", returnStdout: true).trim().split('\\n')
+        for (svc in services) {
+          sh "docker rmi ${PROJECT}-${svc}:ci 2>/dev/null || true"
+        }
+      }
       cleanWs(deleteDirs: true)
     }
     failure {

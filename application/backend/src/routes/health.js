@@ -16,7 +16,7 @@ export default function healthRouter(db) {
     }
 
     // Always 200 so the ALB health check never flaps on transient DB issues.
-    // Use /api/ready for a strict readiness signal.
+    // Use /health/ready for a strict readiness signal.
     res.json({
       status: "ok",
       db: dbStatus,

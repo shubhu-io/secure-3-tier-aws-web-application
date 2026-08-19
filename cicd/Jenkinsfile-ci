@@ -1,0 +1,71 @@
+// ============================================================================
+// Jenkinsfile-ci - CI (pull-request / develop) pipeline
+//
+// Mirrors `.github/workflows/ci.yml` stage-for-stage but WITHOUT deploying:
+//
+//   Checkout -> stack-validate (manifest) -> CI per service
+//     (test + audit + build + trivy scan, driven by stack.json)
+//     -> Terraform fmt + validate
+//
+// No AWS credentials are needed - nothing is pushed or deployed.
+// Runs on the same "docker && linux" agent as the deploy pipeline.
+// ============================================================================
+
+pipeline {
+  agent { label 'docker && linux' }
+
+  options {
+    timestamps()
+    timeout(time: 20, unit: 'MINUTES')
+    buildDiscarder(logRotator(numToKeepStr: '30'))
+    skipDefaultCheckout()
+  }
+
+  stages {
+    stage('Checkout') {
+      steps { checkout scm }
+    }
+
+    stage('Validate stack manifest') {
+      steps { sh "bash cicd/scripts/stack-validate.sh" }
+    }
+
+    stage('CI per service (test + audit + build + scan)') {
+      steps { sh "bash cicd/scripts/stack-ci.sh" }
+    }
+
+    stage('Terraform fmt + validate') {
+      steps {
+        sh """
+          docker run --rm \
+            -v "${WORKSPACE}:/workspace" -w /workspace/terraform \
+            hashicorp/terraform:1.9.8 fmt -check -recursive
+        """
+        sh """
+          docker run --rm \
+            -v "${WORKSPACE}:/workspace" -w /workspace/terraform \
+            hashicorp/terraform:1.9.8 init -backend=false -input=false
+        """
+        sh """
+          docker run --rm \
+            -v "${WORKSPACE}:/workspace" -w /workspace/terraform \
+            hashicorp/terraform:1.9.8 validate
+        """
+      }
+    }
+  }
+
+  post {
+    always {
+      script {
+        def services = sh(script: "bash cicd/scripts/stack-info.sh list", returnStdout: true).trim().split('\\n')
+        for (svc in services) {
+          sh "docker rmi secure-ntier-${svc}:ci 2>/dev/null || true"
+        }
+      }
+      cleanWs(deleteDirs: true)
+    }
+    failure { echo "!!! CI pipeline FAILED - fix before merging" }
+    success { echo ">>> CI pipeline OK - safe to merge" }
+  }
+}

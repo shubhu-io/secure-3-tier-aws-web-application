@@ -158,6 +158,7 @@ Full diagrams (rendered + Mermaid source) are in [`diagrams/`](./diagrams/README
 6. **Deployment flow** — [`diagrams/deployment-flow.mmd`](./diagrams/deployment-flow.mmd)
 7. **Failure recovery** — [`diagrams/failure-flow.mmd`](./diagrams/failure-flow.mmd)
 8. **Disaster recovery** — [`diagrams/disaster-recovery.mmd`](./diagrams/disaster-recovery.mmd)
+9. **Kubernetes (EKS)** — [`diagrams/kubernetes.mmd`](./diagrams/kubernetes.mmd)
 
 ---
 
@@ -193,6 +194,8 @@ Full diagrams (rendered + Mermaid source) are in [`diagrams/`](./diagrams/README
 | Docker | Containerization of frontend + backend |
 | Amazon ECR | Private container registry |
 | GitHub + GitHub Actions | Source control + CI/CD pipeline |
+| Jenkins | Alternative CI/CD pipeline (same shared scripts) |
+| Kubernetes (Amazon EKS) | Optional managed container orchestration (coexists with EC2 path) |
 | React (Vite) | Frontend UI |
 | Node.js / Express | Backend API |
 | PostgreSQL (Amazon RDS) | Relational database |
@@ -207,16 +210,18 @@ Full diagrams (rendered + Mermaid source) are in [`diagrams/`](./diagrams/README
 ## 📁 Repository Structure
 
 ```text
-06-secure-ntier-cloud-platform/
+secure-ntier-cloud-platform/
 ├── README.md
 ├── LICENSE
 ├── SECURITY.md
 ├── CONTRIBUTING.md
 ├── CHANGELOG.md
+├── stack.json               # THE tech-stack manifest: services, ports, toolchains,
+│                            # db engine/version, runtimes — drives CI/CD + Terraform + k8s
 │
 ├── docs/
-│   ├── architecture/      # overview, network, security, cicd, monitoring, DR
-│   ├── deployment/        # prerequisites, aws-setup, terraform, application, cicd
+│   ├── architecture/      # overview, network, security, cicd, monitoring, DR, kubernetes
+│   ├── deployment/        # prerequisites, aws-setup, terraform, application, cicd, eks, jenkins
 │   ├── operations/        # monitoring, backup, scaling, troubleshooting
 │   ├── runbooks/          # deployment-failure, instance-failure, db-failure, rollback
 │   ├── adr/               # architecture decision records
@@ -238,13 +243,15 @@ Full diagrams (rendered + Mermaid source) are in [`diagrams/`](./diagrams/README
 │   │   ├── vpc/           # VPC, subnets, IGW, NAT, route tables, NACLs, flow logs
 │   │   ├── security/      # layered security groups
 │   │   ├── alb/           # ALB, listeners, target group, WAF association
-│   │   ├── compute/       # launch template, ASG, scaling policy, user-data
-│   │   ├── database/      # RDS, subnet group, secrets
+│   │   ├── compute/       # launch template, ASG, scaling policy, user-data (reads stack.json)
+│   │   ├── database/      # RDS, subnet group, secrets (engine/version/port from stack.json)
 │   │   ├── ecr/           # ECR repositories
-│   │   └── monitoring/    # SNS, alarms, dashboard
+│   │   ├── monitoring/    # SNS, alarms, dashboard
+│   │   ├── eks/           # EKS cluster + node group (optional)
+│   │   └── jenkins/       # self-hosted Jenkins controller (optional)
 │   └── environments/
-│       ├── dev/           # dev.tfvars.example + backend.hcl
-│       └── prod/          # prod.tfvars.example + backend.hcl
+│       ├── dev/           # terraform.tfvars.example + backend.hcl
+│       └── prod/          # terraform.tfvars.example + backend.hcl
 │
 ├── application/
 │   ├── frontend/          # React (Vite)
@@ -258,9 +265,26 @@ Full diagrams (rendered + Mermaid source) are in [`diagrams/`](./diagrams/README
 │   ├── nginx/             # nginx conf used by the frontend container
 │   └── docker-compose.yml # LOCAL dev stack (no AWS needed)
 │
+├── kubernetes/            # EKS deployment (optional, coexists with EC2 path)
+│   ├── namespace.yaml     # everything lives in the secure-ntier namespace
+│   ├── configmap.yaml     # non-secret app config shared by every service
+│   ├── secret.yaml.example# template of app-db-secret (never apply as-is)
+│   ├── kustomization.yaml # static support resources (namespace + config)
+│   └── scripts/
+│       ├── render-manifests.sh  # renders per-service Deployment/Service/HPA/PDB from stack.json
+│       ├── deploy.sh            # connect + secrets + apply (static + rendered) + roll + verify
+│       └── undeploy.sh
+│
+├── .github/               # GitHub Actions workflows (ci, deploy, terraform)
+│   ├── workflows/         # ci.yml, deploy.yml, terraform.yml
+│   └── ISSUE_TEMPLATE/    # bug + feature request templates
+│
 ├── cicd/
-│   ├── github-actions/    # ci.yml, deploy.yml
-│   └── scripts/           # ecr-login, build-and-push, deploy-ec2
+│   ├── github-actions/    # GitHub Actions design docs
+│   ├── jenkins/           # Jenkins design docs
+│   ├── Jenkinsfile        # Jenkins deploy pipeline (alternative engine)
+│   ├── Jenkinsfile-ci     # Jenkins CI pipeline (mirrors ci.yml)
+│   └── scripts/           # stack-validate/info/ci/push + ecr-login, build-and-push, deploy-ec2/eks, smoke-test
 │
 ├── security/
 │   ├── iam/               # least-privilege policy documents
@@ -274,11 +298,30 @@ Full diagrams (rendered + Mermaid source) are in [`diagrams/`](./diagrams/README
 │
 ├── scripts/               # setup, health-check, verify, cleanup
 └── tests/
-    ├── infrastructure/
+    ├── infrastructure/    # terraform-validate, tfplan-check, kubernetes-validate
     ├── application/
     ├── security/
     └── integration/
 ```
+
+---
+
+## 🧭 `stack.json` — the manifest (single source of truth)
+
+The whole platform is **manifest-driven**. [`stack.json`](./stack.json) declares the
+tech stack — each service (`name`, `port`, `public`, `source_dir`, `dockerfile`,
+`toolchain`, `ci_steps`, `health_path`), the database (`engine`, `engine_version`,
+`port`), and the runtimes. Everything reads it:
+
+```text
+stack.json ─┬─► CI/CD        stack-validate / stack-ci / stack-push / deploy-ec2 / deploy-eks
+            ├─► Terraform    database engine/version/port, per-service SSM params, compose gen
+            └─► Kubernetes   render-manifests.sh (Deployment/Service/HPA/PDB per service)
+```
+
+**Adding a service = one `stack.json` entry** — it automatically gets an ECR
+repo, an SSM deploy pointer, a Docker Compose service (EC2 path), and a full set
+of Kubernetes manifests (EKS path). No pipeline, Terraform, or manifest edits.
 
 ---
 
@@ -311,7 +354,7 @@ aws configure
 
 ```bash
 git clone <YOUR_REPOSITORY_URL>
-cd 06-secure-ntier-cloud-platform
+cd secure-ntier-cloud-platform
 ```
 
 Then follow the deployment guides **in order**:
@@ -324,6 +367,8 @@ Then follow the deployment guides **in order**:
 | 4. Deploy infrastructure | [`docs/deployment/terraform.md`](./docs/deployment/terraform.md) |
 | 5. Run the app locally first | [`docs/deployment/application.md`](./docs/deployment/application.md) |
 | 6. Set up CI/CD | [`docs/deployment/cicd.md`](./docs/deployment/cicd.md) |
+| 7. (Optional) Kubernetes / EKS | [`docs/deployment/eks.md`](./docs/deployment/eks.md) |
+| 8. (Optional) Self-hosted Jenkins | [`docs/deployment/jenkins.md`](./docs/deployment/jenkins.md) |
 
 ---
 
@@ -369,9 +414,10 @@ terraform plan  -var-file="environments/dev/terraform.tfvars" -out=plan.tfplan
 terraform apply plan.tfplan
 ```
 
-**Application (automatic):** push to `main` — the pipeline builds, scans, tests,
-pushes images to ECR, updates the deploy parameter, and triggers an instance
-refresh. Or deploy locally:
+**Application (automatic):** push to `main` — the pipeline validates the
+manifest, builds, scans, tests, pushes every service image to ECR, updates the
+SSM deploy parameters (per service), and triggers an instance refresh (plus an
+optional EKS deploy). Or deploy locally:
 
 ```bash
 cd docker
@@ -397,7 +443,8 @@ expected output and troubleshooting.
 | Alarms exist | `aws cloudwatch describe-alarms --region <region>` |
 | WAF attached | `aws wafv2 list-web-acls --scope REGIONAL --region <region>` |
 
-The one-command version: [`scripts/verify.sh`](./scripts/verify.sh).
+The one-command version:
+`bash scripts/verify.sh <region> <project> <env> <alb_url>` (see [`scripts/verify.sh`](./scripts/verify.sh)).
 
 ---
 
@@ -499,6 +546,8 @@ Potentially expensive resources:
 | **EC2** | Instance hours (2 × t3.micro) | `desired=0` when idle, or destroy |
 | **CloudWatch** | Custom metrics + logs storage | Flow logs to a log group cost a little; delete when done |
 | **WAF** | Small monthly fee per rule group | Managed rules are worth it |
+| **EKS** (optional) | Control plane ~$73/mo + node group (~$50/mo for 2×t3.medium) | Only enable when learning Kubernetes; destroy when done |
+| **Jenkins** (optional) | ~$15–25/mo (1 × t3.medium + EBS) | Overlaps GitHub Actions — run one engine; lock the ingress CIDRs |
 
 Full breakdown + free-tier notes: [`docs/cost-guide.md`](./docs/cost-guide.md).
 
@@ -506,7 +555,10 @@ Full breakdown + free-tier notes: [`docs/cost-guide.md`](./docs/cost-guide.md).
 
 ## 🔮 Future Improvements
 
-- ECS Fargate / EKS instead of EC2 + Docker Compose
+- HTTPS + WAF at the EKS edge (AWS Load Balancer Controller + Ingress)
+- IRSA / External Secrets Operator (no secrets through CI)
+- Cluster Autoscaler / Karpenter for node autoscaling
+- ECS Fargate as a third (serverless) runtime
 - Blue/green or canary deployments with traffic weighting
 - AWS CodeDeploy / CodePipeline alternative pipelines
 - GitHub Actions OIDC (no long-lived CI keys)
@@ -524,6 +576,7 @@ Full breakdown + free-tier notes: [`docs/cost-guide.md`](./docs/cost-guide.md).
 | ----- | --- |
 | Full build, phase by phase | [`docs/phases.md`](./docs/phases.md) |
 | Architecture | [`docs/architecture/overview.md`](./docs/architecture/overview.md) |
+| Kubernetes architecture | [`docs/architecture/kubernetes.md`](./docs/architecture/kubernetes.md) |
 | Network design | [`docs/architecture/network.md`](./docs/architecture/network.md) |
 | Security design | [`docs/architecture/security.md`](./docs/architecture/security.md) |
 | CI/CD design | [`docs/architecture/cicd.md`](./docs/architecture/cicd.md) |
@@ -531,6 +584,8 @@ Full breakdown + free-tier notes: [`docs/cost-guide.md`](./docs/cost-guide.md).
 | Disaster recovery | [`docs/architecture/disaster-recovery.md`](./docs/architecture/disaster-recovery.md) |
 | AWS setup | [`docs/deployment/aws-setup.md`](./docs/deployment/aws-setup.md) |
 | Terraform deployment | [`docs/deployment/terraform.md`](./docs/deployment/terraform.md) |
+| Kubernetes (EKS) deployment | [`docs/deployment/eks.md`](./docs/deployment/eks.md) |
+| Jenkins (self-hosted) deployment | [`docs/deployment/jenkins.md`](./docs/deployment/jenkins.md) |
 | Application guide | [`docs/deployment/application.md`](./docs/deployment/application.md) |
 | CI/CD setup | [`docs/deployment/cicd.md`](./docs/deployment/cicd.md) |
 | Operations | [`docs/operations/`](./docs/operations/) |

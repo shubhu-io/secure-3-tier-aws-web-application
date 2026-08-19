@@ -39,10 +39,16 @@ found. `npm audit` also runs against the backend dependencies.
 ```bash
 bash tests/infrastructure/terraform-validate.sh    # fmt + validate
 bash tests/infrastructure/tfplan-check.sh          # plan contains key resources
+bash tests/infrastructure/kubernetes-validate.sh   # render + kustomize + dry-run the k8s manifests
 ```
 
 `tfplan-check.sh` greps the plan JSON to prove the VPC, subnets, NAT, SGs,
 ALB, ASG, RDS, ECR, WAF, alarms, flow logs and CloudTrail are all created.
+`kubernetes-validate.sh` needs `kubectl` on PATH (skips if missing); it renders
+the per-service Deployment/Service/HPA/PDB from `stack.json`, asserts every
+manifest service has matching rendered kinds + a non-root `securityContext`,
+and dry-runs the result. Because it reads `stack.json`, new services are
+covered automatically.
 
 ## 5. Application integration tests — `tests/application/integration.sh`
 

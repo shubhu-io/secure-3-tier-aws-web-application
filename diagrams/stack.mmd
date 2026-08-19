@@ -1,0 +1,28 @@
+%% ============================================================================
+%% Diagram 10 - stack.json manifest-driven design
+%% Purpose: how the single source of truth drives CI/CD, Terraform, and
+%% Kubernetes, and how a new service gets added.
+%% ============================================================================
+flowchart LR
+    SJ["stack.json<br/>(single source of truth)<br/>services / ports / public<br/>toolchains / ci_steps<br/>db engine+version+port<br/>runtimes"]
+
+    SJ --> V["cicd/scripts/stack-validate.sh"]
+    SJ --> CI["cicd/scripts/stack-ci.sh<br/>per-service ci_steps in toolchain"]
+    SJ --> PUSH["cicd/scripts/stack-push.sh<br/>build + push to ECR"]
+    SJ --> SSM["deploy-ec2.sh<br/>per-service SSM image params"]
+    SJ --> COMPOSE["compute user-data<br/>renders docker-compose.yml"]
+    SJ --> DB["database module<br/>engine / version / port"]
+    SJ --> K8S["render-manifests.sh<br/>Deployment/Service/HPA/PDB"]
+
+    V --> GH[GitHub Actions]
+    V --> JEN[Jenkins]
+    CI --> GH
+    CI --> JEN
+    PUSH --> DEP[EC2 deploy]
+    SSM --> DEP
+    COMPOSE --> DEP
+    PUSH --> DEPK[EKS deploy]
+    K8S --> DEPK
+
+    ADD["Add a service"] -->|one stack.json entry| SJ
+    ADD -.->|"no pipeline / terraform / manifest edits"| NONE["auto: ECR repo + SSM param + compose svc + k8s manifests"]

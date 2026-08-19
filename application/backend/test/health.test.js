@@ -43,7 +43,7 @@ test("GET /health works without a database at all", async () => {
   server.close();
 });
 
-test("GET /api/ready returns 503 when db is down", async () => {
+test("GET /health/ready returns 503 when db is down", async () => {
   const db = { query: async () => { throw new Error("db down"); } };
   const app = createApp({ db, jwtSecret: "test-secret" });
   const { server, base } = await startServer(app);
@@ -51,6 +51,21 @@ test("GET /api/ready returns 503 when db is down", async () => {
   const res = await fetch(`${base}/health/ready`);
 
   assert.equal(res.status, 503);
+
+  server.close();
+});
+
+test("GET /health/ready returns 200 when db is connected", async () => {
+  const db = { query: async () => ({ rows: [] }) };
+  const app = createApp({ db, jwtSecret: "test-secret" });
+  const { server, base } = await startServer(app);
+
+  const res = await fetch(`${base}/health/ready`);
+  const body = await res.json();
+
+  assert.equal(res.status, 200);
+  assert.equal(body.status, "ready");
+  assert.equal(body.db, "connected");
 
   server.close();
 });

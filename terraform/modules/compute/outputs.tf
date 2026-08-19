@@ -27,12 +27,7 @@ output "instance_profile_name" {
   value       = aws_iam_instance_profile.instance.name
 }
 
-output "backend_image_param" {
-  description = "SSM parameter name holding the deployed backend image URI"
-  value       = local.backend_image_param
-}
-
-output "frontend_image_param" {
-  description = "SSM parameter name holding the deployed frontend image URI"
-  value       = local.frontend_image_param
+output "image_params" {
+  description = "Map of service name -> SSM parameter holding its deployed image URI"
+  value       = local.image_params
 }

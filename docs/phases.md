@@ -1,4 +1,4 @@
-# Full Build Guide — 30 Phases
+# Full Build Guide — 31 Phases
 
 > This document takes you from an empty AWS account to a running, secure,
 > monitored n-tier platform — **one small, verifiable phase at a time**.
@@ -25,7 +25,10 @@
 | Infrastructure code | `terraform/` |
 | Application code | `application/` |
 | Container files | `docker/` |
+| Kubernetes (optional) | `kubernetes/` + `terraform/modules/eks/` |
 | CI/CD pipelines | `.github/workflows/` + `cicd/scripts/` |
+| Tech-stack manifest | `stack.json` (services, ports, toolchains, DB engine/version, runtimes) |
+| Jenkins (optional) | `cicd/Jenkinsfile`, `cicd/Jenkinsfile-ci`, `terraform/modules/jenkins/` |
 | Security policies | `security/iam/`, `security/waf/` |
 | Monitoring | `terraform/modules/monitoring/`, `monitoring/` |
 | Tests | `tests/` |
@@ -117,8 +120,8 @@ None.
 A written, agreed understanding of:
 
 1. **Goal:** auto-deploy a React + Node + PostgreSQL app to a secure n-tier AWS platform.
-2. **Non-goals** (explicitly out of scope): Kubernetes (ECS/EKS is a future
-   improvement), multi-account orgs, cross-region DR.
+2. **Non-goals** (explicitly out of scope): ECS Fargate, multi-account orgs,
+   cross-region DR. (Kubernetes/EKS was moved **in** scope — see phase 30.)
 3. **Success criteria:** one `terraform apply` builds the platform; pushing to
    `main` deploys the app; killing an EC2 instance is self-healed.
 
@@ -139,7 +142,7 @@ tier, layered security groups, secrets outside the repository.
 ### Production notes
 
 - Every decision in this project is an **Architecture Decision** — recorded in
-  [`docs/adr/`](./adr/). Read ADR-001…ADR-007 to see *why* the choices were made.
+  [`docs/adr/`](./adr/). Read ADR-001…ADR-008 to see *why* the choices were made.
 
 ### Beginner explanation
 
@@ -2250,9 +2253,9 @@ Phase 21 — CI/CD Pipeline.
 
 ### Objective
 
-Automate: push → test → scan → build images → push to ECR → update deploy
-pointers → rolling instance refresh → smoke test. Fail the pipeline on any
-critical issue.
+Automate: push → validate manifest → test → scan → build images → push to ECR
+→ update deploy pointers → rolling instance refresh → smoke test. Fail the
+pipeline on any critical issue.
 
 ### Why we need it
 
@@ -2262,18 +2265,23 @@ security gates that stop bad code.
 
 ### Architecture
 
-See [`diagrams/cicd.mmd`](../diagrams/cicd.mmd).
+See [`diagrams/cicd.mmd`](../diagrams/cicd.mmd). The pipeline is
+**manifest-driven**: every stage loops over `stack.json` (services, toolchain,
+`ci_steps`, ports), so a new service needs **only a `stack.json` entry**.
 
 ### Files
 
 | File | Purpose |
 | ---- | ------- |
-| `.github/workflows/ci.yml` | CI: tests, frontend build, docker build, trivy scan, terraform validate |
-| `.github/workflows/deploy.yml` | CD: test → ECR push → update SSM → instance refresh → smoke test |
-| `cicd/scripts/ecr-login.sh` | ECR auth |
-| `cicd/scripts/build-and-push.sh` | build + tag + push an image |
-| `cicd/scripts/deploy-ec2.sh` | update SSM params + start instance refresh |
+| `stack.json` | The manifest: services, ports, toolchains, `ci_steps`, db engine/version, runtimes |
+| `cicd/scripts/stack-validate.sh` | Validate the manifest in CI |
+| `cicd/scripts/stack-ci.sh` | CI for every service: ci_steps in toolchain container → docker build → trivy scan |
+| `cicd/scripts/stack-push.sh` | Build + push every service to ECR (`:sha` + `:latest`) |
+| `.github/workflows/ci.yml` | CI: manifest validate → per-service CI → terraform validate |
+| `.github/workflows/deploy.yml` | CD: ECR push → update SSM → instance refresh → smoke test |
+| `cicd/scripts/deploy-ec2.sh` | update SSM params (per service) + start instance refresh |
 | `cicd/scripts/smoke-test.sh` | wait for healthy app via ALB |
+| `cicd/Jenkinsfile` / `cicd/Jenkinsfile-ci` | The same pipelines for the optional Jenkins engine |
 
 ### Required GitHub Secrets
 
@@ -2348,7 +2356,8 @@ git push origin main
 Deploy workflow passes end-to-end:
 
 ```text
-Checkout → AWS creds → tests → ECR login → push ×2 → Trivy → deploy → smoke ✓
+Checkout → stack-validate → CI per service (tests + build + trivy) → ECR push
+→ SSM params → instance refresh → smoke ✓
 ```
 
 ### Verification
@@ -3044,7 +3053,7 @@ verifiable playbooks, not tribal knowledge.
 | Deployment (prereq, aws-setup, terraform, app, cicd) | `docs/deployment/` |
 | Operations (monitoring, backup, scaling, troubleshooting) | `docs/operations/` |
 | Runbooks (deployment-failure, instance-failure, db-failure, rollback) | `docs/runbooks/` |
-| ADRs 001–007 | `docs/adr/` |
+| ADRs 001–008 | `docs/adr/` |
 | Testing / Cost / Interview | `docs/testing.md`, `docs/cost-guide.md`, `docs/interview-questions.md` |
 | Diagrams | `diagrams/` (Mermaid) |
 | Screenshot instructions | `screenshots/README.md` |
@@ -3154,7 +3163,7 @@ A platform is only finished when every claim is *verified*, not just written.
 ### The one-command verification
 
 ```bash
-bash scripts/verify.sh
+bash scripts/verify.sh eu-west-1 secure-ntier dev http://<ALB_URL>
 ```
 
 (expected output: a checklist summary of the environment.)
@@ -3171,11 +3180,109 @@ WAF rate-limit rules, and a second region (DR site).
 
 ### Next phase
 
-Phase 30 — Cleanup.
+Phase 30 — Kubernetes (EKS).
 
 ---
 
-## Phase 30 — Cleanup
+## Phase 30 — Kubernetes (EKS)
+
+### Objective
+
+Deploy the same application on a managed Kubernetes cluster (Amazon EKS) with
+full CI/CD - as a modern alternative that coexists with the EC2 path.
+
+### Why we need it
+
+Container orchestration gives us declarative desired state, native rolling
+updates, pod-level auto-scaling, and a clean rollback story (`kubectl rollout
+undo`) - capabilities that Docker Compose on EC2 lacks.
+
+### Prerequisites
+
+- EC2 + RDS stack applied (the EKS cluster reuses the VPC, subnets, and RDS).
+- `kubectl` installed locally.
+- EKS is opt-in and **costly** - only run it while you are actively learning.
+
+### Enable EKS
+
+In `terraform/environments/dev/terraform.tfvars`:
+
+```hcl
+enable_eks = true
+```
+
+```bash
+cd terraform
+terraform plan -var-file="environments/dev/terraform.tfvars" -out=plan.tfplan
+terraform apply plan.tfplan
+```
+
+Expected output includes `eks_cluster_name`, `eks_cluster_endpoint`, and
+`eks_connect_command`.
+
+### Grant CI/CD kubectl access (one-time)
+
+If `eks_ci_iam_arn` was left empty, add an access entry for the CI user:
+
+```bash
+aws eks create-access-entry \
+  --cluster-name secure-ntier-dev-eks \
+  --principal-arn arn:aws:iam::<ACCOUNT>:user/github-actions-cicd \
+  --type STANDARD
+
+aws eks associate-access-policy \
+  --cluster-name secure-ntier-dev-eks \
+  --principal-arn arn:aws:iam::<ACCOUNT>:user/github-actions-cicd \
+  --policy-arn arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy \
+  --access-scope type=cluster
+```
+
+### Deploy the application to EKS
+
+```bash
+bash kubernetes/scripts/deploy.sh <git-sha> eu-west-1 dev secure-ntier
+```
+
+The script configures `kubectl`, materializes the DB credentials into the
+`app-db-secret` Kubernetes Secret (from AWS Secrets Manager), **renders the
+per-service Deployment/Service/HPA/PDB manifests from `stack.json`**
+(`kubernetes/scripts/render-manifests.sh`), applies everything, points the
+deployments at the ECR images, and waits for the rollouts.
+
+### Verification
+
+- `kubectl get all -n secure-ntier` → deployments/services/HPA present
+- `kubectl -n secure-ntier get svc frontend` → NLB hostname assigned
+- `curl -s http://<NLB>/health` → `db: "connected"`
+- `kubectl -n secure-ntier get hpa` → replicas scale as CPU rises
+- HPA + PDB exist → `kubectl -n secure-ntier get hpa,pdb`
+
+### Optional: wire the pipelines
+
+- GitHub Actions: set repo variable `DEPLOY_EKS=true` → `deploy-eks` job runs
+  on every push to `main`.
+- Jenkins: tick `DEPLOY_EKS` on the job (needs `kubectl` on the agent).
+- Jenkins CI: `cicd/Jenkinsfile-ci` gates PRs/develop (same as `ci.yml`).
+
+### Common errors
+
+- **`context was not found`** — run `aws eks update-kubeconfig` for the right
+  cluster/region.
+- **`AccessDenied` on `update-kubeconfig`** — the CI principal needs the EKS
+  access entry (step above) + `eks:DescribeCluster`.
+- **Backend unhealthy / `ECONNREFUSED` to RDS** — the DB security group must
+  include the EKS cluster security group (the root module does this
+  automatically when `enable_eks = true`).
+- **NLB never gets a hostname** — check `kubectl describe svc frontend -n
+  secure-ntier` for quota / subnet errors.
+
+### Next phase
+
+Phase 31 — Cleanup.
+
+---
+
+## Phase 31 — Cleanup
 
 ### Objective
 
@@ -3211,7 +3318,7 @@ gone.
 
 ```bash
 # helper
-bash scripts/cleanup.sh --region eu-west-1 --project secure-ntier --env dev
+bash scripts/cleanup.sh eu-west-1 secure-ntier dev
 ```
 
 ### Verification

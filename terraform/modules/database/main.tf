@@ -1,8 +1,11 @@
 # ============================================================================
-# Database module - RDS PostgreSQL + Secrets Manager
+# Database module - managed RDS + Secrets Manager
 #
 # Creates: RDS instance in private DB subnets, DB subnet group, the secret in
 #          AWS Secrets Manager holding all runtime credentials for the app.
+#
+# The engine (postgres | mysql | mariadb), engine version and port come from
+# stack.json (via the root module) so the whole stack follows the manifest.
 # ============================================================================
 
 locals {
@@ -31,7 +34,7 @@ resource "random_password" "jwt_secret" {
 
 resource "aws_secretsmanager_secret" "db_credentials" {
   name        = "${local.name_prefix}-db-credentials"
-  description = "PostgreSQL credentials + runtime secrets for the application"
+  description = "Database credentials + runtime secrets for the application"
 
   tags = {
     Environment = var.environment
@@ -68,7 +71,7 @@ resource "aws_db_subnet_group" "this" {
 # ---------------------------------------------------------------------------
 resource "aws_db_instance" "this" {
   identifier     = "${local.name_prefix}-db"
-  engine         = "postgres"
+  engine         = var.engine
   engine_version = var.engine_version
   instance_class = var.db_instance_class
 
@@ -78,7 +81,7 @@ resource "aws_db_instance" "this" {
   db_name  = var.db_name
   username = var.db_username
   password = random_password.db_password.result
-  port     = 5432
+  port     = var.port
 
   db_subnet_group_name   = aws_db_subnet_group.this.name
   vpc_security_group_ids = [var.db_sg_id]

@@ -137,6 +137,33 @@ terraform fmt -check -recursive
 Enforces consistent style; a style change isn't a semantic bug, but reviewable
 code keeps diffs small and safe.
 
+### 3.4 Kubernetes manifests
+
+```bash
+bash tests/infrastructure/kubernetes-validate.sh
+```
+
+Validates the `kubernetes/` deployment with `kubectl` + `jq`:
+
+- `kubectl kustomize kubernetes/` — the kustomization (namespace + configmap)
+  builds cleanly
+- `kubectl kustomize kubernetes/ | kubectl apply --dry-run=client -f -` — the
+  static support resources are valid API objects (no cluster needed)
+- `kubernetes/scripts/render-manifests.sh` — renders per-service
+  Deployment/Service/HPA/PDB from `stack.json`; the script asserts **all
+  services** in the manifest have matching rendered kinds and a valid
+  `securityContext` (non-root everywhere, `fsGroup` on internal services)
+- when a cluster is reachable (`kubectl cluster-info` succeeds) it also runs
+  `kubectl apply --dry-run=client -f -` over the rendered output
+
+Requires `kubectl` on PATH; the script skips gracefully if it's missing. It
+reads `stack.json` from the repo root, so the check automatically covers any
+service you add to the manifest.
+
+When a real cluster is available you can also run the deployment assertions
+from `docs/architecture/kubernetes.md` (`kubectl get all -n secure-ntier`,
+`curl /health` on the NLB endpoint).
+
 ---
 
 ## 4. Container / dependency security scans
@@ -205,15 +232,17 @@ These are manual tests on **dev only**, documented in `docs/runbooks/`:
 ## 7. How tests gate CI/CD
 
 ```text
-push (feature/*, develop) ────── ci.yml
-   │  unit tests ── frontend build ── docker build ── trivy
+push (feature/*, develop) ────── ci.yml / Jenkinsfile-ci
+   │  stack-validate → stack-ci per service (tests + audit + build + trivy)
    │  npm audit ── terraform fmt + validate
    ▼  any fail → PR blocked; no image pushed
 
 local / on-demand ────────────── tfplan-check.sh (asserts topology)
+                                 kubernetes-validate.sh (render + dry-run)
 
-merge to main / push main ────── deploy.yml
-   │  tests again → ECR push → SSM pointer → instance refresh → smoke test
+merge to main / push main ────── deploy.yml / Jenkinsfile
+   │  tests again → stack-push (ECR) → per-service SSM pointer
+   │  → instance refresh → smoke test (+ optional EKS deploy + NLB smoke)
    ▼  scan fail or smoke fail → ALB still on previous image (rollback in runbook)
 ```
 

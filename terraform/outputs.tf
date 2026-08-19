@@ -33,14 +33,9 @@ output "asg_name" {
   value       = module.compute.asg_name
 }
 
-output "backend_image_param" {
-  description = "SSM parameter holding the deployed backend image"
-  value       = module.compute.backend_image_param
-}
-
-output "frontend_image_param" {
-  description = "SSM parameter holding the deployed frontend image"
-  value       = module.compute.frontend_image_param
+output "image_params" {
+  description = "Map of service name -> SSM parameter holding its deployed image URI"
+  value       = module.compute.image_params
 }
 
 output "ecr_repository_urls" {
@@ -61,4 +56,32 @@ output "dashboard_name" {
 output "web_acl_arn" {
   description = "WAF web ACL ARN"
   value       = module.alb.web_acl_arn
+}
+
+# --- Kubernetes (only populated when enable_eks = true) ---
+output "eks_cluster_name" {
+  description = "EKS cluster name (used by `aws eks update-kubeconfig`)"
+  value       = var.enable_eks ? module.eks[0].cluster_name : ""
+}
+
+output "eks_cluster_endpoint" {
+  description = "EKS control plane endpoint"
+  value       = var.enable_eks ? module.eks[0].cluster_endpoint : ""
+  sensitive   = true
+}
+
+output "eks_connect_command" {
+  description = "Command to connect kubectl to the EKS cluster"
+  value       = var.enable_eks ? "aws eks update-kubeconfig --name ${module.eks[0].cluster_name} --region ${var.aws_region}" : ""
+}
+
+# --- Jenkins (only populated when enable_jenkins = true) ---
+output "jenkins_url" {
+  description = "Jenkins controller URL"
+  value       = var.enable_jenkins ? module.jenkins[0].jenkins_url : ""
+}
+
+output "jenkins_public_ip" {
+  description = "Public IP of the Jenkins controller"
+  value       = var.enable_jenkins ? module.jenkins[0].jenkins_public_ip : ""
 }

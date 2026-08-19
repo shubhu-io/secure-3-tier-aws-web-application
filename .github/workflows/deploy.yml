@@ -1,8 +1,9 @@
 name: Deploy
 
 # Runs when code lands on main.
-# Full pipeline: test -> build -> trivy -> push ECR -> update SSM params
-#              -> trigger ASG instance refresh -> smoke test
+# Generic pipeline driven by stack.json:
+#   build + scan + push every service to ECR -> update SSM params
+#     -> trigger ASG instance refresh -> smoke test -> (optional) EKS deploy
 #
 # Required GitHub repository secrets:
 #   AWS_ACCESS_KEY_ID       IAM user keys (attach the CI/CD IAM policy)
@@ -23,6 +24,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Install jq (if missing)
+        run: command -v jq || sudo apt-get install -y jq
+
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -30,39 +34,11 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
 
-      - name: Backend tests
-        working-directory: application/backend
-        run: |
-          npm ci
-          npm test
-          npm audit --audit-level=high
-
       - name: Login to ECR
         run: bash cicd/scripts/ecr-login.sh "${{ secrets.AWS_REGION }}"
 
-      - name: Build + push backend image
-        run: bash cicd/scripts/build-and-push.sh backend "${{ github.sha }}" "${{ secrets.AWS_REGION }}" "${{ secrets.ECR_PROJECT }}" "${{ secrets.ECR_ENV }}"
-
-      - name: Build + push frontend image
-        run: bash cicd/scripts/build-and-push.sh frontend "${{ github.sha }}" "${{ secrets.AWS_REGION }}" "${{ secrets.ECR_PROJECT }}" "${{ secrets.ECR_ENV }}"
-
-      - name: Trivy scan backend image
-        uses: aquasecurity/trivy-action@0.28.0
-        with:
-          image-ref: "${{ secrets.ECR_PROJECT }}-${{ secrets.ECR_ENV }}-backend:${{ github.sha }}"
-          format: table
-          exit-code: 1
-          ignore-unfixed: true
-          severity: CRITICAL,HIGH
-
-      - name: Trivy scan frontend image
-        uses: aquasecurity/trivy-action@0.28.0
-        with:
-          image-ref: "${{ secrets.ECR_PROJECT }}-${{ secrets.ECR_ENV }}-frontend:${{ github.sha }}"
-          format: table
-          exit-code: 1
-          ignore-unfixed: true
-          severity: CRITICAL,HIGH
+      - name: Build + scan + push every service
+        run: bash cicd/scripts/stack-push.sh "${{ github.sha }}" "${{ secrets.AWS_REGION }}" "${{ secrets.ECR_PROJECT }}" "${{ secrets.ECR_ENV }}"
 
       - name: Update deploy parameters + trigger instance refresh
         run: bash cicd/scripts/deploy-ec2.sh "${{ github.sha }}" "${{ secrets.AWS_REGION }}" "${{ secrets.ECR_ENV }}" "${{ secrets.ECR_PROJECT }}"
@@ -72,3 +48,29 @@ jobs:
           ALB_URL: ${{ secrets.ALB_URL }}
           ATTEMPTS: "36"
         run: bash cicd/scripts/smoke-test.sh
+
+  deploy-eks:
+    name: Deploy to EKS
+    # Opt-in: set the repository variable DEPLOY_EKS=true (Settings → Variables).
+    # Requires the Terraform EKS module applied (enable_eks=true).
+    if: vars.DEPLOY_EKS == 'true'
+    needs: deploy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Install kubectl
+        run: |
+          curl -sLO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+          chmod +x kubectl
+          sudo mv kubectl /usr/local/bin/kubectl
+
+      - name: Deploy to EKS + smoke test
+        run: bash cicd/scripts/deploy-eks.sh "${{ github.sha }}" "${{ secrets.AWS_REGION }}" "${{ secrets.ECR_ENV }}" "${{ secrets.ECR_PROJECT }}"

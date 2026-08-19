@@ -13,6 +13,9 @@ CREATE TABLE IF NOT EXISTS items (
   description TEXT,
   created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+CREATE INDEX IF NOT EXISTS idx_items_user_id ON items(user_id);
+CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
 `;
 
 export async function initDb(pool) {

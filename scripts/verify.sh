@@ -53,7 +53,7 @@ aws ecr describe-repositories --region "$REGION" \
 
 echo ""
 echo "===== 7. SSM deploy parameters ====="
-aws ssm get-parameter --name "/secure-ntier/${ENV_NAME}/backend-image" --region "$REGION" --query 'Parameter.Value' --output text
+aws ssm get-parameter --name "/${PROJECT}/${ENV_NAME}/backend-image" --region "$REGION" --query 'Parameter.Value' --output text
 
 echo ""
 echo "===== Verification complete ====="

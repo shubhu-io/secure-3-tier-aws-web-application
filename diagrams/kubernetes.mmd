@@ -1,0 +1,33 @@
+%% ============================================================================
+%% Diagram 9 - Kubernetes (EKS) deployment
+%% Purpose: the modern deployment path - EKS cluster + managed node group
+%%          replacing (or running alongside) EC2 + Docker Compose
+%% ============================================================================
+flowchart TD
+    U[Internet User] --> NLB[AWS NLB<br/>frontend Service :80]
+    NLB --> F[frontend pods<br/>Nginx serves SPA + proxies /api]
+    F -->|/api, /health| B[backend pods<br/>Node/Express]
+    B -->|postgres 5432| RDS[(RDS PostgreSQL<br/>private subnets)]
+
+    subgraph EKS[EKS cluster - secure-ntier-dev-eks]
+        subgraph NS[namespace: secure-ntier]
+            F
+            B
+            CM[ConfigMap app-config]
+            SEC[Secret app-db-secret<br/>materialized from AWS Secrets Manager]
+            HPA[HPA backend<br/>CPU > 70%]
+            PDB[PDB backend<br/>minAvailable 1]
+        end
+        NG[Managed node group<br/>t3.medium x2-4 - private app subnets]
+    end
+
+    B --> SEC
+    B --> CM
+    HPA --> B
+    PDB --> B
+    NG --> F
+    NG --> B
+
+    CI[CI/CD pipeline] -->|aws eks update-kubeconfig<br/>kubectl apply -k kubernetes/| EKS
+    SM[AWS Secrets Manager<br/>DB credentials + JWT secret] -->|deploy script reads| SEC
+    ECR[Amazon ECR<br/>backend / frontend images] --> NG

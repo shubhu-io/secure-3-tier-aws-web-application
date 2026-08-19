@@ -33,3 +33,17 @@ domain_name = "app.example.com"      # <YOUR_DOMAIN> - REQUIRED for HTTPS in pro
 notification_email = "ops@example.com"    # <YOUR_EMAIL>
 
 repositories = ["backend", "frontend"]
+
+# --- Kubernetes (optional, costly) ---
+# Set to true to also provision an EKS cluster + managed node group.
+enable_eks = false
+
+# IAM principal (user/role ARN) granted cluster admin for CI/CD kubectl.
+# eks_ci_iam_arn = "arn:aws:iam::123456789012:role/github-actions-cicd"
+
+# --- Jenkins (optional, alternative to GitHub Actions) ---
+# In prod, prefer GitHub Actions (managed) over self-hosted Jenkins unless you
+# have a reason to run your own. If you do, LOCK the ingress CIDRs to your IPs.
+enable_jenkins = false
+# jenkins_ingress_cidrs = ["203.0.113.5/32"]
+# jenkins_key_name = "prod-jenkins-key"

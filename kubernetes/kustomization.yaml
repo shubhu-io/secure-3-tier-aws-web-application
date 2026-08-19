@@ -1,0 +1,22 @@
+# ============================================================================
+# Kustomize build for the STATIC support resources only.
+#
+#   kubectl apply -k kubernetes/
+#
+# The per-service Deployment / Service / HPA / PDB manifests are NOT listed
+# here - they are rendered at deploy time from stack.json by
+# kubernetes/scripts/render-manifests.sh (the single source of truth), so a new
+# service needs only a stack.json entry. See scripts/deploy.sh.
+#
+# The app-db-secret is intentionally NOT listed here: it contains the real DB
+# credentials + JWT secret and is created at deploy time from AWS Secrets
+# Manager (see scripts/deploy.sh and secret.yaml.example).
+# ============================================================================
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: secure-ntier
+
+resources:
+  - namespace.yaml
+  - configmap.yaml

@@ -245,8 +245,44 @@ is the smallest design that still meets those.
 
 **Q: What would you add in production?** — OIDC for CI, multi-AZ on,
 deletion-protection, GuardDuty/Config, OpenSearch log analytics, blue/green or
-canary deploys, a second region for DR, and ECS/Fargate or EKS if the fleet
-outgrows EC2.
+canary deploys, HTTPS+WAF at the EKS edge, IRSA/External Secrets, and a second
+region for DR. (EKS is already in the repo as an optional path - `enable_eks`.)
+
+---
+
+## 11. Kubernetes
+
+**Q: Why EKS instead of just EC2 + Docker Compose?** — Compose gives you a
+fixed set of containers on one host; Kubernetes gives declarative desired
+state, rolling updates, self-healing (liveness/readiness probes), pod-level
+autoscaling (HPA) and a real rollback primitive (`kubectl rollout undo`). For
+this project EKS is an **optional coexisting path**, enabled with `enable_eks`.
+
+**Q: How does the app reach the private RDS from a pod?** — The node group runs
+in the private app subnets. The EKS cluster security group is added as a source
+to the DB security group on 5432, so pods reach RDS through the node ENIs -
+RDS is never public.
+
+**Q: How do you avoid secrets in Git / in image layers?** — `deploy.sh` reads
+the DB credentials + JWT secret from AWS Secrets Manager at deploy time and
+materialises them into a Kubernetes Secret (`app-db-secret`) that the backend
+Deployment loads via `secretRef`. Nothing secret is committed. Production
+upgrade: IRSA / External Secrets Operator.
+
+**Q: What's the difference between a Deployment, Service and HPA?** — A
+Deployment is the declarative desired state (replicas, image, probes). A
+Service is a stable network endpoint that load-balances to pods (ClusterIP
+internally, LoadBalancer for the public NLB). An HPA watches CPU (or custom
+metrics) and changes the replica count.
+
+**Q: How does a rolling update + rollback work?** — `kubectl set image` triggers
+a RollingUpdate (maxUnavailable 0, maxSurge 1) that swaps pods one at a time
+using the readiness probe. If the new revision is bad, `kubectl rollout undo
+deployment/backend` re-points to the previous revision.
+
+**Q: What is a PodDisruptionBudget?** — A policy that caps how many pods can be
+voluntarily evicted during node drains / cluster upgrades. Here `minAvailable:
+1` guarantees the backend never drops to zero during maintenance.
 
 ---
 

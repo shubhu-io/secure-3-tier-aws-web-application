@@ -1,0 +1,19 @@
+# ============================================================================
+# Non-secret application configuration shared by every service.
+# Secret values (DB credentials, JWT secret, DB host/port) are injected from a
+# Kubernetes Secret that the pipeline materializes at deploy time - see
+# scripts/deploy.sh and secret.yaml.example. Never commit real secrets here.
+#
+# NOTE: PORT is NOT here - each Deployment sets it from stack.json (the render
+# script), and DB_* come from the app-db-secret Secret so every service follows
+# the same platform env contract as the EC2 path.
+# ============================================================================
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+  namespace: secure-ntier
+data:
+  NODE_ENV: "production"
+  DB_POOL_MAX: "10"
+  JWT_EXPIRES_IN: "8h"

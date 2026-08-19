@@ -65,18 +65,43 @@ flowchart TD
 ```mermaid
 flowchart LR
     D[Developer] -->|git push| GH[GitHub]
-    GH --> CI[CI: test + lint + scan]
-    CI --> B[Docker build]
-    B --> TR[Trivy scan]
-    TR --> ECR[Amazon ECR]
-    ECR --> DEP[Update SSM param + ASG refresh]
-    DEP --> EC2[EC2]
+    GH --> CI[CI: stack-validate + stack-ci<br/>test + audit + build + Trivy]
+    CI --> ECR[Amazon ECR]
+    ECR --> DEP[stack-push + deploy-ec2<br/>SSM param + ASG refresh]
+    DEP --> EC2[EC2 + Docker Compose]
+    ECR --> DEPK[deploy-eks<br/>render k8s manifests from stack.json]
+    DEPK --> EKS[Amazon EKS]
     EC2 --> HC[Health check]
-    HC --> ALB
+    EKS --> HC2[Health check]
 ```
 
-The image pushed to ECR is tagged with the git SHA; the deployed instances
-pull exactly that image. **What you tested is what you deploy.**
+Every pipeline stage reads **`stack.json`** — the single source of truth for
+the tech stack (services, ports, toolchain, database engine/version, runtimes).
+CI/CD, EC2 user-data, and Kubernetes manifest rendering all consume that one
+file, so the same image pushed to ECR (tagged with the git SHA) is deployed to
+whichever runtime is enabled. **What you tested is what you deploy.**
+
+Two engines run these pipelines — **GitHub Actions** (`.github/workflows/`) or
+**Jenkins** (`cicd/Jenkinsfile` + `cicd/Jenkinsfile-ci`) — sharing the exact
+same `cicd/scripts/`.
+
+## Deployment sizes — from small to production
+
+The same Terraform + pipeline code scales from a cheap learning lab to a
+hardened production platform; you flip variables, not architecture:
+
+| | **Small (dev lab)** | **Medium** | **Production** |
+| --- | --- | --- | --- |
+| Instances | 2× `t3.micro`, `min=1` | 2–3× `t3.small` | 3+× `t3.medium`+, ASG 70% CPU scaling |
+| Database | `db.t3.micro`, single-AZ | `db.t3.small` | `db.t3.medium`+, `multi_az=true`, deletion protection |
+| NAT | 1 (shared) | 1 | 2 (one per AZ) |
+| HTTPS / WAF | HTTP only (no domain) | ACM + WAF | ACM + WAF + rate limiting + OIDC |
+| CI/CD | GitHub Actions | GitHub Actions | GitHub Actions **OIDC** (or Jenkins) |
+| Runtime | EC2 + Compose | EC2 + Compose | + EKS (`enable_eks`), HPA/PDB |
+| Jenkins | — | opt-in `enable_jenkins` | self-hosted (locked-down CIDRs) |
+
+The "dev → production" story is one `.tfvars` file and a few repo secrets —
+never a fork or a rewrite.
 
 ## Key properties of this architecture
 
@@ -105,3 +130,22 @@ Each decision is recorded as an **Architecture Decision Record** in
 | Docker on EC2 | [ADR-005](../adr/ADR-005-docker.md) |
 | Managed RDS (not self-hosted Postgres) | [ADR-006](../adr/ADR-006-rds.md) |
 | Multi-AZ deployment | [ADR-007](../adr/ADR-007-multi-az.md) |
+| Managed Kubernetes (Amazon EKS) | [ADR-008](../adr/ADR-008-eks.md) |
+
+## Deployment runtimes
+
+The same images can run on either runtime (see [`kubernetes.md`](./kubernetes.md)).
+Manifests are **rendered from `stack.json`** at deploy time, never hand-maintained
+per service:
+
+| Runtime | Provisioned by | Deploy trigger | Rollback |
+| ------- | -------------- | -------------- | -------- |
+| **EC2 + Docker Compose** | `modules/compute` (default) | SSM deploy pointer + ASG refresh | re-point the SSM parameter |
+| **EKS** (optional, `enable_eks`) | `modules/eks` | `kubernetes/scripts/render-manifests.sh` → apply → roll | `kubectl rollout undo` |
+
+## CI/CD engines
+
+| Engine | CI | Deploy | Notes |
+| ------ | -- | ------ | ----- |
+| **GitHub Actions** | `.github/workflows/ci.yml` | `.github/workflows/deploy.yml` | zero infrastructure |
+| **Jenkins** (opt-in, `enable_jenkins`) | `cicd/Jenkinsfile-ci` | `cicd/Jenkinsfile` | self-hosted module in `terraform/modules/jenkins/` |

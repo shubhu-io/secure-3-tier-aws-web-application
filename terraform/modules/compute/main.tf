@@ -6,9 +6,8 @@
 # ============================================================================
 
 locals {
-  name_prefix          = "${var.project_name}-${var.environment}"
-  backend_image_param  = "/secure-ntier/${var.environment}/backend-image"
-  frontend_image_param = "/secure-ntier/${var.environment}/frontend-image"
+  name_prefix  = "${var.project_name}-${var.environment}"
+  image_params = { for s in var.services : s.name => "/${var.project_name}/${var.environment}/${s.name}-image" }
 }
 
 # ---------------------------------------------------------------------------
@@ -65,8 +64,8 @@ resource "aws_iam_role_policy" "instance" {
         Effect = "Allow"
         Action = ["ssm:GetParameter"]
         Resource = [
-          "arn:aws:ssm:${var.region}:*:parameter/secure-ntier/${var.environment}/backend-image",
-          "arn:aws:ssm:${var.region}:*:parameter/secure-ntier/${var.environment}/frontend-image",
+          for s in var.services :
+          "arn:aws:ssm:${var.region}:*:parameter/${var.project_name}/${var.environment}/${s.name}-image"
         ]
       },
       {
@@ -96,7 +95,7 @@ resource "aws_iam_role_policy" "instance" {
           "logs:PutLogEvents",
           "logs:DescribeLogStreams"
         ]
-        Resource = ["arn:aws:logs:${var.region}:*:log-group:/secure-ntier-${var.environment}/*:*"]
+        Resource = ["arn:aws:logs:${var.region}:*:log-group:/${var.project_name}-${var.environment}/*:*"]
       }
     ]
   })
@@ -114,23 +113,15 @@ resource "aws_iam_instance_profile" "instance" {
 }
 
 # ---------------------------------------------------------------------------
-# SSM Parameters - the "deploy pointer". CI/CD updates these, then triggers
-# an instance refresh; new instances pull the new images at boot.
+# SSM Parameters - the "deploy pointer". CI/CD updates these (one per service),
+# then triggers an instance refresh; new instances pull the new images at boot.
 # ---------------------------------------------------------------------------
-resource "aws_ssm_parameter" "backend_image" {
-  name  = local.backend_image_param
-  type  = "String"
-  value = var.initial_backend_image
+resource "aws_ssm_parameter" "image" {
+  for_each = { for s in var.services : s.name => s }
 
-  tags = {
-    Environment = var.environment
-  }
-}
-
-resource "aws_ssm_parameter" "frontend_image" {
-  name  = local.frontend_image_param
+  name  = local.image_params[each.key]
   type  = "String"
-  value = var.initial_frontend_image
+  value = "pending"
 
   tags = {
     Environment = var.environment
@@ -152,12 +143,12 @@ resource "aws_launch_template" "this" {
   vpc_security_group_ids = [var.app_sg_id]
 
   user_data = base64encode(templatefile("${path.module}/user-data.sh", {
-    region               = var.region
-    environment          = var.environment
-    app_name             = local.name_prefix
-    secret_name          = var.db_secret_arn
-    backend_image_param  = local.backend_image_param
-    frontend_image_param = local.frontend_image_param
+    region        = var.region
+    environment   = var.environment
+    project_name  = var.project_name
+    app_name      = local.name_prefix
+    secret_name   = var.db_secret_arn
+    services_json = jsonencode(var.services)
   }))
 
   # Encrypted EBS root volume

@@ -1,26 +1,27 @@
 %% ============================================================================
-%% Diagram 4 - CI/CD pipeline
-%% Purpose: how a commit becomes a deployed, verified application
+%% Diagram 4 - CI/CD pipeline (manifest-driven)
+%% Purpose: how a commit becomes a deployed, verified application.
+%% Every stage reads stack.json (the single source of truth for the stack),
+%% so both engines (GitHub Actions / Jenkins) share the same scripts and a new
+%% service needs only a stack.json entry.
 %% ============================================================================
 flowchart TD
-    DEV[Developer] -->|git push to main| GH[GitHub]
-    GH -->|triggers Deploy workflow| CH[Checkout]
-    CH --> AWS_CREDS[Configure AWS credentials<br/>GitHub secrets]
-    AWS_CREDS --> TEST[Backend tests + npm audit]
-    TEST --> LOGIN[ECR login]
-    LOGIN --> BUILD[Build + push backend image]
-    LOGIN --> BUILDF[Build + push frontend image]
-    BUILD --> SCAN[Trivy scan CRITICAL/HIGH]
-    BUILDF --> SCANF[Trivy scan CRITICAL/HIGH]
-    SCAN -->|pass| DEPLOY
-    SCANF -->|pass| DEPLOY
-    DEPLOY[Update SSM image params<br/>+ start ASG instance refresh]
+    DEV[Developer] -->|git push to main| GH[GitHub / Jenkins]
+    GH -->|triggers Deploy pipeline| CH[Checkout]
+    CH --> VAL[stack-validate<br/>validate stack.json manifest]
+    VAL --> CI[CI per service - stack-ci.sh<br/>ci_steps in toolchain + Docker build + Trivy scan]
+    CI -->|pass| LOGIN[ECR login]
+    LOGIN --> PUSH[stack-push<br/>build + push every service :git-sha]
+    PUSH --> DEPLOY[deploy-ec2<br/>update SSM image params per service<br/>+ start ASG instance refresh]
+    PUSH --> DEPK[optional: deploy-eks<br/>render k8s manifests from stack.json + apply]
     DEPLOY --> SMOKE[Smoke test against ALB]
-    SMOKE -->|healthy| DONE[Deployed ✓]
+    DEPK --> SMOKE2[Smoke test against NLB]
+    SMOKE -->|healthy| DONE[Deployed to EC2 ✓]
+    SMOKE2 -->|healthy| DONE2[Deployed to EKS ✓]
 
-    FAIL[Scan finds issues] --> BLOCK[Pipeline fails - nothing deployed]
+    CI -->|scan finds issues| BLOCK[Pipeline fails - nothing deployed]
 
-    TRIVY_TRIGGER[PR / push to develop] --> CI
-    subgraph CI[CI workflow]
-        A[Unit tests] --> B[Frontend build] --> C[Docker build] --> D[Trivy scan] --> E[Terraform validate]
+    PR[PR / push to develop] --> CICFG
+    subgraph CICFG[CI workflow - ci.yml / Jenkinsfile-ci]
+        A[stack-validate] --> B[stack-ci: test + audit + build + Trivy] --> C[Terraform fmt + validate]
     end

@@ -1,0 +1,40 @@
+{
+  "project": "secure-ntier",
+  "services": [
+    {
+      "name": "backend",
+      "language": "node",
+      "port": 3000,
+      "public": false,
+      "source_dir": "application/backend",
+      "dockerfile": "docker/backend/Dockerfile",
+      "toolchain": "node:20-alpine",
+      "ci_steps": [
+        { "name": "install", "command": "npm ci" },
+        { "name": "test", "command": "npm test" },
+        { "name": "audit", "command": "npm audit --audit-level=high" }
+      ],
+      "health_path": "/health"
+    },
+    {
+      "name": "frontend",
+      "language": "node",
+      "port": 80,
+      "public": true,
+      "source_dir": "application/frontend",
+      "dockerfile": "docker/frontend/Dockerfile",
+      "toolchain": "node:20-alpine",
+      "ci_steps": [
+        { "name": "install", "command": "npm ci" },
+        { "name": "build", "command": "npm run build" }
+      ],
+      "health_path": "/health"
+    }
+  ],
+  "database": {
+    "engine": "postgres",
+    "engine_version": "16.4",
+    "port": 5432
+  },
+  "runtime": ["ec2-compose", "eks"]
+}

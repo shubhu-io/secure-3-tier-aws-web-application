@@ -3,7 +3,12 @@ name: CI
 # Runs on pull requests and pushes to develop.
 # Goal: catch broken code BEFORE it reaches main.
 #
-# Stages: checkout -> install -> test -> audit -> docker build -> trivy scan
+# Generic: every job reads the stack.json manifest, so any service (any
+# language/framework) is tested, built and scanned with no workflow edits.
+#
+#   validate        -> stack.json schema + terraform fmt/validate
+#   build-and-scan  -> per-service ci_steps (in toolchain containers),
+#                      docker build, trivy scan
 
 on:
   pull_request:
@@ -12,85 +17,17 @@ on:
     branches: [develop]
 
 jobs:
-  test-backend:
-    name: Backend unit & API tests
+  validate:
+    name: Manifest + Terraform validate
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: npm
-          cache-dependency-path: application/backend/package-lock.json
+      - name: Install jq (if missing)
+        run: command -v jq || sudo apt-get install -y jq
 
-      - name: Install dependencies
-        working-directory: application/backend
-        run: npm ci
-
-      - name: Run tests
-        working-directory: application/backend
-        run: npm test
-
-      - name: npm audit (fail on high/critical)
-        working-directory: application/backend
-        run: npm audit --audit-level=high
-
-  build-frontend:
-    name: Frontend build
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: npm
-          cache-dependency-path: application/frontend/package-lock.json
-
-      - name: Install dependencies
-        working-directory: application/frontend
-        run: npm ci
-
-      - name: Build
-        working-directory: application/frontend
-        run: npm run build
-
-  docker-build-and-scan:
-    name: Docker build + Trivy scan
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Build backend image
-        run: docker build -f docker/backend/Dockerfile -t secure-ntier-backend:ci .
-
-      - name: Build frontend image
-        run: docker build -f docker/frontend/Dockerfile -t secure-ntier-frontend:ci .
-
-      - name: Trivy scan backend image
-        uses: aquasecurity/trivy-action@0.28.0
-        with:
-          image-ref: secure-ntier-backend:ci
-          format: table
-          exit-code: 1
-          ignore-unfixed: true
-          severity: CRITICAL,HIGH
-
-      - name: Trivy scan frontend image
-        uses: aquasecurity/trivy-action@0.28.0
-        with:
-          image-ref: secure-ntier-frontend:ci
-          format: table
-          exit-code: 1
-          ignore-unfixed: true
-          severity: CRITICAL,HIGH
-
-  terraform-validate:
-    name: Terraform validate
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
+      - name: Validate stack manifest
+        run: bash cicd/scripts/stack-validate.sh
 
       - uses: hashicorp/setup-terraform@v3
         with:
@@ -105,3 +42,15 @@ jobs:
         run: |
           terraform init -backend=false -input=false
           terraform validate
+
+  build-and-scan:
+    name: Build + scan all services
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install jq (if missing)
+        run: command -v jq || sudo apt-get install -y jq
+
+      - name: CI per service (test, audit, build, trivy scan)
+        run: bash cicd/scripts/stack-ci.sh

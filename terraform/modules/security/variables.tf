@@ -28,3 +28,9 @@ variable "db_port" {
   type        = number
   default     = 5432
 }
+
+variable "db_ingress_extra_sg_ids" {
+  description = "Extra security groups allowed to reach the database (e.g. the EKS cluster security group)"
+  type        = list(string)
+  default     = []
+}

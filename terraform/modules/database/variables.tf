@@ -28,10 +28,22 @@ variable "db_instance_class" {
   default     = "db.t3.micro"
 }
 
+variable "engine" {
+  description = "RDS engine: postgres | mysql | mariadb (from stack.json)"
+  type        = string
+  default     = "postgres"
+}
+
 variable "engine_version" {
-  description = "PostgreSQL engine version"
+  description = "RDS engine version (must be valid for engine)"
   type        = string
   default     = "16.4"
+}
+
+variable "port" {
+  description = "Database port (5432 postgres, 3306 mysql/mariadb)"
+  type        = number
+  default     = 5432
 }
 
 variable "db_name" {

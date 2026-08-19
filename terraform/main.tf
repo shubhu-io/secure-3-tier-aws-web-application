@@ -12,6 +12,13 @@ locals {
     data.aws_availability_zones.available.names[0],
     data.aws_availability_zones.available.names[1],
   ]
+
+  # The tech stack lives in stack.json (single source of truth): which
+  # services to run, the database engine/version/port and the runtimes.
+  stack = jsondecode(file("${path.root}/../stack.json"))
+
+  services = local.stack.services
+  db_port  = local.stack.database.engine == "postgres" ? 5432 : 3306
 }
 
 # ---------------------------------------------------------------------------
@@ -38,11 +45,12 @@ module "vpc" {
 module "security" {
   source = "./modules/security"
 
-  project_name = var.project_name
-  environment  = var.environment
-  vpc_id       = module.vpc.vpc_id
-  app_port     = 80
-  db_port      = 5432
+  project_name            = var.project_name
+  environment             = var.environment
+  vpc_id                  = module.vpc.vpc_id
+  app_port                = 80
+  db_port                 = local.db_port
+  db_ingress_extra_sg_ids = var.enable_eks ? [module.eks[0].cluster_security_group_id] : []
 }
 
 # ---------------------------------------------------------------------------
@@ -130,6 +138,9 @@ module "database" {
   environment           = var.environment
   db_subnet_ids         = module.vpc.db_subnet_ids
   db_sg_id              = module.security.db_sg_id
+  engine                = local.stack.database.engine
+  engine_version        = local.stack.database.engine_version
+  port                  = local.db_port
   db_instance_class     = var.db_instance_class
   db_multi_az           = var.db_multi_az
   db_allocated_storage  = var.db_allocated_storage
@@ -153,6 +164,7 @@ module "compute" {
   app_sg_id                  = module.security.app_sg_id
   target_group_arn           = module.alb.target_group_arn
   db_secret_arn              = module.database.db_secret_arn
+  services                   = local.services
   instance_type              = var.instance_type
   min_size                   = var.asg_min_size
   max_size                   = var.asg_max_size
@@ -174,6 +186,45 @@ module "monitoring" {
   target_group_arn        = module.alb.target_group_arn
   db_instance_id          = module.database.db_instance_id
   db_allocated_storage_gb = var.db_allocated_storage
+}
+
+# ---------------------------------------------------------------------------
+# 8b. Kubernetes (optional) - EKS cluster + managed node group
+# ---------------------------------------------------------------------------
+module "eks" {
+  count = var.enable_eks ? 1 : 0
+
+  source = "./modules/eks"
+
+  project_name        = var.project_name
+  environment         = var.environment
+  app_subnet_ids      = module.vpc.app_subnet_ids
+  cluster_version     = var.eks_cluster_version
+  node_instance_types = var.eks_node_instance_types
+  node_min_size       = var.eks_node_min_size
+  node_desired_size   = var.eks_node_desired_size
+  node_max_size       = var.eks_node_max_size
+  ci_iam_arn          = var.eks_ci_iam_arn
+}
+
+# ---------------------------------------------------------------------------
+# 8c. Jenkins (optional) - self-hosted CI/CD controller (alternative engine)
+# ---------------------------------------------------------------------------
+module "jenkins" {
+  count = var.enable_jenkins ? 1 : 0
+
+  source = "./modules/jenkins"
+
+  project_name      = var.project_name
+  environment       = var.environment
+  region            = var.aws_region
+  vpc_id            = module.vpc.vpc_id
+  public_subnet_ids = module.vpc.public_subnet_ids
+  cicd_policy_arn   = aws_iam_policy.cicd.arn
+  ingress_cidrs     = var.jenkins_ingress_cidrs
+  instance_type     = var.jenkins_instance_type
+  key_name          = var.jenkins_key_name
+  kubectl_version   = var.jenkins_kubectl_version
 }
 
 # ---------------------------------------------------------------------------
@@ -291,8 +342,8 @@ resource "aws_iam_policy" "cicd" {
           "ssm:GetParameter"
         ]
         Resource = [
-          "arn:aws:ssm:${var.aws_region}:*:parameter/secure-ntier/${var.environment}/backend-image",
-          "arn:aws:ssm:${var.aws_region}:*:parameter/secure-ntier/${var.environment}/frontend-image",
+          "arn:aws:ssm:${var.aws_region}:*:parameter/${var.project_name}/${var.environment}/backend-image",
+          "arn:aws:ssm:${var.aws_region}:*:parameter/${var.project_name}/${var.environment}/frontend-image",
         ]
       },
       {
@@ -302,6 +353,16 @@ resource "aws_iam_policy" "cicd" {
           "autoscaling:StartInstanceRefresh",
           "autoscaling:DescribeAutoScalingGroups",
           "autoscaling:DescribeInstanceRefreshes"
+        ]
+        Resource = ["*"]
+      },
+      {
+        Sid    = "KubernetesAccess"
+        Effect = "Allow"
+        Action = [
+          "eks:DescribeCluster",
+          "eks:ListClusters",
+          "eks:ListAccessEntries"
         ]
         Resource = ["*"]
       },

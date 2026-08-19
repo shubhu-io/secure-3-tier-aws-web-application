@@ -92,7 +92,7 @@ resource "aws_security_group" "db" {
     from_port       = var.db_port
     to_port         = var.db_port
     protocol        = "tcp"
-    security_groups = [aws_security_group.app.id]
+    security_groups = concat([aws_security_group.app.id], var.db_ingress_extra_sg_ids)
   }
 
   egress {

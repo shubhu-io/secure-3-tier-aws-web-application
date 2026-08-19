@@ -1,8 +1,8 @@
 # Application tests
 
 The backend has unit + API tests in `application/backend/test/` (run with
-`npm test`). This folder holds the integration scripts that run the full
-application through real HTTP and a real database:
+`npm test`). The integration scripts that run the full application through
+real HTTP and a real database live in the repo-root `tests/` folder:
 
 - `tests/application/integration.sh` — API flow test against any URL
   (local `http://localhost` or the deployed ALB).

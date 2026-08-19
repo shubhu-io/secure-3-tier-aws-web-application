@@ -21,12 +21,17 @@ The CI/CD IAM user needs the least-privilege policy in
 ## Enable the workflows
 
 The workflows live in `.github/workflows/` and are enabled automatically once
-your repository is on GitHub.
+your repository is on GitHub. Both are **driven by `stack.json`** — every stage
+loops over the manifest, so a new service only needs a `stack.json` entry.
 
 | Workflow | Trigger | Effect |
 | -------- | ------- | ------ |
-| `ci.yml` | PRs + pushes to `develop` | Gates merges |
-| `deploy.yml` | push to `main` | Deploys to AWS |
+| `ci.yml` | PRs + pushes to `develop` | Gates merges: manifest validate → per-service test/build/scan → Terraform validate |
+| `deploy.yml` | push to `main` | Deploys to AWS: build+push every service → SSM → instance refresh → smoke test |
+
+> **Jenkins alternative?** The same pipelines exist as `cicd/Jenkinsfile` +
+> `cicd/Jenkinsfile-ci`. Provision a controller with the Terraform Jenkins
+> module (`enable_jenkins = true`) — see [`docs/deployment/jenkins.md`](./jenkins.md).
 
 ## Run your first deployment
 
@@ -41,8 +46,8 @@ Then: GitHub → your repo → **Actions** → the `Deploy` workflow.
 Expected flow:
 
 ```text
-Backend tests ✔ → ECR login ✔ → Build+push backend ✔ → Build+push frontend ✔
-→ Trivy backend ✔ → Trivy frontend ✔ → Update params + instance refresh ✔
+stack-validate ✔ → CI per service (tests + audit + build + trivy) ✔
+→ ECR login ✔ → Build + push every service ✔ → Update params + instance refresh ✔
 → Smoke test ✔ → Done
 ```
 
@@ -55,8 +60,8 @@ curl -s <ALB_URL>/health
 
 ## Instance refresh details
 
-The pipeline updates two SSM parameters with `:<git-sha>`-tagged image URIs,
-then calls:
+The pipeline updates the SSM parameters with `:<git-sha>`-tagged image URIs
+(**one parameter per service**, read from `stack.json`), then calls:
 
 ```bash
 aws autoscaling start-instance-refresh \

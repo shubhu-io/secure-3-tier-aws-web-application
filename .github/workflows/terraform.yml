@@ -94,6 +94,14 @@ jobs:
         with:
           terraform_version: ${{ env.TF_VERSION }}
 
+      - name: Prepare tfvars
+        working-directory: terraform
+        run: |
+          if [ ! -f "environments/${{ env.TARGET_ENV }}/terraform.tfvars" ]; then
+            cp "environments/${{ env.TARGET_ENV }}/terraform.tfvars.example" \
+               "environments/${{ env.TARGET_ENV }}/terraform.tfvars"
+          fi
+
       - name: Terraform Init
         working-directory: terraform
         run: terraform init -backend-config="environments/${{ env.TARGET_ENV }}/backend.hcl" -input=false
@@ -158,6 +166,13 @@ jobs:
         with:
           terraform_version: ${{ env.TF_VERSION }}
 
+      - name: Prepare tfvars (dev)
+        working-directory: terraform
+        run: |
+          if [ ! -f "environments/dev/terraform.tfvars" ]; then
+            cp "environments/dev/terraform.tfvars.example" "environments/dev/terraform.tfvars"
+          fi
+
       - name: Terraform init + plan + apply (dev)
         working-directory: terraform
         run: |
@@ -194,6 +209,13 @@ jobs:
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: ${{ env.TF_VERSION }}
+
+      - name: Prepare tfvars (prod)
+        working-directory: terraform
+        run: |
+          if [ ! -f "environments/prod/terraform.tfvars" ]; then
+            cp "environments/prod/terraform.tfvars.example" "environments/prod/terraform.tfvars"
+          fi
 
       - name: Terraform init + plan + apply (prod)
         working-directory: terraform

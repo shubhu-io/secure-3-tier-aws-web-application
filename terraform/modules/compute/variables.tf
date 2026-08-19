@@ -73,20 +73,17 @@ variable "enable_detailed_monitoring" {
   default     = false
 }
 
+variable "services" {
+  description = "Application services from stack.json: each gets an SSM image parameter + a docker-compose service. `public` marks the web entry point (mapped to host port 80)."
+  type = list(object({
+    name   = string
+    port   = number
+    public = bool
+  }))
+}
+
 variable "health_check_grace_period" {
   description = "Seconds before ELB health checks start evaluating a new instance"
   type        = number
   default     = 180
-}
-
-variable "initial_backend_image" {
-  description = "Initial value of the backend image SSM parameter (CI/CD overrides it)"
-  type        = string
-  default     = ""
-}
-
-variable "initial_frontend_image" {
-  description = "Initial value of the frontend image SSM parameter (CI/CD overrides it)"
-  type        = string
-  default     = ""
 }

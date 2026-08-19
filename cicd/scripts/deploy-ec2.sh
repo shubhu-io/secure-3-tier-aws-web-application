@@ -2,21 +2,28 @@
 # ============================================================================
 # deploy-ec2.sh - point the environment at the new images and refresh the ASG
 # Usage: bash cicd/scripts/deploy-ec2.sh <tag> <region> <env> <project>
+#
+# Iterates over every service in stack.json so a new service only needs a
+# manifest entry - the SSM "deploy pointer" is updated per service, then one
+# rolling instance refresh picks them all up.
 # ============================================================================
 set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+INFO="$SCRIPT_DIR/stack-info.sh"
 
 TAG="${1:?usage: deploy-ec2.sh <tag> <region> <env> <project>}"
 REGION="${2:?region required}"
 ENV_NAME="${3:-dev}"
-PROJECT="${4:-secure-ntier}"
+PROJECT="${4:-$("$INFO" project)}"
 
 ACCOUNT_ID="$(aws sts get-caller-identity --query Account --output text)"
 
 # 1. Point the SSM "deploy pointer" parameters at the new images.
 #    Instances read these values on boot and pull that image from ECR.
-for repo in backend frontend; do
+for repo in $("$INFO" list); do
   URI="${ACCOUNT_ID}.dkr.ecr.${REGION}.amazonaws.com/${PROJECT}-${ENV_NAME}-${repo}"
-  PARAM="/secure-ntier/${ENV_NAME}/${repo}-image"
+  PARAM="/${PROJECT}/${ENV_NAME}/${repo}-image"
 
   aws ssm put-parameter \
     --name "$PARAM" \

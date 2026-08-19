@@ -11,6 +11,8 @@ Everything you need to build, deploy, operate, and extend the platform.
 | Prepare your AWS account | [`deployment/aws-setup.md`](./deployment/aws-setup.md) |
 | Deploy infrastructure with Terraform | [`deployment/terraform.md`](./deployment/terraform.md) |
 | Run and deploy the application | [`deployment/application.md`](./deployment/application.md) |
+| Deploy on Kubernetes (EKS) | [`deployment/eks.md`](./deployment/eks.md) |
+| Run a self-hosted Jenkins controller | [`deployment/jenkins.md`](./deployment/jenkins.md) |
 | Set up CI/CD | [`deployment/cicd.md`](./deployment/cicd.md) |
 
 ## Architecture
@@ -18,6 +20,7 @@ Everything you need to build, deploy, operate, and extend the platform.
 | Topic | Doc |
 | ----- | --- |
 | System overview | [`architecture/overview.md`](./architecture/overview.md) |
+| Kubernetes architecture | [`architecture/kubernetes.md`](./architecture/kubernetes.md) |
 | Network design (VPC, subnets, routing, CIDRs) | [`architecture/network.md`](./architecture/network.md) |
 | Security design (defense in depth) | [`architecture/security.md`](./architecture/security.md) |
 | CI/CD design | [`architecture/cicd.md`](./architecture/cicd.md) |

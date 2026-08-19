@@ -32,9 +32,12 @@ This guide has three parts:
 | **ECR** | ~$0 | storage is tiny | free tier generous |
 | **Data transfer** | ~$1–3 | reasonable dev use | trivial in dev |
 | **CloudTrail** (to S3) | ~$0–2 | trail itself free; S3 storage tiny | keep |
+| **EKS** *(optional)* | ~$73 control plane + ~$50 node group (2 × t3.medium) | Only when `enable_eks=true`; the most expensive add-on | leave `enable_eks=false` unless actively learning Kubernetes |
+| **Jenkins** *(optional)* | ~$15–25 (1 × t3.medium + EBS) | Only when `enable_jenkins=true`; overlaps GitHub Actions | run one CI/CD engine per repo |
 
-> **Rough dev running total: ≈ $95–$140/month.** "Running" = the resources
-> exist. Every day they exist, you pay. This is why cleanup matters.
+> **Rough dev running total: ≈ $95–$140/month** (≈ $220+/month with EKS,
+> ≈ $240+ with EKS **and** Jenkins enabled). "Running" = the resources exist.
+> Every day they exist, you pay. This is why cleanup matters.
 
 **Free tier offsets (may apply, depends on your account age):**
 
@@ -61,6 +64,7 @@ Goal: prove the architecture at minimal cost, destroy when done.
 | `deletion_protection` | `false` | destroy must actually work |
 | `domain_name` | `""` | skip ACM + Route 53 (plain HTTP ALB) |
 | `enable_detailed_monitoring` | auto-`false` for dev | avoids 1-min metric cost |
+| `enable_eks` / `enable_jenkins` | `false` | both optional engines are costly — leave off unless learning them |
 
 **Free-est learning path:** run the application 100% locally.
 
@@ -154,7 +158,7 @@ Then finish the manual items (this is the part people forget):
 Quick sweep:
 
 ```bash
-bash scripts/cleanup.sh --region eu-west-1 --project secure-ntier --env dev
+bash scripts/cleanup.sh eu-west-1 secure-ntier dev
 ```
 
 ---

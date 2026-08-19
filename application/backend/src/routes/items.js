@@ -49,9 +49,15 @@ export default function itemsRouter({ db, jwtSecret }) {
   // DELETE /api/items/:id - delete own item
   router.delete("/:id", async (req, res, next) => {
     try {
+      const id = Number(req.params.id);
+
+      if (!Number.isInteger(id) || id <= 0) {
+        return res.status(400).json({ error: "invalid item id" });
+      }
+
       const result = await db.query(
         "DELETE FROM items WHERE id = $1 AND user_id = $2 RETURNING id",
-        [req.params.id, req.userId]
+        [id, req.userId]
       );
 
       if (result.rows.length === 0) {

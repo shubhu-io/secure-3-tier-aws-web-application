@@ -8,43 +8,49 @@ tests. CI/CD makes deployment **automatic, gated, and reproducible**.
 
 ## Pipeline overview
 
+The pipelines are **manifest-driven**: every stage reads `stack.json`, so the
+number of services, their toolchains and their CI steps are data, not code.
+
 ```mermaid
 flowchart TD
     A[Developer pushes to main] --> B[Checkout]
-    B --> C[Backend tests]
-    C --> D[npm audit]
-    D --> E[Frontend build]
-    E --> F[Docker build backend + frontend]
-    F --> G[Trivy security scan]
-    G --> H[Push images to ECR :git-sha]
-    H --> I[Update SSM image parameters]
+    B --> V[stack-validate: validate stack.json]
+    V --> C[CI per service - stack-ci.sh<br/>toolchain ci_steps + Docker build + Trivy scan]
+    C --> H[stack-push: push every image to ECR :git-sha]
+    H --> I[deploy-ec2: update SSM image params per service]
     I --> J[Rolling ASG instance refresh]
     J --> K[Smoke test /health]
     K -->|pass| L[Deployed]
     K -->|fail| M[Pipeline fails - alert]
-    G -->|critical/high CVE| M
+    C -->|critical/high CVE| M
+    H --> I2[Optional: deploy-eks - render k8s manifests + apply + roll]
+    I2 --> K
 ```
 
-## Two workflows
+## Two engines, one pipeline
 
-| Workflow | Runs on | Purpose |
-| -------- | ------- | ------- |
-| `ci.yml` | PRs, pushes to `develop` | **Gate**: never merge broken code. Tests, audit, build, scan, terraform validate. |
-| `deploy.yml` | push to `main` | **Ship**: full build → scan → push → deploy → verify. |
+| Engine | CI | Deploy | Purpose |
+| ----- | --- | ------ | ------- |
+| GitHub Actions | `.github/workflows/ci.yml` | `.github/workflows/deploy.yml` | hosted, zero infra |
+| Jenkins (opt-in) | `cicd/Jenkinsfile-ci` | `cicd/Jenkinsfile` | self-hosted |
+
+Both call the identical `cicd/scripts/` (which read `stack.json`), so a deploy
+from either engine is byte-identical.
 
 ## Deploy mechanism (how instances get new code)
 
 The instances boot and run a fixed `user-data` script. The only thing that
-changes between releases is a value in **SSM Parameter Store**:
+changes between releases is a value in **SSM Parameter Store** — **one
+parameter per service**:
 
 ```text
 /secure-ntier/<env>/backend-image  = 123456789.dkr.ecr.eu-west-1.amazonaws.com/secure-ntier-dev-backend:<git-sha>
 /secure-ntier/<env>/frontend-image = 123456789.dkr.ecr.eu-west-1.amazonaws.com/secure-ntier-dev-frontend:<git-sha>
 ```
 
-CI/CD writes these parameters, then starts a **rolling instance refresh** on
-the ASG. Instances are replaced one at a time; each new instance reads the
-parameter at boot and pulls **that exact image**.
+CI/CD writes these parameters (iterating over `stack.json`), then starts a
+**rolling instance refresh** on the ASG. Instances are replaced one at a time;
+each new instance reads the parameter at boot and pulls **that exact image**.
 
 ### Why not just use `:latest`?
 
@@ -57,18 +63,21 @@ redeploy, could pull different images. Pinning the git SHA means:
 
 ## Where the pipeline runs
 
-GitHub Actions (free for public repos). It needs an IAM user with the
-least-privilege policy in [`security/iam/cicd-policy.json`](../../security/iam/cicd-policy.json)
-and the secrets documented in [`docs/deployment/cicd.md`](../deployment/cicd.md).
+- **GitHub Actions** (free for public repos). It needs an IAM user with the
+  least-privilege policy in [`security/iam/cicd-policy.json`](../../security/iam/cicd-policy.json)
+  and the secrets documented in [`docs/deployment/cicd.md`](../deployment/cicd.md).
+- **Jenkins** (optional): the Terraform `jenkins` module provisions a controller
+  that uses the same IAM policy via an instance role — no keys on the box
+  (see [`docs/deployment/jenkins.md`](../deployment/jenkins.md)).
 
 ## Gating / quality bar
 
 The pipeline **fails** (no deploy) when:
 
-- Any backend test fails.
-- `npm audit` finds high/critical vulnerabilities.
-- The frontend does not build.
-- Trivy finds CRITICAL or HIGH CVEs in an image.
+- `stack.json` fails validation (bad service entry, missing dockerfile…).
+- Any service's `ci_steps` fail (tests, `npm audit`…).
+- Any image does not build.
+- Trivy finds CRITICAL or HIGH CVEs in any image.
 - The post-deploy smoke test does not return a healthy `/health`.
 
 ## Environment flow
