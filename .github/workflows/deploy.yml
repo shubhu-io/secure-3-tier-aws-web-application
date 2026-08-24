@@ -54,7 +54,7 @@ jobs:
       # --- Cloud authentication (only the ACTIVE cloud logs in) -------------
       - name: Configure AWS credentials
         if: env.CLOUD == 'aws'
-        uses: aws-actions/configure-aws-credentials@v4
+        uses: aws-actions/configure-aws-credentials@v6
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -120,7 +120,7 @@ jobs:
 
       - name: Configure AWS credentials
         if: env.CLOUD == 'aws'
-        uses: aws-actions/configure-aws-credentials@v4
+        uses: aws-actions/configure-aws-credentials@v6
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
