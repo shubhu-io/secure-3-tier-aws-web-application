@@ -46,7 +46,7 @@ jobs:
     name: Build, push, deploy (${{ inputs.cloud || 'aws' }})
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Install jq (if missing)
         run: command -v jq || sudo apt-get install -y jq
@@ -113,7 +113,7 @@ jobs:
     needs: deploy
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Install jq (if missing)
         run: command -v jq || sudo apt-get install -y jq
