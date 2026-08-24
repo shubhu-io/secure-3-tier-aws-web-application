@@ -7,7 +7,7 @@
 # Stage 2: serve static files with Nginx and proxy /api to the backend
 # ============================================================================
 
-FROM node:20-alpine AS build
+FROM node:22-alpine AS build
 
 WORKDIR /app
 COPY application/frontend/package.json application/frontend/package-lock.json* ./
@@ -16,7 +16,11 @@ COPY application/frontend/ ./
 RUN npm run build
 
 # --- runtime: Nginx ---
-FROM nginx:1.27-alpine
+FROM nginx:1.29-alpine
+
+# Patch the base image packages (openssl, curl, expat, ...) so no known
+# CRITICAL/HIGH CVEs ship in the runtime image.
+RUN apk upgrade --no-cache
 
 # Nginx config: serves the SPA and proxies /api + /health to backend:3000
 COPY docker/nginx/nginx.conf /etc/nginx/conf.d/default.conf

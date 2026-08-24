@@ -55,7 +55,7 @@ coexist.
 
 ## Consequences
 
-- New `terraform/modules/eks` (cluster, node group, IAM, access entries) and
+- New `terraform/cloud/aws/modules/eks` (cluster, node group, IAM, access entries) and
   the `kubernetes/` manifest folder.
 - Pipelines gain an optional EKS deploy stage (`deploy-eks.sh`) behind
   `DEPLOY_EKS`.

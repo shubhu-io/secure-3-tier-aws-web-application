@@ -23,8 +23,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - EKS deployment path: `terraform/modules/eks/`, `kubernetes/` manifests,
   `cicd/scripts/deploy-eks.sh`, `docs/deployment/eks.md`, ADR-008.
 - Architecture Decision Record [ADR-008](docs/adr/ADR-008-eks.md) for Amazon EKS.
+- `tests/infrastructure/stack-validate.sh` — cluster-free test of the manifest
+  scripts: `stack-validate.sh` accepts the repo `stack.json` (and rejects
+  malformed manifests), every `stack-info.sh` subcommand returns the expected
+  value, and `render-manifests.sh` produces the right shapes (2 services ×
+  Deployment/Service/HPA/PDB, one LoadBalancer, `fsGroup` on the internal
+  service only). Needs `jq` on PATH (skips if missing).
 
 ### Changed
+
+- Cross-platform fixes for the manifest scripts: `stack-info.sh` and
+  `stack-validate.sh` strip `\r` from `jq` output (Windows Git Bash/WSL
+  compatibility), and `stack-ci.sh` scopes `MSYS2_ARG_CONV_EXCL` to `docker` so
+  container-side `/workspace` paths survive on Git Bash while `jq` still gets
+  the Windows-converted host path. Trivy-in-docker is skipped with a warning on
+  Windows hosts (no Linux docker socket).
+- `scripts/deploy.sh` now builds/pushes every service in one `stack-push.sh`
+  call instead of per-service `build-and-push.sh` lines.
 
 - Kubernetes deploy flow: `kubectl apply -k` (namespace + configmap) followed by
   `kubectl apply -f -` of rendered manifests (see `kubernetes/scripts/deploy.sh`).

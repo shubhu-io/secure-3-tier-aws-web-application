@@ -8,7 +8,7 @@
       "public": false,
       "source_dir": "application/backend",
       "dockerfile": "docker/backend/Dockerfile",
-      "toolchain": "node:20-alpine",
+      "toolchain": "node:22-alpine",
       "ci_steps": [
         { "name": "install", "command": "npm ci" },
         { "name": "test", "command": "npm test" },
@@ -23,7 +23,7 @@
       "public": true,
       "source_dir": "application/frontend",
       "dockerfile": "docker/frontend/Dockerfile",
-      "toolchain": "node:20-alpine",
+      "toolchain": "node:22-alpine",
       "ci_steps": [
         { "name": "install", "command": "npm ci" },
         { "name": "build", "command": "npm run build" }
@@ -36,5 +36,12 @@
     "engine_version": "16.4",
     "port": 5432
   },
-  "runtime": ["ec2-compose", "eks"]
+  "runtime": ["ec2-compose", "eks"],
+  "clouds": ["aws", "azure", "gcp"],
+  "default_cloud": "aws",
+  "cloud_config": {
+    "aws":   { "region": "eu-west-1",    "registry": "ecr",              "kubernetes": "eks" },
+    "azure": { "region": "westeurope",   "registry": "acr",              "kubernetes": "aks" },
+    "gcp":   { "region": "europe-west1", "registry": "artifact-registry","kubernetes": "gke" }
+  }
 }

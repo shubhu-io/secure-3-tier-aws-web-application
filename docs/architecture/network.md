@@ -145,6 +145,23 @@ aws ec2 describe-route-tables --region <region> \
   --query 'RouteTables[].Routes'
 ```
 
+## Cloud mapping
+
+The same /16 + /24 tier layout is provisioned by every cloud module
+(`terraform/cloud/<cloud>/modules/vpc`). The concepts translate as:
+
+| Concept | AWS | Azure | GCP |
+| ------- | --- | ----- | --- |
+| Virtual network | VPC | VNet | VPC network |
+| Tiers | public/app/db subnets + route tables | subnets + route tables | subnets + routes |
+| Internet edge | Internet Gateway | default system route to the internet (no IGW object) | default internet gateway on the VPC |
+| Outbound-only egress | NAT Gateway | NAT Gateway | Cloud NAT |
+| Stateless/per-tier firewall | Network ACLs | Network Security Groups | VPC firewall rules |
+| Network audit | VPC Flow Logs | NSG flow logs | VPC Flow Logs |
+
+> Note: Azure NSGs and GCP firewall rules are **stateful**, unlike AWS NACLs —
+> the layered-firewall idea carries over, not the statelessness detail.
+
 ## Key takeaway
 
 Network isolation comes from **three independent mechanisms**: subnet routing

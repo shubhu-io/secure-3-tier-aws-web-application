@@ -1,18 +1,32 @@
 %% ============================================================================
-%% Diagram 6 - Deployment flow
-%% Purpose: full deployment from commit to verified release
+%% Diagram 6 - Full deployment lifecycle (with rollback)
+%% Purpose: commit -> CI -> push -> rolling ASG refresh -> verify -> (rollback)
+%% Matches scripts/deploy.sh, cicd/scripts/* and README section 6.
 %% ============================================================================
 flowchart LR
-    C[git commit] --> P[git push to main]
-    P --> F[Fetch code in pipeline]
-    F --> BT[Build + test]
-    BT --> SC[Security scan<br/>npm audit + Trivy]
-    SC -->|clean| IMG[Build Docker images]
-    IMG --> ECR[Push to Amazon ECR]
-    ECR --> SSM[Update SSM image params]
-    SSM --> REF[Start ASG instance refresh]
-    REF --> NEW[New instances pull new images]
-    NEW --> HC[ALB health checks pass]
-    HC -->|healthy| OK[Release ✓]
-    HC -->|unhealthy| RB[Rollback: set SSM params to previous tag + refresh]
-    RB --> NEW
+    subgraph CI["CI pipeline (ci.yml / Jenkinsfile-ci)"]
+        C[git push to main] --> MV[Validate stack.json manifest]
+        MV --> TS[Per-service ci_steps<br/>tests + npm audit]
+        TS --> DB[Docker build image]
+        DB --> TR[Trivy scan<br/>CRITICAL/HIGH]
+        TR -->|clean| TF[Terraform fmt + validate]
+        TR -->|vulnerable| FAIL[Pipeline blocked<br/>image not shipped]
+        TF --> SEC[tfsec + checkov<br/>IaC scan]
+        SEC -->|clean| PUSH
+        SEC -->|misconfig| FAIL
+    end
+
+    subgraph DEP["Deploy (deploy.yml / Jenkinsfile)"]
+        PUSH[ECR login] --> IMG[Build + push tagged image<br/>per service to ECR]
+        IMG -->         SSM[deploy-ec2: write SSM deploy pointer<br/>project/env/svc-image = repo:tag]
+        SSM --> REF[Start ASG instance refresh<br/>rolling, min 50% healthy]
+        REF --> BOOT[New EC2 instances boot<br/>pull image from ECR]
+        BOOT --> HC[ALB health checks + smoke test<br/>GET /health, db connected]
+        HC -->|healthy| OK[Release ✓]
+        HC -->|unhealthy| RB[Rollback: set SSM params to<br/>previous tag + refresh ASG]
+        RB --> BOOT
+    end
+
+    CI -->|all green| DEP
+    OK --> DONE[(Live on ALB)]
+    RB -.ALB never serves broken build.-> DONE

@@ -13,7 +13,7 @@ Jenkins is byte-identical to one from GitHub Actions.
 
 | Piece | What it is |
 | ----- | ---------- |
-| `terraform/modules/jenkins/` | EC2 controller + SG (UI 8080, agents 50000) + IAM role reusing the CI/CD policy |
+| `terraform/cloud/<cloud>/modules/jenkins/` | EC2 controller + SG (UI 8080, agents 50000) + IAM role reusing the CI/CD policy |
 | `cicd/Jenkinsfile` | **Deploy** pipeline (CI → ECR push → SSM → ASG refresh → optional EKS → smoke test) |
 | `cicd/Jenkinsfile-ci` | **CI** pipeline (manifest validate → per-service test/build/scan → Terraform fmt/validate) — mirrors `.github/workflows/ci.yml` |
 | `stack.json` | The manifest both pipelines read — one entry per service, zero pipeline edits |

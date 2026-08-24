@@ -38,7 +38,7 @@ jq -e '([.services[].name] | length) == ([.services[].name] | unique | length)' 
 echo "===== 3. per-service shape ====="
 COUNT=$("$INFO" count)
 for (( i = 0; i < COUNT; i++ )); do
-  NAME=$(jq -r ".services[$i].name" "$STACK_FILE")
+  NAME=$(jq -r ".services[$i].name" "$STACK_FILE" | tr -d '\r')
   [ -n "$NAME" ] || fail "service[$i].name is empty"
   echo "    - $NAME"
 

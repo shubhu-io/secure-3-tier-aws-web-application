@@ -5,6 +5,10 @@ are version-controllable, reviewable in pull requests, and renderable anywhere.
 No fake screenshots — every diagram is derived from the actual Terraform,
 pipeline, and application code in this repository.
 
+Pre-rendered **PNG copies live in [`rendered/`](./rendered)** and are embedded
+in the main [`README.md`](../README.md), so the diagrams display on GitHub
+without any rendering step.
+
 ## Diagram index
 
 | File | What it shows |
@@ -55,6 +59,6 @@ done
 
 ## Keeping diagrams accurate
 
-- Diagrams must always match the Terraform resources in [`terraform/modules/`](../terraform/modules).
+- Diagrams must always match the Terraform resources in [`terraform/cloud/<cloud>/modules/`](../terraform).
 - If you change a CIDR, subnet tier, port, or pipeline stage, update the
   corresponding `.mmd` file in the same change so docs never drift from code.

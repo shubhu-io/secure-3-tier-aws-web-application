@@ -16,8 +16,7 @@ PROJECT="${3:-secure-ntier}"
 ENV_NAME="${4:-dev}"
 
 bash cicd/scripts/ecr-login.sh "$REGION"
-bash cicd/scripts/build-and-push.sh backend "$TAG" "$REGION" "$PROJECT" "$ENV_NAME"
-bash cicd/scripts/build-and-push.sh frontend "$TAG" "$REGION" "$PROJECT" "$ENV_NAME"
+bash cicd/scripts/stack-push.sh "$TAG" "$REGION" "$PROJECT" "$ENV_NAME"
 bash cicd/scripts/deploy-ec2.sh "$TAG" "$REGION" "$ENV_NAME" "$PROJECT"
 
 echo ""

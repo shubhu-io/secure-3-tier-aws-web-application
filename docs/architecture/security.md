@@ -84,6 +84,24 @@ signatures. See [`../../security/waf/README.md`](../../security/waf/README.md).
 | Man-in-the-middle | TLS everywhere externally |
 | Credential stuffing on API | JWT auth + WAF rate rules (extendable) |
 
+## Cloud mapping
+
+The seven layers exist on every cloud; only the service names change:
+
+| Layer | AWS | Azure | GCP |
+| ----- | --- | ----- | --- |
+| Web firewall | AWS WAF | Application Gateway WAF policy | Cloud Armor policy |
+| Transport / TLS cert | ACM | App Service Certificate / Key Vault certificates | Google-managed certs (Certificate Manager) |
+| Subnet firewall | Network ACLs + Security Groups | Network Security Groups | VPC firewall rules |
+| Identity | IAM roles/policies, instance profile | Managed Identities + RBAC | IAM service accounts |
+| Secrets | Secrets Manager | Key Vault | Secret Manager |
+| Instance access (no SSH) | SSM Session Manager | Bastion / AAD SSH login | IAP TCP forwarding / OS Login |
+| Audit trail | CloudTrail | Activity Log | Cloud Audit Logs |
+
+> The Azure (`terraform/cloud/azure/`) and GCP (`terraform/cloud/gcp/`)
+> modules implement these mappings as **reference implementations pending live
+> validation**; the AWS path remains the battle-tested one.
+
 ## Verification
 
 Run [`tests/security/security-tests.sh`](../../tests/security/security-tests.sh):

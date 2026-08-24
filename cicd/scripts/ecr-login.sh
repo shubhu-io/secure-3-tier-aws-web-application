@@ -1,14 +1,13 @@
 #!/usr/bin/env bash
 # ============================================================================
-# ecr-login.sh - authenticate Docker to Amazon ECR using the current AWS creds
+# ecr-login.sh - DEPRECATED alias for registry-login.sh (kept for backward
+# compatibility). Forces CLOUD=aws; new pipelines should call
+# cicd/scripts/registry-login.sh directly.
 # Usage: bash cicd/scripts/ecr-login.sh <region>
 # ============================================================================
 set -euo pipefail
 
-REGION="${1:?usage: ecr-login.sh <region>}"
-ACCOUNT_ID="$(aws sts get-caller-identity --query Account --output text)"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-aws ecr get-login-password --region "$REGION" |
-  docker login --username AWS --password-stdin "${ACCOUNT_ID}.dkr.ecr.${REGION}.amazonaws.com"
-
-echo "Logged in to ECR: ${ACCOUNT_ID}.dkr.ecr.${REGION}.amazonaws.com"
+echo ">>> ecr-login.sh is deprecated - delegating to registry-login.sh (CLOUD=aws)"
+CLOUD=aws exec bash "$SCRIPT_DIR/registry-login.sh" "$@"

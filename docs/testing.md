@@ -105,6 +105,31 @@ bash tests/infrastructure/terraform-validate.sh
 # equivalent: cd terraform && terraform validate
 ```
 
+### 3.1.1 Multi-cloud validation
+
+The Terraform root is now a dispatcher that instantiates exactly one cloud
+implementation (`-var="cloud=aws|azure|gcp"`), so static validation runs
+**per cloud directory** — each of `terraform/cloud/aws`, `terraform/cloud/azure`,
+and `terraform/cloud/gcp` is its own self-contained Terraform configuration
+with its own providers and modules:
+
+```bash
+for d in aws azure gcp; do
+  (cd "terraform/cloud/$d" && terraform init -backend=false && terraform validate)
+done
+```
+
+What this proves: the infrastructure checks validate the *selected* cloud's
+module, and every cloud module must satisfy the same contract — same inputs
+(from the shared `stack.json` + shared variables) and the same normalized
+outputs (`app_url`, `lb_dns_name`, `db_host`, `db_secret_ref`, `registry_url`,
+…). A port that breaks the output contract fails validation just like a broken
+AWS change would.
+
+> The Azure/GCP modules are reference implementations pending live validation;
+> `validate` proves they compile against the contract, not that they have been
+> applied against a live subscription/project.
+
 ### 3.2 Plan sanity check
 
 ```bash
@@ -137,7 +162,29 @@ terraform fmt -check -recursive
 Enforces consistent style; a style change isn't a semantic bug, but reviewable
 code keeps diffs small and safe.
 
-### 3.4 Kubernetes manifests
+### 3.4 Manifest-driven scripts (no cluster needed)
+
+```bash
+bash tests/infrastructure/stack-validate.sh
+```
+
+Needs `jq` on PATH (skips gracefully if missing). Asserts the manifest-driven
+scripts agree with `stack.json`:
+
+- `cicd/scripts/stack-validate.sh` accepts the repo `stack.json` (and rejects
+  malformed manifests: two public services, a missing `source_dir`)
+- `cicd/scripts/stack-info.sh` returns the expected values for `project`,
+  `list`, `count`, `public-service`, `db-engine`, `db-port`, `db-version`,
+  `field`, and `ci-steps`
+- `kubernetes/scripts/render-manifests.sh` produces one Deployment/Service/HPA/
+  PDB per service (8 resources), exactly one `LoadBalancer` (the public
+  service), `fsGroup` only on the internal service, HPA `maxReplicas`/CPU
+  target and PDB `minAvailable` as expected
+
+Because everything reads `stack.json`, adding a service extends what these
+checks cover automatically.
+
+### 3.5 Kubernetes manifests
 
 ```bash
 bash tests/infrastructure/kubernetes-validate.sh
@@ -184,6 +231,33 @@ docker build -f docker/backend/Dockerfile -t secure-ntier-backend:tmp .
 docker run --rm aquasec/trivy:latest image --exit-code 1 \
   --severity CRITICAL,HIGH secure-ntier-backend:tmp
 ```
+
+### 4.1 Infrastructure-as-Code security scans (tfsec + checkov)
+
+Runs in CI (`ci.yml` → `iac-security-scan` job and `Jenkinsfile-ci`):
+
+| Check | Command equivalent | Gate |
+| ----- | ------------------ | ---- |
+| Terraform lint | `tfsec terraform --config-file .tfsec` | fails on CRITICAL/HIGH |
+| Policy-as-code | `checkov -d terraform --config-file .checkov.yml` | fails on HIGH+ |
+
+Both config files live at the repo root and are shared with the Jenkins
+pipeline (run in the toolchain containers). The configs document every
+intentional exclusion (e.g. the opt-in Jenkins SG defaults) rather than
+silently skipping checks.
+
+```bash
+# locally
+docker run --rm -v "$PWD:/workspace" -w /workspace aquasec/tfsec:latest terraform
+docker run --rm -v "$PWD:/workspace" -w /workspace bridgecrew/checkov:latest -d terraform
+```
+
+### 4.2 Static analysis (SonarQube, optional)
+
+`sonar-project.properties` at the repo root configures `sonar-scanner` for the
+backend + frontend sources and the backend tests. Runs in Jenkins when a
+`SonarQube` server credential is configured (skipped otherwise). It is advisory
+by default — set `sonar.qualitygate.wait=true` to make it a hard gate.
 
 ---
 
@@ -234,7 +308,7 @@ These are manual tests on **dev only**, documented in `docs/runbooks/`:
 ```text
 push (feature/*, develop) ────── ci.yml / Jenkinsfile-ci
    │  stack-validate → stack-ci per service (tests + audit + build + trivy)
-   │  npm audit ── terraform fmt + validate
+   │  npm audit ── terraform fmt + validate ── tfsec ── checkov
    ▼  any fail → PR blocked; no image pushed
 
 local / on-demand ────────────── tfplan-check.sh (asserts topology)

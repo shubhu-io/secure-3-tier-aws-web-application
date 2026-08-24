@@ -4,6 +4,11 @@
 > **deployment** itself creates billable resources. Read
 > [`docs/cost-guide.md`](../cost-guide.md) before you `terraform apply`.
 
+> **Targeting another cloud?** The platform is now multi-cloud. Sibling guides:
+> [`azure-setup.md`](./azure-setup.md) and [`gcp-setup.md`](./gcp-setup.md).
+> AWS remains the reference implementation; the Azure and GCP paths are ports
+> pending live validation.
+
 ## 1. Create an AWS account
 
 https://aws.amazon.com/free → "Create a Free Account". You'll need a payment

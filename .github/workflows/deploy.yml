@@ -1,25 +1,116 @@
 name: Deploy
 
 # Runs when code lands on main.
-# Generic pipeline driven by stack.json:
-#   build + scan + push every service to ECR -> update SSM params
-#     -> trigger ASG instance refresh -> smoke test -> (optional) EKS deploy
+# Generic pipeline driven by stack.json + the CLOUD variable (aws | azure | gcp):
+#   auth to the selected cloud -> build + scan + push every service to its
+#   registry -> roll the VM fleet (ASG / VMSS / MIG) -> smoke test
+#   -> (optional) managed-k8s deploy (EKS / AKS / GKE)
 #
 # Required GitHub repository secrets:
+#   CLOUD                   aws | azure | gcp (optional, default aws)
+#   CLOUD_REGION            region of the active cloud (falls back to AWS_REGION)
+#
+# AWS (CLOUD=aws):
 #   AWS_ACCESS_KEY_ID       IAM user keys (attach the CI/CD IAM policy)
 #   AWS_SECRET_ACCESS_KEY
 #   AWS_REGION              e.g. eu-west-1
-#   ALB_URL                 e.g. http://secure-ntier-dev-alb-xxxx.eu-west-1.elb.amazonaws.com
+# Azure (CLOUD=azure):
+#   AZURE_CLIENT_ID / AZURE_TENANT_ID / AZURE_SUBSCRIPTION_ID  (OIDC login)
+# GCP (CLOUD=gcp):
+#   GCP_CREDENTIALS         service-account JSON key
+# Shared:
+#   ALB_URL                 e.g. http://secure-ntier-dev-alb-xxxx.elb.amazonaws.com
 #   ECR_PROJECT             e.g. secure-ntier
 #   ECR_ENV                 e.g. dev
 
 on:
   push:
     branches: [main]
+  workflow_dispatch:
+    inputs:
+      cloud:
+        description: "Cloud to deploy to"
+        required: false
+        default: aws
+        type: choice
+        options: [aws, azure, gcp]
+
+env:
+  CLOUD: ${{ inputs.cloud || 'aws' }}
+  REGION: ${{ secrets.CLOUD_REGION || secrets.AWS_REGION }}
+  PROJECT: ${{ secrets.ECR_PROJECT }}
+  ENV: ${{ secrets.ECR_ENV }}
 
 jobs:
   deploy:
-    name: Build, push, deploy
+    name: Build, push, deploy (${{ inputs.cloud || 'aws' }})
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install jq (if missing)
+        run: command -v jq || sudo apt-get install -y jq
+
+      # --- Cloud authentication (only the ACTIVE cloud logs in) -------------
+      - name: Configure AWS credentials
+        if: env.CLOUD == 'aws'
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.REGION }}
+
+      - name: Azure login
+        if: env.CLOUD == 'azure' && secrets.AZURE_CLIENT_ID != ''
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Authenticate to Google Cloud
+        if: env.CLOUD == 'gcp' && secrets.GCP_CREDENTIALS != ''
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_CREDENTIALS }}
+
+      # --- Registry + deploy -------------------------------------------------
+      - name: Login to container registry
+        run: bash cicd/scripts/registry-login.sh "$REGION"
+
+      - name: Build + scan + push every service
+        run: bash cicd/scripts/stack-push.sh "${{ github.sha }}" "$REGION" "$PROJECT" "$ENV"
+
+      - name: Roll VM fleet onto new images (ASG / VMSS / MIG)
+        run: |
+          case "$CLOUD" in
+            aws)
+              bash cicd/scripts/deploy-ec2.sh "${{ github.sha }}" "$REGION" "$ENV" "$PROJECT"
+              ;;
+            azure)
+              bash cicd/scripts/deploy-vmss.sh "${{ github.sha }}" "$REGION" "$ENV" "$PROJECT"
+              ;;
+            gcp)
+              bash cicd/scripts/deploy-mig.sh "${{ github.sha }}" "$REGION" "$ENV" "$PROJECT"
+              ;;
+            *)
+              echo "ERROR: unsupported CLOUD '$CLOUD'" >&2
+              exit 1
+              ;;
+          esac
+
+      - name: Smoke test (wait for healthy app)
+        env:
+          ALB_URL: ${{ secrets.ALB_URL }}
+          ATTEMPTS: "36"
+        run: bash cicd/scripts/smoke-test.sh
+
+  deploy-k8s:
+    name: Deploy to managed Kubernetes (${{ inputs.cloud || 'aws' }})
+    # Opt-in: set the repository variable DEPLOY_K8S=true (or legacy DEPLOY_EKS).
+    # Requires the Terraform k8s module applied for the active cloud.
+    if: vars.DEPLOY_K8S == 'true' || vars.DEPLOY_EKS == 'true'
+    needs: deploy
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -28,43 +119,26 @@ jobs:
         run: command -v jq || sudo apt-get install -y jq
 
       - name: Configure AWS credentials
+        if: env.CLOUD == 'aws'
         uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION }}
+          aws-region: ${{ env.REGION }}
 
-      - name: Login to ECR
-        run: bash cicd/scripts/ecr-login.sh "${{ secrets.AWS_REGION }}"
-
-      - name: Build + scan + push every service
-        run: bash cicd/scripts/stack-push.sh "${{ github.sha }}" "${{ secrets.AWS_REGION }}" "${{ secrets.ECR_PROJECT }}" "${{ secrets.ECR_ENV }}"
-
-      - name: Update deploy parameters + trigger instance refresh
-        run: bash cicd/scripts/deploy-ec2.sh "${{ github.sha }}" "${{ secrets.AWS_REGION }}" "${{ secrets.ECR_ENV }}" "${{ secrets.ECR_PROJECT }}"
-
-      - name: Smoke test (wait for healthy app)
-        env:
-          ALB_URL: ${{ secrets.ALB_URL }}
-          ATTEMPTS: "36"
-        run: bash cicd/scripts/smoke-test.sh
-
-  deploy-eks:
-    name: Deploy to EKS
-    # Opt-in: set the repository variable DEPLOY_EKS=true (Settings → Variables).
-    # Requires the Terraform EKS module applied (enable_eks=true).
-    if: vars.DEPLOY_EKS == 'true'
-    needs: deploy
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
+      - name: Azure login
+        if: env.CLOUD == 'azure' && secrets.AZURE_CLIENT_ID != ''
+        uses: azure/login@v2
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION }}
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Authenticate to Google Cloud
+        if: env.CLOUD == 'gcp' && secrets.GCP_CREDENTIALS != ''
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_CREDENTIALS }}
 
       - name: Install kubectl
         run: |
@@ -72,5 +146,5 @@ jobs:
           chmod +x kubectl
           sudo mv kubectl /usr/local/bin/kubectl
 
-      - name: Deploy to EKS + smoke test
-        run: bash cicd/scripts/deploy-eks.sh "${{ github.sha }}" "${{ secrets.AWS_REGION }}" "${{ secrets.ECR_ENV }}" "${{ secrets.ECR_PROJECT }}"
+      - name: Deploy to cluster + smoke test
+        run: bash cicd/scripts/deploy-k8s.sh "${{ github.sha }}" "$REGION" "$ENV" "$PROJECT"

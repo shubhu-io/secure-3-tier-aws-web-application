@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # ============================================================================
-# stack-push.sh - build + scan + push EVERY service in stack.json to ECR.
+# stack-push.sh - build + scan + push EVERY service in stack.json to the
+# ACTIVE cloud's registry (ECR | ACR | Artifact Registry, selected by CLOUD).
 #
 # Thin wrapper over build-and-push.sh, looping over the manifest services so a
 # new service needs no pipeline edits - just a stack.json entry.

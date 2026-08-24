@@ -7,8 +7,10 @@
 //     (test + audit + build + trivy scan, driven by stack.json)
 //     -> Terraform fmt + validate
 //
-// No AWS credentials are needed - nothing is pushed or deployed.
-// Runs on the same "docker && linux" agent as the deploy pipeline.
+// No cloud credentials are needed - nothing is pushed or deployed.
+// CLOUD (aws | azure | gcp, default aws) threads the target cloud through the
+// manifest scripts. Runs on the same "docker && linux" agent as the deploy
+// pipeline.
 // ============================================================================
 
 pipeline {
@@ -21,6 +23,15 @@ pipeline {
     skipDefaultCheckout()
   }
 
+  parameters {
+    choice(name: 'CLOUD', choices: ['aws', 'azure', 'gcp'],
+           description: 'Cloud context for the manifest scripts (aws | azure | gcp)')
+  }
+
+  environment {
+    CLOUD = "${params.CLOUD}"
+  }
+
   stages {
     stage('Checkout') {
       steps { checkout scm }
@@ -28,6 +39,33 @@ pipeline {
 
     stage('Validate stack manifest') {
       steps { sh "bash cicd/scripts/stack-validate.sh" }
+    }
+
+    stage('IaC security scan (tfsec + checkov)') {
+      steps {
+        // tfsec
+        sh """
+          docker run --rm \
+            -v "${WORKSPACE}:/workspace" -w /workspace \
+            aquasec/tfsec:latest terraform --config-file /workspace/.tfsec
+        """
+        // checkov
+        sh """
+          docker run --rm \
+            -v "${WORKSPACE}:/workspace" -w /workspace \
+            bridgecrew/checkov:latest -d terraform --config-file /workspace/.checkov.yml
+        """
+      }
+    }
+
+    stage('Static analysis (SonarQube, optional)') {
+      // Only runs when a SONAR_HOST_URL credential exists on the agent.
+      when { expression { env.SONAR_HOST_URL != null } }
+      steps {
+        withSonarQubeEnv('SonarQube') {
+          sh "sonar-scanner -Dsonar.projectBaseDir=${WORKSPACE}"
+        }
+      }
     }
 
     stage('CI per service (test + audit + build + scan)') {

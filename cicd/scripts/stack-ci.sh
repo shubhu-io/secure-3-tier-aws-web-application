@@ -35,7 +35,10 @@ for SVC in $("$INFO" list); do
   while IFS= read -r step; do
     [ -n "$step" ] || continue
     echo "    $step"
-    docker run --rm \
+    # MSYS2_ARG_CONV_EXCL is scoped to docker so Git Bash doesn't rewrite the
+    # container-side /workspace paths (it must not leak into stack-info.sh,
+    # whose jq needs the host path converted to a Windows path).
+    MSYS2_ARG_CONV_EXCL='*' docker run --rm \
       -v "${REPO_ROOT}:/workspace" \
       -w "/workspace/$DIR" \
       "$TOOLCHAIN" sh -c "$step"
@@ -45,10 +48,17 @@ for SVC in $("$INFO" list); do
   docker build -f "$DOCKERFILE" -t "$IMAGE" "$REPO_ROOT"
 
   echo ">>> trivy scan $IMAGE"
-  docker run --rm \
-    -v /var/run/docker.sock:/var/run/docker.sock \
-    aquasec/trivy:latest image \
-      --ignore-unfixed --exit-code 1 --severity CRITICAL,HIGH "$IMAGE"
+  case "$(uname -s)" in
+    MINGW*|MSYS*|CYGWIN*)
+      echo "    WARN: trivy-in-docker needs the Linux docker socket - skipping (CI scans the image)"
+      ;;
+    *)
+      docker run --rm \
+        -v /var/run/docker.sock:/var/run/docker.sock \
+        aquasec/trivy:latest image \
+          --ignore-unfixed --exit-code 1 --severity CRITICAL,HIGH "$IMAGE"
+      ;;
+  esac
 
   echo ">>> $SVC OK"
 done

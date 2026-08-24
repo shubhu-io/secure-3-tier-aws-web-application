@@ -1,8 +1,26 @@
 # Kubernetes architecture (EKS)
 
-The **modern deployment path**. The same images that run on EC2 + Docker
-Compose also run on a Kubernetes cluster - Amazon EKS - provisioned by the
-Terraform `eks` module. Both paths coexist; pick one (or both) per environment.
+The **modern deployment path**. The same images that run on VM + Docker
+Compose also run on a managed Kubernetes cluster - Amazon EKS - provisioned by
+the Terraform `eks` module (`terraform/cloud/aws/modules/eks/`; AKS and GKE
+ports live under `terraform/cloud/azure/modules/aks/` and
+`terraform/cloud/gcp/modules/gke/`). Both paths coexist; pick one (or both)
+per environment.
+
+> **Cloud mapping** — the cluster story is the same shape everywhere, but the
+> AWS/EKS content below is the reference implementation; the Azure and GCP
+> modules are ports pending live validation.
+>
+> | Concern | AWS | Azure | GCP |
+> | ------- | --- | ----- | --- |
+> | Managed cluster | EKS | AKS | GKE |
+> | Node group | EC2 managed node group | node pool | node pool |
+> | Public edge Service | NLB via `type: LoadBalancer` | Azure LB / Application Gateway ingress | Google Cloud Load Balancer |
+> | Secrets materialization | Secrets Manager → K8s Secret | Key Vault → K8s Secret | Secret Manager → K8s Secret |
+> | Cluster access for CI | access entry + IAM | `az aks get-credentials` + RBAC | `gcloud container clusters get-credentials` + IAM |
+>
+> The normalized Terraform outputs (`kubeconfig_command`,
+> `cluster_endpoint`) return the right connect command per cloud.
 
 ```text
 Internet → AWS NLB (public Service :80) → public pods (Nginx)

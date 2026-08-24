@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="500" viewBox="0 0 800 500" style="background: #ffffff">
+<rect x="680" y="30" width="100" height="40" fill="#3d8bce" stroke="#e53e3e" stroke-width="1" rx="3" />
+<rect x="560" y="30" width="100" height="40" fill="#3d8bce" stroke="#e53e3e" stroke-width="1" rx="3" />
+<rect x="440" y="30" width="110" height="40" fill="#3d8bce" stroke="#2a5c98" stroke-width="1" rx="3" />
+<rect x="320" y="30" width="110" height="40" fill="#3d8bce" stroke="#2a5c98" stroke-width="1" rx="3" />
+<rect x="200" y="30" width="110" height="40" fill="#3d8bce" stroke="#2a5c98" stroke-width="1" rx="3" />
+<rect x="100" y="30" width="110" height="40" fill="#3d8bce" stroke="#2a5c98" stroke-width="1" rx="3" />
+<rect x="20" y="30" width="70" height="40" fill="#3d8bce" stroke="#2a5c98" stroke-width="1" rx="3" />
+<rect x="680" y="120" width="120" height="50" fill="#ffffff" stroke="#2a5c98" stroke-width="2" rx="3" />
+<text x="720" y="50" font-size="12" fill="#333333" font-weight="middle" text-anchor="middle" dominant-baseline="middle">WAF</text>
+<text x="600" y="50" font-size="12" fill="#333333" font-weight="middle" text-anchor="middle" dominant-baseline="middle">IAM</text>
+<text x="495" y="50" font-size="12" fill="#333333" font-weight="middle" text-anchor="middle" dominant-baseline="middle">Security Groups</text>
+<text x="375" y="50" font-size="12" fill="#333333" font-weight="middle" text-anchor="middle" dominant-baseline="middle">Network ACL</text>
+<text x="255" y="50" font-size="12" fill="#333333" font-weight="middle" text-anchor="middle" dominant-baseline="middle">Secrets Manager</text>
+<text x="155" y="50" font-size="12" fill="#333333" font-weight="middle" text-anchor="middle" dominant-baseline="middle">CloudTrail</text>
+<text x="55" y="50" font-size="12" fill="#333333" font-weight="middle" text-anchor="middle" dominant-baseline="middle">CloudWatch</text>
+<text x="720" y="160" font-size="11" fill="#333333" font-weight="middle" text-anchor="middle" dominant-baseline="middle">RDS Encrypted</text>
+</svg>

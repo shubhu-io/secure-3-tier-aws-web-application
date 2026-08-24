@@ -1,11 +1,73 @@
 # Terraform Deployment Guide
 
-This guide takes the repository from zero to a deployed AWS platform.
+This guide takes the repository from zero to a deployed platform. AWS is the
+walkthrough default (the battle-tested reference implementation); Azure and
+GCP are selected with one variable, as shown below.
 
-> ⚠️ **COST WARNING** — `terraform apply` creates EC2, ALB, NAT Gateway, RDS,
-> WAF, and CloudWatch resources. These cost money. See
-> [`docs/cost-guide.md`](../cost-guide.md). Always run `terraform destroy`
-> when done.
+> ⚠️ **COST WARNING** — `terraform apply` creates billable resources on
+> whichever cloud you target: EC2/ALB/NAT/RDS/WAF/CloudWatch on AWS, VMSS +
+> Application Gateway + PostgreSQL on Azure, MIG + HTTPS LB + Cloud SQL on
+> GCP. See [`docs/cost-guide.md`](../cost-guide.md). Always run
+> `terraform destroy` when done.
+
+## Choose your cloud
+
+The Terraform root `terraform/` is a dispatcher: pass
+`-var="cloud=aws|azure|gcp"` and exactly one self-contained implementation
+under `terraform/cloud/<cloud>/` is planned and applied. Each cloud uses its
+own backend file so the state files never mix:
+
+```bash
+terraform init -backend-config="cloud/aws/backend.hcl"
+terraform init -backend-config="cloud/azure/backend.hcl"
+terraform init -backend-config="cloud/gcp/backend.hcl"
+```
+
+### Plan / apply per cloud
+
+```bash
+# --- AWS (reference implementation) ---
+terraform init -backend-config="cloud/aws/backend.hcl"
+terraform plan  -var="cloud=aws" -var="aws_region=eu-west-1" \
+                -var-file="environments/dev/terraform.tfvars" -out=plan.tfplan
+terraform apply plan.tfplan
+
+# --- Azure (reference implementation, pending live validation) ---
+terraform init -backend-config="cloud/azure/backend.hcl"
+terraform plan  -var="cloud=azure" -var="azure_location=westeurope" \
+                -var-file="environments/dev/terraform.tfvars" -out=plan.tfplan
+terraform apply plan.tfplan
+
+# --- GCP (reference implementation, pending live validation) ---
+terraform init -backend-config="cloud/gcp/backend.hcl"
+terraform plan  -var="cloud=gcp" -var="gcp_project=my-project-id" -var="gcp_region=europe-west1" \
+                -var-file="environments/dev/terraform.tfvars" -out=plan.tfplan
+terraform apply plan.tfplan
+```
+
+Key per-cloud variables: `aws_region` (AWS), `azure_location` (Azure),
+`gcp_project` + `gcp_region` (GCP); everything else (`project_name`,
+`notification_email`, subnet CIDRs, ASG/database sizing…) is shared. The root
+module exposes the same normalized outputs no matter which cloud you picked
+(`app_url`, `lb_dns_name`, `db_host`, `registry_url`, …).
+
+Account/CLI preparation per cloud: [aws-setup.md](./aws-setup.md),
+[azure-setup.md](./azure-setup.md), [gcp-setup.md](./gcp-setup.md).
+
+### Destroy
+
+Destroy is also cloud-scoped — always pair the same `-var="cloud=..."` (and
+backend) used to create:
+
+```bash
+terraform destroy -var="cloud=aws"   -var-file="environments/dev/terraform.tfvars"
+terraform destroy -var="cloud=azure" -var-file="environments/dev/terraform.tfvars"
+terraform destroy -var="cloud=gcp"   -var-file="environments/dev/terraform.tfvars"
+```
+
+The rest of this guide walks the workflow end-to-end using the AWS reference
+implementation; every command works identically once the cloud variable,
+backend file, and credentials are switched.
 
 ## 0. Understand the Terraform workflow
 

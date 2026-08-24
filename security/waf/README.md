@@ -1,7 +1,7 @@
 # WAF Configuration
 
 The WAF web ACL is created by Terraform in the ALB module
-(`terraform/modules/alb/main.tf`). This file documents the rules and the
+(`terraform/cloud/<cloud>/modules/alb/main.tf`). This file documents the rules and the
 rationale. All rules use **AWS Managed Rule Groups** so AWS maintains the
 signatures — no custom rules to manage.
 

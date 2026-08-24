@@ -2,20 +2,32 @@
 
 ## What are we building?
 
-A **three-tier web application** on AWS:
+A **multi-cloud three-tier web application**: one architecture, deployable to
+**AWS, Azure, or GCP** by changing a single Terraform variable. The tiers are
+identical on every cloud — only the managed services differ:
 
 ```text
 TIER 1 (Presentation)   React single-page app served by Nginx containers
 TIER 2 (Application)    Node.js/Express API in Docker containers
-TIER 3 (Data)           PostgreSQL managed by Amazon RDS
+TIER 3 (Data)           PostgreSQL managed by the cloud's managed database service
 ```
 
+> **AWS is the reference implementation.** It is the battle-tested path this
+> repository was built on. The Azure (`terraform/cloud/azure/`) and GCP
+> (`terraform/cloud/gcp/`) modules are faithful ports of the same design, but
+> they are **reference implementations pending live validation** — treat them
+> accordingly before pointing production traffic at them.
+
 The three tiers are isolated at the **network level** (three sets of subnets),
-the **firewall level** (layered security groups), and the **application level**
-(API calls only). A load balancer + auto scaling provide availability, a WAF
-provides web attack protection, and CloudWatch + SNS provide observability.
+the **firewall level** (layered security groups / NSGs / firewall rules), and
+the **application level** (API calls only). A load balancer + auto scaling
+provide availability, a web application firewall provides attack protection,
+and cloud-native monitoring + notifications provide observability.
 
 ## Architecture diagram
+
+The diagram below shows the **AWS reference implementation**; each cloud maps
+its own services 1:1 onto the same shape (see the table below).
 
 ```mermaid
 flowchart TD
@@ -44,6 +56,10 @@ flowchart TD
     NG --> IGW
 ```
 
+For a hand-drawn walkthrough of the same design, see the annotated notes:
+
+![Handwritten 3-tier notes](images/3-tier-aws-handwritten-notes.png)
+
 ## Components at a glance
 
 | Layer | Component | Responsibility |
@@ -59,6 +75,36 @@ flowchart TD
 | Secrets | Secrets Manager | DB credentials injected at runtime |
 | Observe | CloudWatch + SNS | Metrics, logs, alarms, notifications |
 | Audit | CloudTrail | Record of every API call in the account |
+
+## Cloud service mapping
+
+The same logical component exists on all three clouds. Terraform selects the
+implementation with `-var="cloud=aws|azure|gcp"`:
+
+| Concern | AWS | Azure | GCP |
+| ------- | --- | ----- | --- |
+| Compute | EC2 + Auto Scaling Group | Virtual Machine Scale Sets (VMSS) | Managed Instance Group (MIG) |
+| Database | RDS PostgreSQL | Azure PostgreSQL Flexible Server | Cloud SQL for PostgreSQL |
+| Registry | ECR | Azure Container Registry (ACR) | Artifact Registry |
+| LB / WAF | ALB + AWS WAF | Application Gateway + WAF policy | Global external HTTPS LB + Cloud Armor |
+| Monitoring | CloudWatch + SNS | Azure Monitor + Action Group | Cloud Monitoring + notification channel |
+| Secrets | Secrets Manager | Key Vault | Secret Manager |
+| Kubernetes | EKS | AKS | GKE |
+| Audit trail | CloudTrail | Activity Log | Cloud Audit Logs |
+
+### How the multi-cloud code is organized
+
+The Terraform root `terraform/` is a thin **dispatcher**: it instantiates
+exactly one self-contained implementation under `terraform/cloud/<cloud>/`
+(the other two are not created at all), so only the selected cloud's provider
+needs credentials. Each cloud module owns its provider config, reads the shared
+[`stack.json`](../../stack.json) manifest (as `../../stack.json` from its own
+directory), and exposes **normalized outputs** with identical names across
+clouds: `app_url`, `lb_dns_name`, `db_host`, `db_secret_ref`, `registry_url`,
+`image_repository_urls`, `asg_name`, `topic_arn`, `dashboard_name`,
+`web_acl_arn`, `kubeconfig_command`, `cluster_endpoint`, and
+`cicd_policy_json`. State is kept separate per cloud via
+`terraform init -backend-config="cloud/<cloud>/backend.hcl"`.
 
 ## The deployment model (how code becomes running software)
 
@@ -84,6 +130,8 @@ whichever runtime is enabled. **What you tested is what you deploy.**
 Two engines run these pipelines — **GitHub Actions** (`.github/workflows/`) or
 **Jenkins** (`cicd/Jenkinsfile` + `cicd/Jenkinsfile-ci`) — sharing the exact
 same `cicd/scripts/`.
+
+![3-tier AWS web application flow](images/3-tier-aws-web-application.png)
 
 ## Deployment sizes — from small to production
 
@@ -140,12 +188,15 @@ per service:
 
 | Runtime | Provisioned by | Deploy trigger | Rollback |
 | ------- | -------------- | -------------- | -------- |
-| **EC2 + Docker Compose** | `modules/compute` (default) | SSM deploy pointer + ASG refresh | re-point the SSM parameter |
-| **EKS** (optional, `enable_eks`) | `modules/eks` | `kubernetes/scripts/render-manifests.sh` → apply → roll | `kubectl rollout undo` |
+| **VM + Docker Compose** | `cloud/<cloud>/modules/compute` (default) | deploy pointer + rolling refresh (SSM param on AWS) | re-point the deploy parameter |
+| **Managed Kubernetes** (optional, `enable_eks`) | `cloud/<cloud>/modules/eks|aks|gke` | `kubernetes/scripts/render-manifests.sh` → apply → roll | `kubectl rollout undo` |
+
+The CI/CD pipelines are becoming cloud-aware via a `CLOUD=aws|azure|gcp`
+environment variable (registry login, image push, and deploy scripts read it).
 
 ## CI/CD engines
 
 | Engine | CI | Deploy | Notes |
 | ------ | -- | ------ | ----- |
 | **GitHub Actions** | `.github/workflows/ci.yml` | `.github/workflows/deploy.yml` | zero infrastructure |
-| **Jenkins** (opt-in, `enable_jenkins`) | `cicd/Jenkinsfile-ci` | `cicd/Jenkinsfile` | self-hosted module in `terraform/modules/jenkins/` |
+| **Jenkins** (opt-in, `enable_jenkins`) | `cicd/Jenkinsfile-ci` | `cicd/Jenkinsfile` | self-hosted module in `terraform/cloud/aws/modules/jenkins/` |

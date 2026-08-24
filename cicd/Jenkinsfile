@@ -5,12 +5,14 @@
 //          parameter. Mirrors `.github/workflows/deploy.yml` exactly:
 //
 //   Checkout → CI (test + audit + build + trivy, per stack.json service)
-//     → ECR login → Push every service → SSM pointer → instance refresh
-//     → (optional) Deploy to EKS → Smoke test
+//     → Registry login → Push every service → VM fleet rollout
+//       (AWS ASG / Azure VMSS / GCP MIG, per CLOUD)
+//     → (optional) Deploy to managed k8s (EKS/AKS/GKE) → Smoke test
 //
 // Agent requirements (see cicd/jenkins/README.md for setup):
-//   - a Linux agent labelled "docker" with: bash, git, docker, AWS CLI v2, jq
-//   - kubectl (only needed when DEPLOY_EKS=true)
+//   - a Linux agent labelled "docker" with: bash, git, docker, jq and the
+//     active cloud's CLI (aws | az | gcloud)
+//   - kubectl (only needed when DEPLOY_K8S=true)
 //   - node/npm, trivy etc. run inside containers (no agent-side installs)
 //
 // Credentials (Jenkins → Manage Jenkins → Credentials → Global) - OPTIONAL:
@@ -18,6 +20,7 @@
 //   aws-secret-access-key  (Secret text) = AWS Secret Access Key
 // If these two credentials are absent, the pipeline falls back to the agent's
 // AWS instance role (the Terraform Jenkins module provides one automatically).
+// For azure/gcp the agent needs `az login` / `gcloud auth` (or instance roles).
 // ============================================================================
 
 pipeline {
@@ -32,29 +35,30 @@ pipeline {
   }
 
   parameters {
+    choice(name: 'CLOUD', choices: ['aws', 'azure', 'gcp'],
+           description: 'Target cloud (aws | azure | gcp)')
     choice(name: 'ENVIRONMENT', choices: ['dev', 'prod'],
            description: 'Target environment (dev applies the cheaper stack)')
-    string(name: 'REGION', defaultValue: 'eu-west-1',
-           description: 'AWS region')
+    string(name: 'REGION', defaultValue: '',
+           description: 'Region of the active cloud. Empty = stack.json cloud_config region.')
     string(name: 'PROJECT', defaultValue: 'secure-ntier',
-           description: 'Project name used in resource/ECR naming')
+           description: 'Project name used in resource/registry naming')
     booleanParam(name: 'AUTO_DEPLOY', defaultValue: true,
-           description: 'Push images, set SSM pointer and refresh the ASG')
+           description: 'Push images and roll the VM fleet (ASG / VMSS / MIG)')
     string(name: 'IMAGE_TAG', defaultValue: '',
            description: 'Image tag to build & deploy. Empty = current git SHA.')
     string(name: 'ALB_URL', defaultValue: '',
            description: 'URL to smoke-test after deploy, e.g. http://...elb.amazonaws.com . Empty = skip smoke test.')
-    booleanParam(name: 'DEPLOY_EKS', defaultValue: false,
-           description: 'Also deploy to the EKS cluster (requires Terraform enable_eks=true + kubectl on the agent)')
+    booleanParam(name: 'DEPLOY_K8S', defaultValue: false,
+           description: 'Also deploy to the managed k8s cluster (EKS/AKS/GKE - requires Terraform enable_eks/aks/gke=true + kubectl on the agent)')
     string(name: 'K8S_CLUSTER', defaultValue: '',
-           description: 'EKS cluster name. Empty = <project>-<env>-eks.')
+           description: 'Cluster name. Empty = <project>-<env>-<eks|aks|gke>.')
   }
 
   environment {
-    AWS_DEFAULT_REGION = "${params.REGION}"
-    ECR_REGION         = "${params.REGION}"
-    ENV                = "${params.ENVIRONMENT}"
-    PROJECT            = "${params.PROJECT}"
+    CLOUD      = "${params.CLOUD}"
+    ENV        = "${params.ENVIRONMENT}"
+    PROJECT    = "${params.PROJECT}"
   }
 
   stages {
@@ -64,7 +68,14 @@ pipeline {
         script {
           // Resolve the tag: explicit parameter wins, else short git SHA.
           env.IMAGE_TAG = params.IMAGE_TAG ?: GIT_COMMIT.take(7)
-          echo "Building image tag: ${env.IMAGE_TAG}"
+          echo "Building image tag: ${env.IMAGE_TAG} for cloud ${params.CLOUD}"
+
+          // Region: explicit parameter wins, else the active cloud's
+          // region from stack.json cloud_config.
+          env.REGION = params.REGION ?: sh(
+            script: "bash cicd/scripts/stack-info.sh cloud-field region",
+            returnStdout: true).trim()
+          echo "Using region: ${env.REGION}"
 
           // AWS credentials are OPTIONAL. When the Jenkins credentials exist
           // they are used; otherwise the pipeline relies on the agent's AWS
@@ -88,33 +99,54 @@ pipeline {
       }
     }
 
-    stage('ECR login') {
+    stage('Static analysis (SonarQube, optional)') {
+      // Runs only when a SONAR_HOST_URL is available; the code-quality gate
+      // does not block deploys by default (set sonar.qualitygate.wait=true
+      // in sonar-project.properties to enforce it).
+      when { expression { env.SONAR_HOST_URL != null } }
       steps {
-        sh "bash cicd/scripts/ecr-login.sh ${ECR_REGION}"
+        withSonarQubeEnv('SonarQube') {
+          sh "sonar-scanner -Dsonar.projectBaseDir=${WORKSPACE}"
+        }
+      }
+    }
+
+    stage('Registry login (ECR / ACR / Artifact Registry)') {
+      steps {
+        sh "bash cicd/scripts/registry-login.sh ${env.REGION}"
       }
     }
 
     stage('Push images') {
       when { expression { params.AUTO_DEPLOY == true } }
       steps {
-        sh "bash cicd/scripts/stack-push.sh ${env.IMAGE_TAG} ${ECR_REGION} ${PROJECT} ${ENV}"
+        sh "bash cicd/scripts/stack-push.sh ${env.IMAGE_TAG} ${env.REGION} ${PROJECT} ${ENV}"
       }
     }
 
-    stage('Deploy (SSM + instance refresh)') {
+    stage('Deploy (VM fleet rollout: ASG / VMSS / MIG)') {
       when { expression { params.AUTO_DEPLOY == true } }
       steps {
-        sh "bash cicd/scripts/deploy-ec2.sh ${env.IMAGE_TAG} ${ECR_REGION} ${ENV} ${PROJECT}"
+        script {
+          // One deploy script per cloud - all take the same arguments.
+          def deployScripts = [aws: 'deploy-ec2.sh', azure: 'deploy-vmss.sh', gcp: 'deploy-mig.sh']
+          sh "bash cicd/scripts/${deployScripts[params.CLOUD]} ${env.IMAGE_TAG} ${env.REGION} ${ENV} ${PROJECT}"
+        }
       }
     }
 
-    stage('Deploy to EKS (kubectl)') {
-      when { expression { params.AUTO_DEPLOY == true && params.DEPLOY_EKS == true } }
+    stage('Deploy to Kubernetes (kubectl)') {
+      when { expression { params.AUTO_DEPLOY == true && params.DEPLOY_K8S == true } }
       steps {
         script {
-          env.K8S_CLUSTER = params.K8S_CLUSTER ?: "${params.PROJECT}-${params.ENVIRONMENT}-eks"
+          if (params.K8S_CLUSTER) {
+            env.K8S_CLUSTER = params.K8S_CLUSTER
+          } else {
+            def suffix = [aws: 'eks', azure: 'aks', gcp: 'gke'][params.CLOUD]
+            env.K8S_CLUSTER = "${params.PROJECT}-${params.ENVIRONMENT}-${suffix}"
+          }
         }
-        sh "bash cicd/scripts/deploy-eks.sh ${env.IMAGE_TAG} ${ECR_REGION} ${ENV} ${PROJECT} ${env.K8S_CLUSTER}"
+        sh "bash cicd/scripts/deploy-k8s.sh ${env.IMAGE_TAG} ${env.REGION} ${ENV} ${PROJECT} ${env.K8S_CLUSTER}"
       }
     }
 

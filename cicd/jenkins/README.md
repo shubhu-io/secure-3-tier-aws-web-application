@@ -54,7 +54,7 @@ No AWS credentials are needed for the CI pipeline — nothing is pushed.
   - `/var/run/docker.sock` available (Trivy stage reads local images)
   - `kubectl` on PATH — **only** required if you enable `DEPLOY_EKS`
 
-> The Terraform **Jenkins module** (`terraform/modules/jenkins/`, opt-in via
+> The Terraform **Jenkins module** (`terraform/cloud/<cloud>/modules/jenkins/`, opt-in via
 > `enable_jenkins`) provisions this controller for you, including an IAM role
 > with the CI/CD policy. See [`docs/deployment/jenkins.md`](../../docs/deployment/jenkins.md).
 

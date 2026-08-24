@@ -69,6 +69,19 @@ and is created by Terraform.
 3. **SNS** — a publish/subscribe service that fans the alarm out.
 4. **Notification** — your email, delivered by the SNS subscription.
 
+## Cloud mapping
+
+Every cloud module provisions the same metric → alarm → notification chain
+with its native services (Terraform outputs `topic_arn` + `dashboard_name`
+regardless of target):
+
+| Concern | AWS | Azure | GCP |
+| ------- | --- | ----- | --- |
+| Metrics / logs / alarms | CloudWatch (+ Logs, Alarms) | Azure Monitor (+ Log Analytics, metric alerts) | Cloud Monitoring (+ Cloud Logging, alerting policies) |
+| Notification fan-out | SNS topic + email subscription | Action Group + email | Notification channel + email |
+| Dashboard | CloudWatch dashboard | Azure dashboard / workbook | Cloud Monitoring dashboard |
+| Compute metric | ASG average CPU | VMSS CPU percentage | MIG CPU utilization |
+
 ## Verification
 
 ```bash

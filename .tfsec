@@ -1,0 +1,24 @@
+# tfsec configuration
+# See https://aquasecurity.github.io/tfsec/v1.28.1/configuration/configuration/
+
+# Severity threshold for CI failure (default is CRITICAL,HIGH)
+severity_threshold = HIGH
+
+# Explicitly recognised checks - treated as context, not suppressed.
+include:
+  - aws-s3-enable-bucket-encryption
+  - aws-s3-enable-versioning
+  - aws-ec2-enforce-launch-config-http-token-imds
+  - aws-ec2-no-public-egress-sgr
+  - aws-rds-encrypt-cluster-storage-data
+  - aws-rds-enable-performance-insights
+  - aws-eks-enable-control-plane-logging
+
+# Checks we intentionally accept and document here:
+exclude:
+  # dev/tfvars pin Jenkins UI open to the world by default; the tfvars
+  # documentation + Terraform variable description warn to lock this down.
+  # The Jenkins module is opt-in (enable_jenkins = false by default).
+  - aws-ec2-no-public-ingress-sgr
+  # RDS storage autoscaling is a deliberate trade-off in dev
+  - aws-rds-no-auto-rotation

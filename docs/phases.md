@@ -16,6 +16,16 @@
 > run the commands, tick the checklist, move on. Do **not** skip phases or run
 > everything at once.
 
+> **Multi-cloud note:** these phases were written against AWS and remain the
+> reference implementation, but they are **cloud-generic** now. The Terraform
+> root dispatches to one self-contained module per cloud
+> (`terraform/cloud/aws|azure|gcp`, selected with `-var="cloud=..."`), and the
+> Azure/GCP equivalents are named inline where trivial (e.g. VPC ↔ VNet ↔ VPC,
+> RDS ↔ Azure PostgreSQL Flexible Server ↔ Cloud SQL). Where a phase names an
+> AWS service, read it as the concept; per-cloud setup guides live in
+> [`deployment/`](./deployment/). The Azure/GCP modules are ports pending live
+> validation.
+
 ---
 
 ## How to use this guide

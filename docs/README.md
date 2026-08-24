@@ -7,6 +7,7 @@ Everything you need to build, deploy, operate, and extend the platform.
 | Topic | Doc |
 | ----- | --- |
 | **Full build guide, phase by phase** | [`phases.md`](./phases.md) |
+| Getting started from scratch | [`getting-started.md`](./getting-started.md) | 
 | Before you start (tools) | [`deployment/prerequisites.md`](./deployment/prerequisites.md) |
 | Prepare your AWS account | [`deployment/aws-setup.md`](./deployment/aws-setup.md) |
 | Deploy infrastructure with Terraform | [`deployment/terraform.md`](./deployment/terraform.md) |

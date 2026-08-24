@@ -80,6 +80,21 @@ The pipeline **fails** (no deploy) when:
 - Trivy finds CRITICAL or HIGH CVEs in any image.
 - The post-deploy smoke test does not return a healthy `/health`.
 
+## Cloud mapping
+
+The pipeline is cloud-agnostic by design: the same stages run with a
+`CLOUD=aws|azure|gcp` environment variable, and Terraform's normalized outputs
+(`registry_url`, `image_repository_urls`, `asg_name`, `topic_arn`,
+`cicd_policy_json`) feed it regardless of target. The per-cloud equivalents:
+
+| Pipeline concern | AWS | Azure | GCP |
+| ---------------- | --- | ----- | --- |
+| Registry + login | ECR (`ecr get-login-password`) | ACR (`az acr login`) | Artifact Registry (`gcloud auth configure-docker`) |
+| Deploy pointer | SSM Parameter Store | VM custom script extension / tags | instance metadata / startup script |
+| Rolling swap | ASG instance refresh | VMSS rolling upgrade | MIG rolling update |
+| CI/CD identity | IAM user/role (`cicd-policy.json`) | Service principal / managed identity | Service account (+ Workload Identity Federation) |
+| Policy source | Terraform output `cicd_policy_json` | Terraform output `cicd_policy_json` | Terraform output `cicd_policy_json` |
+
 ## Environment flow
 
 ```text
