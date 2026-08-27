@@ -1,0 +1,83 @@
+---
+# Docker Engine from the official repository + compose plugin.
+# Mirrors what the Terraform user-data installs, so Ansible can also
+# converge fleets that were built before user-data was added.
+
+- name: Remove distro docker packages (avoid conflicts)
+  ansible.builtin.package:
+    name:
+      - docker
+      - docker-engine
+      - podman-docker
+      - containerd
+    state: absent
+
+- name: Install docker prerequisites
+  ansible.builtin.package:
+    name:
+      - ca-certificates
+      - gnupg
+      - lsb-release
+    state: present
+
+- name: Add Docker official GPG key (Debian family)
+  ansible.builtin.get_url:
+    url: https://download.docker.com/linux/ubuntu/gpg
+    dest: /etc/apt/keyrings/docker.asc
+    mode: "0644"
+  when: ansible_facts['os_family'] == 'Debian'
+
+- name: Add Docker apt repository (Debian family)
+  ansible.builtin.apt_repository:
+    repo: >-
+      deb [signed-by=/etc/apt/keyrings/docker.asc]
+      https://download.docker.com/linux/{{ ansible_facts['distribution'] | lower }}
+      {{ ansible_facts['distribution_release'] }} stable
+    filename: docker
+  when: ansible_facts['os_family'] == 'Debian'
+
+- name: Install Docker Engine + Compose plugin (Amazon Linux)
+  ansible.builtin.yum:
+    name:
+      - docker
+      - git
+    state: present
+    enablerepo: docker-ce-test
+  when: ansible_facts['os_family'] in ['RedHat', 'Amazon']
+  failed_when: false
+
+- name: Install Docker Engine + Compose plugin (Debian family)
+  ansible.builtin.package:
+    name:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+      - docker-buildx-plugin
+      - docker-compose-plugin
+    state: present
+  when: ansible_facts['os_family'] == 'Debian'
+  notify: restart docker
+
+- name: Enable and start docker
+  ansible.builtin.service:
+    name: docker
+    state: started
+    enabled: true
+
+- name: Ensure ec2-user is in the docker group
+  ansible.builtin.user:
+    name: "{{ ansible_user | default('ec2-user') }}"
+    groups: docker
+    append: true
+
+- name: Create app deploy directory
+  ansible.builtin.file:
+    path: "{{ app_deploy_dir }}"
+    state: directory
+    owner: root
+    group: docker
+    mode: "0750"
+
+- name: Verify docker works
+  ansible.builtin.command: docker version --format '{{ '{{' }}.Server.Version{{ '}}' }}'
+  changed_when: false

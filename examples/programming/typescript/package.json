@@ -1,0 +1,19 @@
+{
+  "name": "typescript-http-server",
+  "version": "1.0.0",
+  "description": "Minimal HTTP server in TypeScript using built-in modules",
+  "main": "dist/index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node dist/index.js",
+    "build": "tsc",
+    "test": "echo 'No test framework configured'",
+    "watch": "tsc --watch"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.2"
+  }
+}

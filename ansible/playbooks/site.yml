@@ -1,0 +1,32 @@
+# ============================================================================
+# Platform entrypoint. Converges any host in the [app] / [jenkins] groups.
+#
+#   ansible-playbook playbooks/site.yml            # everything, idempotent
+#   ansible-playbook playbooks/site.yml --tags docker
+#
+# Order matters: base OS → security hardening → Docker → monitoring agent.
+# ============================================================================
+---
+- name: Configure application tier
+  hosts: app
+  become: true
+  roles:
+    - role: common
+      tags: [common]
+    - role: hardening
+      tags: [hardening]
+    - role: docker
+      tags: [docker]
+    - role: cloudwatch-agent
+      tags: [monitoring]
+
+- name: Configure Jenkins controller/agents
+  hosts: jenkins
+  become: true
+  roles:
+    - role: common
+      tags: [common]
+    - role: hardening
+      tags: [hardening]
+    - role: docker
+      tags: [docker]

@@ -1,0 +1,34 @@
+---
+- name: Set hostname to instance id tag
+  ansible.builtin.hostname:
+    name: "{{ inventory_hostname }}"
+
+- name: Install base packages
+  ansible.builtin.package:
+    name:
+      - curl
+      - jq
+      - git
+      - htop
+      - unzip
+      - chrony
+    state: present
+
+- name: Enable and start time sync
+  ansible.builtin.service:
+    name: chronyd
+    state: started
+    enabled: true
+  when: ansible_facts['os_family'] in ['RedHat', 'Amazon']
+
+- name: Create ops group
+  ansible.builtin.group:
+    name: ops
+    state: present
+
+- name: Ensure ops group has passwordless sudo
+  ansible.builtin.copy:
+    content: "%ops ALL=(ALL) NOPASSWD:ALL\n"
+    dest: /etc/sudoers.d/90-ops-group
+    mode: "0440"
+    validate: "visudo -cf %s"

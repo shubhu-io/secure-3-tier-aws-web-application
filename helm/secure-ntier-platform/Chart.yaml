@@ -1,0 +1,16 @@
+apiVersion: v2
+name: secure-ntier-platform
+description: >-
+  Helm chart for the secure n-tier platform: React/Nginx frontend +
+  Node/Express backend on Kubernetes (EKS / AKS / GKE). Complements the raw
+  manifests rendered from stack.json in kubernetes/.
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+keywords:
+  - secure-ntier
+  - three-tier
+  - multi-cloud
+maintainers:
+  - name: DevOps Projects
+home: https://github.com/example/secure-ntier-cloud-platform

@@ -1,0 +1,6 @@
+---
+# Overridable defaults for the hardening role.
+sshd_password_auth: "no"
+sshd_permit_root_login: "no"
+ssh_allow_users: ec2-user
+

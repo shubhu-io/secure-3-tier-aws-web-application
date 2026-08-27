@@ -1,0 +1,22 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: secure-ntier
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/YOUR_USERNAME/secure-ntier-cloud-platform.git
+    targetRevision: main
+    path: kubernetes          # static support resources (kustomize)
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: secure-ntier
+  syncPolicy:
+    automated:
+      prune: false            # rendered per-service manifests are not in git;
+      selfHeal: true          # let deploy.sh own them, Argo owns the base
+    syncOptions:
+      - CreateNamespace=true

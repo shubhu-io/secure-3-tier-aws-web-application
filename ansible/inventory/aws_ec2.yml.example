@@ -1,0 +1,22 @@
+# Dynamic AWS inventory — copy to aws_ec2.yml and run:
+#   AWS_REGION=eu-west-1 ansible-inventory -i inventory/aws_ec2.yml --graph
+#
+# Discovers instances by the tags Terraform sets (project + environment),
+# so new ASG-launched instances are picked up automatically.
+plugin: amazon.aws.aws_ec2
+
+regions:
+  - eu-west-1
+
+filters:
+  tag:Project: secure-ntier
+  instance-state-name: running
+
+keyed_groups:
+  # Groups: tag_Role_app, tag_Role_jenkins ...
+  - key: tags.Role
+    prefix: tag_role
+    separator: _
+
+groups:
+  app: "'Role' in tags and tags.Role == 'app'"

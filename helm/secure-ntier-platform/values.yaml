@@ -1,0 +1,84 @@
+# ============================================================================
+# Default values for secure-ntier-platform.
+# Override per environment, e.g.:
+#   helm upgrade --install ntier helm/secure-ntier-platform \
+#     --namespace secure-ntier --create-namespace \
+#     --set image.registry=123456789.dkr.ecr.eu-west-1.amazonaws.com \
+#     --set image.tag=main-abc1234
+#
+# Service names/ports intentionally mirror stack.json so both deployment paths
+# (rendered raw manifests and Helm) produce identical workloads.
+# ============================================================================
+
+fullnameOverride: ""          # leave empty to derive "<release>-<service>"
+
+image:
+  # Registry without trailing slash (ECR / ACR / Artifact Registry).
+  registry: ""
+  # Empty tag = Chart appVersion. CI passes a unique tag per build.
+  tag: ""
+  pullPolicy: IfNotPresent
+
+config:
+  # Non-secret app configuration (mirrors kubernetes/configmap.yaml).
+  NODE_ENV: production
+  PORT: "3000"
+
+existingSecret: app-db-secret  # created by kubernetes/scripts/deploy.sh or manually
+
+backend:
+  enabled: true
+  image:
+    repository: backend
+    tag: ""
+  replicaCount: 2
+  containerPort: 3000
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 6
+    targetCPUUtilizationPercentage: 70
+  podDisruptionBudget:
+    enabled: true
+    minAvailable: 1
+  env:
+    DB_HOST: ""   # RDS/Flexible Server/Cloud SQL endpoint — required in cloud envs
+    DB_PORT: "5432"
+    DB_NAME: appdb
+
+frontend:
+  enabled: true
+  image:
+    repository: frontend
+    tag: ""
+  replicaCount: 2
+  containerPort: 80
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 250m
+      memory: 256Mi
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 6
+    targetCPUUtilizationPercentage: 70
+  service:
+    type: ClusterIP
+  ingress:
+    enabled: false
+    className: nginx           # AWS Load Balancer Controller: use "alb"
+    annotations: {}
+      # cert-manager.io/cluster-issuer: letsencrypt-prod
+      # alb.ingress.kubernetes.io/scheme: internet-facing
+      # alb.ingress.kubernetes.io/listen-ports: '[{"HTTPS":443}]'
+    host: ""                   # e.g. app.example.com; empty = accept all hosts

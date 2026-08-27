@@ -1,0 +1,41 @@
+{{- if and .Values.frontend.enabled .Values.frontend.ingress.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "secure-ntier-platform.fullname" . }}-frontend
+  labels:
+    {{- include "secure-ntier-platform.labels" . | nindent 4 }}
+  {{- with .Values.frontend.ingress.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  ingressClassName: {{ .Values.frontend.ingress.className }}
+  {{- if .Values.frontend.ingress.host }}
+  tls:
+    - hosts:
+        - {{ .Values.frontend.ingress.host }}
+  rules:
+    - host: {{ .Values.frontend.ingress.host }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "secure-ntier-platform.fullname" . }}-frontend
+                port:
+                  number: 80
+  {{- else }}
+  rules:
+    - http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "secure-ntier-platform.fullname" . }}-frontend
+                port:
+                  number: 80
+  {{- end }}
+{{- end }}

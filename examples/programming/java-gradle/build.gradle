@@ -1,0 +1,29 @@
+plugins {
+    id 'java'
+    id 'application'
+}
+
+repositories {
+    mavenCentral()
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
+}
+
+dependencies {
+    // No external dependencies; using JDK built-in HttpServer
+}
+
+application {
+    mainClass = 'com.example.App'
+}
+
+run {
+    args = ['8080']
+}
+
+build {
+    outputs.upToDateWhen { false }
+}

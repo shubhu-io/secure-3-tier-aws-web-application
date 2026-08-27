@@ -1,0 +1,18 @@
+# Copy to inventory/hosts.ini and fill with real addresses.
+# Prefer DNS names of the ALB-attached ASG instances or SSM-forwarded ports.
+
+[app]
+# app-instance-1 ansible_host=10.0.11.23
+# app-instance-2 ansible_host=10.0.12.45
+
+[app:vars]
+ansible_user=ec2-user
+# If tunnelling over SSM Session Manager port forwarding:
+# ansible_ssh_common_args='-o ProxyCommand="aws ssm start-session --target %h --document-name AWS-StartPortForwardingSessionToRemoteHost --parameters host=%h,portName=22 --region eu-west-1"'
+
+[jenkins]
+# jenkins-controller ansible_host=10.0.5.10
+
+[cloud:children]
+app
+jenkins

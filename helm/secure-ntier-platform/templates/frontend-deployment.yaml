@@ -1,0 +1,41 @@
+{{- if .Values.frontend.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "secure-ntier-platform.fullname" . }}-frontend
+  labels:
+    app: frontend
+    {{- include "secure-ntier-platform.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.frontend.replicaCount }}
+  selector:
+    matchLabels:
+      app: frontend
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app: frontend
+        {{- include "secure-ntier-platform.labels" . | nindent 8 }}
+    spec:
+      containers:
+        - name: frontend
+          image: {{ include "secure-ntier-platform.image" (dict "repository" .Values.frontend.image.repository "tag" .Values.frontend.image.tag "Chart" .Chart "Values" .Values) }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.frontend.containerPort }}
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: {{ .Values.frontend.containerPort }}
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: {{ .Values.frontend.containerPort }}
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          resources:
+            {{- toYaml .Values.frontend.resources | nindent 12 }}
+{{- end }}

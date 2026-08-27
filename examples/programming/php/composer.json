@@ -1,0 +1,6 @@
+{
+    "name": "php-http-server",
+    "type": "project",
+    "description": "Minimal HTTP server in PHP",
+    "require": {}
+}

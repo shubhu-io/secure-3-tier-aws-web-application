@@ -1,0 +1,28 @@
+---
+# Shared variables — override per environment with -e or group_vars/<env>.
+project_name: secure-ntier
+environment: dev
+aws_region: eu-west-1
+
+# hardening defaults
+sshd_password_auth: "no"
+sshd_permit_root_login: "no"
+ssh_allow_users: ec2-user
+
+# docker role
+app_deploy_dir: /opt/app
+
+# cloudwatch-agent role — collects docker + system logs to the platform log group
+cloudwatch_agent_config:
+  agent:
+    region: "{{ aws_region }}"
+    logfile:
+      max_buffer_size: 1048576
+  logs:
+    logs_collected:
+      files:
+        collect_list:
+          - file_path: /var/log/secure
+            log_group_name: "/{{ project_name }}/{{ environment }}/os/secure"
+          - file_path: /var/log/syslog
+            log_group_name: "/{{ project_name }}/{{ environment }}/os/syslog"

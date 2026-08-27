@@ -1,0 +1,19 @@
+=====================================================================
+ secure-ntier-platform has been deployed (release: {{ .Release.Name }})
+=====================================================================
+
+Services:
+{{- if .Values.backend.enabled }}
+  backend : {{ include "secure-ntier-platform.fullname" . }}-backend:{{ .Values.backend.containerPort }}
+{{- end }}
+{{- if .Values.frontend.enabled }}
+  frontend: {{ include "secure-ntier-platform.fullname" . }}-frontend:80
+{{- end }}
+
+Verify rollout:
+  kubectl -n {{ .Release.Namespace }} rollout status deploy/{{ include "secure-ntier-platform.fullname" . }}-backend
+  kubectl -n {{ .Release.Namespace }} get pods
+
+Smoke test (from inside the cluster):
+  kubectl -n {{ .Release.Namespace }} run smoke --rm -it --image=curlimages/curl --restart=Never -- \
+    curl -s http://{{ include "secure-ntier-platform.fullname" . }}-frontend/health

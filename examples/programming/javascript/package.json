@@ -1,0 +1,15 @@
+{
+  "name": "javascript-http-server",
+  "version": "1.0.0",
+  "description": "Minimal HTTP server in Node.js using built-in http module",
+  "main": "src/index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/index.js",
+    "test": "node --test",
+    "build": "echo 'No build step needed'"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

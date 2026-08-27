@@ -1,0 +1,37 @@
+{{- if .Values.backend.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "secure-ntier-platform.fullname" . }}-backend
+  labels:
+    app: backend
+    {{- include "secure-ntier-platform.labels" . | nindent 4 }}
+spec:
+  type: ClusterIP
+  selector:
+    app: backend
+    app.kubernetes.io/instance: {{ .Release.Name }}
+  ports:
+    - name: http
+      port: {{ .Values.backend.containerPort }}
+      targetPort: {{ .Values.backend.containerPort }}
+{{- end }}
+---
+{{- if .Values.frontend.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "secure-ntier-platform.fullname" . }}-frontend
+  labels:
+    app: frontend
+    {{- include "secure-ntier-platform.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.frontend.service.type }}
+  selector:
+    app: frontend
+    app.kubernetes.io/instance: {{ .Release.Name }}
+  ports:
+    - name: http
+      port: 80
+      targetPort: {{ .Values.frontend.containerPort }}
+{{- end }}
