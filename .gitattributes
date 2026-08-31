@@ -1,0 +1,7 @@
+*.sh text eol=lf
+*.bash text eol=lf
+*.tf text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+Dockerfile text eol=lf
+Makefile text eol=lf

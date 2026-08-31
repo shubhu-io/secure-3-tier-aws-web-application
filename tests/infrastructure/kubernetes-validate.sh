@@ -8,7 +8,7 @@
 #                                  from stack.json and checks the output shape)
 #  3. client dry-run            -> only when a cluster/context is reachable
 # ============================================================================
-set -uo pipefail
+set -euo pipefail
 
 if ! command -v kubectl >/dev/null 2>&1; then
   echo "WARN: kubectl not found on PATH - skipping Kubernetes manifest validation"

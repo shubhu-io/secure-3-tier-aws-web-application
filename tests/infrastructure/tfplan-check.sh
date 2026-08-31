@@ -13,11 +13,21 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(dirname "$SCRIPT_DIR")"
 cd "$REPO_ROOT/terraform"
 
-echo "==> terraform plan"
-terraform plan -var-file="$ENV_FILE" -out=/tmp/tfplan.bin >/dev/null
+# Resolve terraform binary (Windows Git Bash compat)
+TF_BIN="${TERRAFORM_BIN:-}"
+if [ -z "$TF_BIN" ]; then
+  if command -v terraform >/dev/null 2>&1; then TF_BIN="terraform"
+  elif command -v terraform.exe >/dev/null 2>&1; then TF_BIN="terraform.exe"
+  elif [ -x "/c/terraform/terraform.exe" ]; then TF_BIN="/c/terraform/terraform.exe"
+  elif [ -x "C:/terraform/terraform.exe" ]; then TF_BIN="C:/terraform/terraform.exe"
+  else TF_BIN="terraform"; fi
+fi
+
+echo "==> terraform plan ($TF_BIN)"
+"$TF_BIN" plan -var-file="$ENV_FILE" -out=/tmp/tfplan.bin >/dev/null
 
 echo "==> Extracting resource addresses"
-terraform show -json /tmp/tfplan.bin > /tmp/tfplan.json
+"$TF_BIN" show -json /tmp/tfplan.bin > /tmp/tfplan.json
 
 REQUIRED=(
   "aws_vpc.this"
