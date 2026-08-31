@@ -14,12 +14,12 @@ db_subnet_cidrs     = ["10.0.21.0/24", "10.0.22.0/24"]
 
 nat_gateway_count = 2   # one NAT per AZ for HA
 
-instance_type          = "t3.medium"
+aws_instance_type      = "t3.medium"
 asg_min_size           = 2
 asg_max_size           = 6
 asg_desired_capacity   = 2
 
-db_instance_class     = "db.t3.medium"
+aws_db_instance_class = "db.t3.medium"
 db_multi_az           = true
 db_allocated_storage  = 50
 db_name               = "appdb"
@@ -36,14 +36,14 @@ repositories = ["backend", "frontend"]
 
 # --- Kubernetes (optional, costly) ---
 # Set to true to also provision an EKS cluster + managed node group.
-enable_eks = false
+aws_enable_eks = false
 
 # IAM principal (user/role ARN) granted cluster admin for CI/CD kubectl.
-# eks_ci_iam_arn = "arn:aws:iam::123456789012:role/github-actions-cicd"
+# aws_eks_ci_iam_arn = "arn:aws:iam::123456789012:role/github-actions-cicd"
 
 # --- Jenkins (optional, alternative to GitHub Actions) ---
 # In prod, prefer GitHub Actions (managed) over self-hosted Jenkins unless you
 # have a reason to run your own. If you do, LOCK the ingress CIDRs to your IPs.
-enable_jenkins = false
-# jenkins_ingress_cidrs = ["203.0.113.5/32"]
-# jenkins_key_name = "prod-jenkins-key"
+aws_enable_jenkins = false
+# aws_jenkins_ingress_cidrs = ["203.0.113.5/32"]
+# aws_jenkins_key_name = "prod-jenkins-key"
