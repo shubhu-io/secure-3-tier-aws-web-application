@@ -98,11 +98,11 @@ public class App
                     using var reader = new System.IO.StreamReader(request.InputStream, request.ContentEncoding);
                     var body = reader.ReadToEnd();
 
-                    string name;
+                    string? name;
                     try
                     {
                         var dict = System.Text.Json.JsonSerializer.Deserialize<System.Collections.Generic.Dictionary<string, string>>(body);
-                        name = dict?.ContainsKey("name") == true ? dict["name"] : null;
+                        name = dict != null && dict.TryGetValue("name", out var v) ? v : null;
                     }
                     catch
                     {
