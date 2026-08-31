@@ -5,9 +5,25 @@
 > (`diagrams/`), or (b) **your** captures following the instructions below.
 > Nothing in this folder is auto-generated to "look like" an AWS console.
 
+> **Image ideas:** full categorized list with filenames lives in [`screenshots/IMAGE_IDEAS.md`](./IMAGE_IDEAS.md) — generate per that guide, drop files in `screenshots/<folder>/NN-...png`, and I will wire them into README + step files (*jaha jarurat hai waha add kar dunga*).
+
+## Folder layout
+
+```
+screenshots/
+├── IMAGE_IDEAS.md   # master list (terraform / jenkins / cicd / deployment / k8s / monitoring)
+├── terraform/       # T01–T08 terraform steps
+├── jenkins/         # J01–J09 Jenkins steps
+├── cicd/            # C01–C05 GitHub Actions
+├── deployment/      # D01–D08 app verification
+├── kubernetes/      # K01–K04 EKS/AKS/GKE
+├── monitoring/      # M01–M03 CloudWatch etc.
+└── *.png            # legacy flat captures (deprecated, use subfolders)
+```
+
 Drop captured screenshots here (`.png`, < 500 KB each) and link them from docs
 with relative paths. Suggested capture checklist for when you deploy the
-platform yourself:
+platform yourself (legacy flat list — prefer subfolder READMEs):
 
 ## Suggested captures (AWS Console → navigate → screenshot)
 

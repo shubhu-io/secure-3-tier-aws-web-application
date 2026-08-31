@@ -65,3 +65,26 @@ screenshots/*.jpeg
 # --- Cloud-native local caches ----------------------------------------------
 .terraform.tfstate.lock.info
 terraform.tfstate.backup
+
+# --- Generated / Local ------------------------------------------------------
+tree_output.txt
+PROPOSED_STRUCTURE.md
+MULTI-CLOUD-DEPLOYMENT.md
+SETUP-GUIDE.md
+__pycache__/
+*.pyc
+dist-test/
+examples/programming/typescript/dist/
+examples/programming/typescript/dist-test/
+
+# --- Programming examples build artifacts -----------------------------------
+examples/programming/csharp/bin/
+examples/programming/csharp/obj/
+examples/programming/kotlin/.gradle/
+examples/programming/kotlin/build/
+examples/programming/java-gradle/.gradle/
+examples/programming/java-gradle/build/
+examples/programming/rust/target/
+examples/programming/rust/Cargo.lock
+examples/programming/scala/target/
+examples/programming/swift/.build/

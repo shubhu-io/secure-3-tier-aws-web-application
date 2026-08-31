@@ -112,10 +112,10 @@ public class App
                     if (string.IsNullOrEmpty(name))
                     {
                         response.StatusCode = 400;
-                        var json = "{\"error\":\"name is required\"}";
-                        var buffer = Encoding.UTF8.GetBytes(json);
-                        response.ContentLength64 = buffer.Length;
-                        response.OutputStream.Write(buffer, 0, buffer.Length);
+                        var errorJson = "{\"error\":\"name is required\"}";
+                        var errorBuffer = Encoding.UTF8.GetBytes(errorJson);
+                        response.ContentLength64 = errorBuffer.Length;
+                        response.OutputStream.Write(errorBuffer, 0, errorBuffer.Length);
                         response.OutputStream.Close();
                         continue;
                     }
@@ -130,7 +130,8 @@ public class App
                     }
 
                     response.StatusCode = 201;
-                    var createdJson = $"{{\"id\":\"{items[^1][\"id\"]}\",\"name\":\"{name}\"}}";
+                    var lastId = items[items.Count - 1]["id"];
+                    var createdJson = $"{{\"id\":\"{lastId}\",\"name\":\"{name}\"}}";
                     var buffer = Encoding.UTF8.GetBytes(createdJson);
                     response.ContentLength64 = buffer.Length;
                     response.OutputStream.Write(buffer, 0, buffer.Length);

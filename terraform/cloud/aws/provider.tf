@@ -1,5 +1,9 @@
 # ============================================================================
-# Provider configuration
+# Provider requirements — provider configuration lives in the ROOT
+# terraform/provider.tf and is passed into this child via
+#   providers = { aws = aws }
+# Removing the local provider block allows the root's count dispatch
+# (module "aws" count = var.cloud == "aws" ? 1 : 0) to be legal.
 # ============================================================================
 
 terraform {
@@ -13,18 +17,6 @@ terraform {
     random = {
       source  = "hashicorp/random"
       version = "~> 3.6"
-    }
-  }
-}
-
-provider "aws" {
-  region = var.aws_region
-
-  default_tags {
-    tags = {
-      Project     = var.project_name
-      Environment = var.environment
-      ManagedBy   = "Terraform"
     }
   }
 }

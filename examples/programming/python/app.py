@@ -4,7 +4,7 @@ import urllib.parse
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from typing import Dict, List
 
-items: List[Dict[str, str]]
+items: List[Dict[str, str]] = []
 
 
 class RequestHandler(BaseHTTPRequestHandler):

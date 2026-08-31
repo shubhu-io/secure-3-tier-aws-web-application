@@ -1,9 +1,10 @@
 # End-to-End Automated & Secure n-Tier Cloud Infrastructure with Application Deployment
 
-> A production-inspired, fully automated AWS platform: **React + Node/Express + PostgreSQL**
-> running on an **n-tier VPC** (public / private app / private DB), deployed through a
-> **CI/CD pipeline**, secured by **WAF + layered security groups + Secrets Manager + IAM
-> least privilege**, monitored with **CloudWatch alarms**, and provisioned 100% by **Terraform**.
+> A production-inspired, fully automated **AWS EC2** platform: **React + Node/Express + PostgreSQL**
+> running **entirely on AWS EC2** (Auto Scaling Group + ALB) inside an **n-tier VPC**
+> (public / private app / private DB), deployed through **CI/CD pipeline**, secured by
+> **WAF + layered security groups + Secrets Manager + IAM least privilege**, monitored with
+> **CloudWatch alarms**, and provisioned 100% by **Terraform**. EKS/K8s is optional, disabled by default (`aws_enable_eks=false`).
 
 [![Terraform](https://img.shields.io/badge/Terraform-%235835CC.svg?logo=terraform&logoColor=white)](https://www.terraform.io)
 [![AWS](https://img.shields.io/badge/AWS-%23FF9900.svg?logo=amazonwebservices&logoColor=white)](https://aws.amazon.com)
@@ -244,13 +245,14 @@ Every major decision exists to solve a specific production problem:
 | **Multi-AZ** | If an Availability Zone fails, traffic keeps flowing from the other AZ. |
 | **Private subnets** | App and database servers have no public IP → cannot be attacked directly from the internet. |
 | **Load balancer (ALB)** | Distributes traffic across instances, handles TLS termination, and performs health checks. |
-| **Auto Scaling** | Replaces failed instances and adds capacity as load grows — without a human. |
+| **Auto Scaling (EC2)** | Replaces failed instances and adds capacity as load grows — **all app containers run on AWS EC2** (ASG, ubuntu 24.04 + Docker). |
 | **Managed RDS** | Database backups, patching, and failover handled by AWS. |
-| **Docker** | The exact image tested in CI is the exact image deployed — no drift. |
-| **CI/CD** | Code changes are tested, scanned, and shipped automatically and consistently. |
+| **Docker on EC2** | The exact image tested in CI is the exact image deployed — EC2 user-data runs `docker compose` from ECR. |
+| **CI/CD** | Code changes are tested, scanned, and shipped automatically and consistently (deploy-ec2.sh → SSO + ASG refresh). |
 | **WAF** | Blocks common web attacks (SQL injection, XSS, bots) before they reach the app. |
 | **Monitoring** | Alarms fire before users notice a problem. |
 | **Terraform** | The whole platform is code: reviewable, versioned, reproducible. |
+| **EC2-only default** | EKS is **opt-in** (`aws_enable_eks=false` by default). Everything runs on EC2 unless you explicitly enable EKS. |
 
 ---
 
@@ -291,24 +293,25 @@ Full diagrams (rendered PNGs + Mermaid source) are in [`diagrams/`](./diagrams/R
 AWS reference implementation — each row has an Azure/GCP twin per the
 [mapping table](#multi-cloud-design):
 
-| Component | What it does |
+| Component | What it does — **all runs on AWS EC2** |
 | --------- | ------------ |
-| **Route 53** | DNS — maps `app.example.com` to the ALB. Also does health-check based failover (optional). |
-| **AWS WAF** | Web Application Firewall. Managed rule sets block SQL injection, XSS, bad bots, and common exploit patterns before they reach the ALB. |
-| **ALB** | Application Load Balancer. Terminates TLS, routes HTTPS :443 to the app target group, redirects :80 → :443. |
+| **Route 53** | DNS — maps `app.example.com` to the ALB. |
+| **AWS WAF** | Web Application Firewall. Managed rule sets block SQL injection, XSS, bad bots before they reach the ALB. |
+| **ALB** | Application Load Balancer. Terminates TLS, routes HTTPS :443 to the EC2 target group, redirects :80 → :443. |
 | **VPC** | Private, isolated network with its own CIDR block (10.0.0.0/16). |
-| **Public subnets** | Contain the ALB and NAT Gateway. Only these subnets talk to the internet directly. |
-| **Private app subnets** | Contain EC2 instances running the application in Docker. They reach the internet (for package downloads) **only** through the NAT Gateway, and have no public IPs. |
+| **Public subnets** | Contain the ALB and NAT Gateway. Only these talk to the internet directly. |
+| **Private app subnets** | **Contain EC2 instances** (ASG) running the application in Docker. They reach the internet **only** through the NAT Gateway, no public IPs. |
 | **Private DB subnets** | Contain RDS. No route to the internet at all. Reachable only from the app security group on port 5432. |
-| **NAT Gateway** | Gives private instances outbound internet access while keeping them un-reachable from the internet. |
+| **NAT Gateway** | Gives private EC2 instances outbound internet while keeping them unreachable from the internet. |
 | **Internet Gateway** | The door between the VPC and the internet for public resources. |
-| **EC2 + Auto Scaling** | Launch Template defines the exact machine (AMI, size, user-data). ASG keeps 2 healthy instances across AZs and replaces any that fail. |
-| **Docker on EC2** | Each instance runs the frontend (Nginx) and backend (Node) containers from Amazon ECR, plus the app connects to RDS. |
+| **EC2 + Auto Scaling** | **Primary compute: Launch Template (Ubuntu 24.04 + Docker) + ASG** keeps 2 healthy EC2 instances across AZs and replaces any that fail. Image pull from ECR via SSM pointer (`/project/env/service-image`). |
+| **Docker on EC2** | EC2 user-data renders `/opt/app/docker-compose.yml` from `stack.json` and runs `docker compose up`. Frontend (Nginx) exposes 80, backend 3000, both on the same EC2 host. |
 | **RDS PostgreSQL** | Managed database in private subnets: encrypted, automated backups, optional multi-AZ. Credentials live in Secrets Manager. |
-| **ECR** | Private Docker registry where CI/CD pushes images. |
-| **Secrets Manager** | Stores the DB username/password. The application retrieves them at boot using its **instance role** — no secrets in code. |
-| **CloudWatch** | Metrics, logs, and alarms (CPU, 5xx, unhealthy hosts, RDS storage) that notify via SNS. |
+| **ECR** | Private Docker registry where CI/CD pushes EC2 images. |
+| **Secrets Manager** | Stores DB credentials. EC2 instance role reads them at boot — no secrets in code. |
+| **CloudWatch** | Metrics, logs, and alarms (CPU, 5xx, unhealthy hosts, RDS storage) that notify via SNS — monitors EC2 + ALB + RDS. |
 | **CloudTrail + Flow Logs** | Audit trail of API calls and network traffic. |
+| **EKS (optional)** | **Disabled by default.** Enable with `aws_enable_eks=true` if you want k8s alongside EC2. Otherwise everything stays on EC2. |
 
 ### Network & traffic flow
 
@@ -320,15 +323,16 @@ AWS reference implementation — each row has an Azure/GCP twin per the
 
 ## 🧰 Technology Stack
 
-| Technology | Purpose |
+| Technology | Purpose — **EC2 is default compute** |
 | ---------- | ------- |
 | Terraform | Infrastructure as Code — multi-cloud root dispatcher + per-cloud modules (`cloud/aws`, `cloud/azure`, `cloud/gcp`) |
-| AWS · Azure · Google Cloud | Target clouds — one selected per deployment via `-var="cloud=…"` |
-| Docker | Containerization of frontend + backend |
-| Amazon ECR / Azure ACR / GCP Artifact Registry | Private container registry for the active cloud |
-| GitHub + GitHub Actions | Source control + CI/CD pipeline |
-| Jenkins | Alternative CI/CD pipeline (same shared scripts) |
-| Kubernetes (EKS / AKS / GKE) | Optional managed container orchestration (coexists with VM path) |
+| **AWS EC2 (primary)** | **All app workloads run on EC2 Auto Scaling Group** (Ubuntu 24.04 + Docker Compose). No EKS required. |
+| AWS · Azure · Google Cloud | Target clouds — one selected per deployment via `-var="cloud=…"` (EC2/VMSS/MIG per cloud) |
+| Docker | Containerization of frontend + backend — runs on EC2 via user-data `docker compose` |
+| Amazon ECR / Azure ACR / GCP Artifact Registry | Private container registry for the active cloud (EC2 pulls via instance role) |
+| GitHub + GitHub Actions | Source control + CI/CD pipeline (`deploy-ec2.sh` → SSM + ASG instance refresh) |
+| Jenkins | Alternative CI/CD pipeline (also runs on EC2, same shared scripts) |
+| Kubernetes (EKS / AKS / GKE) | **Optional, disabled by default** (`enable_eks/aks/gke=false`). Enable only if you want K8s alongside EC2. |
 | React (Vite) | Frontend UI |
 | Node.js / Express | Backend API |
 | PostgreSQL (RDS / Flexible Server / Cloud SQL) | Relational database, private-only access |
@@ -342,99 +346,82 @@ AWS reference implementation — each row has an Azure/GCP twin per the
 
 ## 📁 Repository Structure
 
+> **Folder map updated 2026-08-27** — reflects the organized layout (`project/` removed, `scripts/` consolidated). See step files: [`docs/getting-started.md`](./docs/getting-started.md) · [`docs/phases.md`](./docs/phases.md) · [`docs/deployment/terraform.md`](./docs/deployment/terraform.md)
+
 ```text
 secure-ntier-cloud-platform/
-├── README.md
-├── LICENSE
-├── SECURITY.md
-├── CONTRIBUTING.md
-├── CHANGELOG.md
-├── stack.json               # THE tech-stack manifest: services, ports, toolchains,
-│                            # db engine/version, runtimes — drives CI/CD + Terraform + k8s
+├── README.md, LICENSE, SECURITY.md, CONTRIBUTING.md, CHANGELOG.md
+├── stack.json               # THE manifest: services, ports, toolchain, db, clouds — drives CI/CD + Terraform + k8s
+├── Makefile                 # language-agnostic build/test helpers (examples/programming/*)
+├── sonar-project.properties # SonarQube config
+├── .checkov.yml / .tfsec / .dockerignore / .gitignore
 │
-├── docs/
-│   ├── architecture/      # overview, network, security, cicd, monitoring, DR, kubernetes
-│   ├── deployment/        # prerequisites, aws-setup, terraform, application, cicd, eks, jenkins
-│   ├── operations/        # monitoring, backup, scaling, troubleshooting
-│   ├── runbooks/          # deployment-failure, instance-failure, db-failure, rollback
-│   ├── adr/               # architecture decision records
-│   ├── phases.md          # the full phase-by-phase build guide
-│   ├── testing.md
-│   ├── cost-guide.md
-│   └── interview-questions.md
+├── docs/                    # 📚 Step files & deep dives
+│   ├── getting-started.md   # Step 0 → 10 zero-to-deployed guide (START HERE)
+│   ├── phases.md            # Step-by-step build phases (phase 1 → N)
+│   ├── deployment/          # prerequisites, aws-setup, azure-setup, gcp-setup, terraform, application, cicd, eks, jenkins
+│   ├── architecture/        # overview, network, security, cicd, monitoring, DR, kubernetes (+ images/)
+│   ├── operations/          # monitoring, backup, scaling, troubleshooting
+│   ├── runbooks/            # deployment-failure, instance-failure, db-failure, rollback
+│   ├── commands/            # CLI references: aws, azure, gcp, docker, k8s, terraform, git, etc.
+│   ├── adr/                 # ADR-001 → ADR-008 decisions
+│   ├── cost-guide.md / testing.md / interview-questions.md / explain-like-im-five.md
+│   └── archive/             # PROPOSED_STRUCTURE.md (historical plan)
 │
-├── diagrams/              # Mermaid sources (architecture, network, security, cicd, ...)
-│   └── rendered/          # Pre-rendered PNG copies embedded in this README
-├── screenshots/           # capture instructions (no fabricated images)
+├── diagrams/                # Mermaid sources (architecture, network, security, cicd, request-flow, deployment-flow, failure-flow, disaster-recovery, kubernetes, stack)
+│   ├── rendered/            # Pre-rendered PNGs embedded in README
+│   └── assets/              # Generated SVG/PNG via scripts/create_diagrams.py
+├── screenshots/             # capture instructions (png ignored by .gitignore)
+├── assets/images/           # static platform images
 │
-├── terraform/
-│   ├── main.tf            # multi-cloud dispatcher: -var="cloud=aws|azure|gcp"
-│   ├── variables.tf       # shared vars + per-cloud vars (aws_*/azure_*/gcp_*)
-│   ├── outputs.tf         # normalized outputs (same names for every cloud)
-│   ├── provider.tf        # note: providers are configured per cloud module
-│   ├── versions.tf        # pinned aws/azurerm/google provider versions
-│   ├── backend.tf         # S3 remote state (+ per-cloud backend.hcl keys)
-│   └── cloud/
-│       ├── aws/           # reference implementation (battle-tested)
-│       │   └── modules/   # vpc, security, alb, compute, database, ecr,
-│       │                  # monitoring, eks, jenkins
-│       ├── azure/         # VNet, NSGs, App Gateway+WAF, VMSS, PostgreSQL
-│       │                  # Flexible Server, ACR, Monitor, AKS, Jenkins
-│       └── gcp/           # VPC, firewall rules, HTTPS LB+Cloud Armor, MIG,
-│                          # Cloud SQL, Artifact Registry, Monitoring, GKE
-│   └── environments/
-│       ├── dev/           # terraform.tfvars.example + backend.hcl
-│       └── prod/          # terraform.tfvars.example + backend.hcl
+├── terraform/               # IaC — multi-cloud dispatcher
+│   ├── main.tf              # -var="cloud=aws|azure|gcp" selects exactly one child
+│   ├── variables.tf / outputs.tf / provider.tf / versions.tf / backend.tf
+│   ├── cloud/
+│   │   ├── aws/             # reference impl — modules: vpc, security, alb, compute, database, ecr, monitoring, eks, jenkins
+│   │   ├── azure/           # VNet, NSGs, App Gateway+WAF, VMSS, PostgreSQL Flexible, ACR, Monitor, AKS
+│   │   └── gcp/             # VPC, firewall, HTTPS LB+Cloud Armor, MIG, Cloud SQL, Artifact Registry, Monitoring, GKE
+│   ├── environments/dev|prod/ # terraform.tfvars.example + backend.hcl
+│   └── scripts/bootstrap-state.sh
 │
-├── application/
-│   ├── frontend/          # React (Vite)
-│   ├── backend/           # Node/Express API
-│   ├── database/          # SQL schema
-│   └── tests/             # integration tests
+├── application/             # Main app (manifest-driven)
+│   ├── frontend/            # React + Vite
+│   ├── backend/             # Node/Express API (src/, test/)
+│   ├── database/            # SQL schema
+│   └── tests/               # integration tests
 │
 ├── docker/
-│   ├── backend/           # multi-stage Dockerfile
-│   ├── frontend/          # build + nginx Dockerfile
-│   ├── nginx/             # nginx conf used by the frontend container
-│   └── docker-compose.yml # LOCAL dev stack (no AWS needed)
+│   ├── backend/Dockerfile   # multi-stage Node image
+│   ├── frontend/Dockerfile  # build + nginx
+│   ├── nginx/               # nginx conf (proxies /api → backend)
+│   └── docker-compose.yml   # LOCAL dev stack (no cloud needed)
 │
-├── kubernetes/            # EKS deployment (optional, coexists with EC2 path)
-│   ├── namespace.yaml     # everything lives in the secure-ntier namespace
-│   ├── configmap.yaml     # non-secret app config shared by every service
-│   ├── secret.yaml.example# template of app-db-secret (never apply as-is)
-│   ├── kustomization.yaml # static support resources (namespace + config)
-│   └── scripts/
-│       ├── render-manifests.sh  # renders per-service Deployment/Service/HPA/PDB from stack.json
-│       ├── deploy.sh            # connect + secrets + apply (static + rendered) + roll + verify
-│       └── undeploy.sh
+├── kubernetes/              # Optional managed-K8s (EKS/AKS/GKE)
+│   ├── namespace.yaml / configmap.yaml / secret.yaml.example / kustomization.yaml
+│   └── scripts/render-manifests.sh, deploy.sh, undeploy.sh  # manifest rendering from stack.json
 │
-├── .github/               # GitHub Actions workflows (ci, deploy, terraform)
-│   ├── workflows/         # ci.yml, deploy.yml, terraform.yml
-│   └── ISSUE_TEMPLATE/    # bug + feature request templates
+├── .github/workflows/       # ci.yml, deploy.yml, terraform.yml (+ ISSUE_TEMPLATE, dependabot)
 │
 ├── cicd/
-│   ├── github-actions/    # GitHub Actions design docs
-│   ├── jenkins/           # Jenkins design docs
-│   ├── Jenkinsfile        # Jenkins deploy pipeline (alternative engine)
-│   ├── Jenkinsfile-ci     # Jenkins CI pipeline (mirrors ci.yml)
-│   └── scripts/           # stack-validate/info/ci/push + ecr-login, build-and-push, deploy-ec2/eks, smoke-test
+│   ├── Jenkinsfile / Jenkinsfile-ci
+│   ├── github-actions/ / jenkins/   # design docs
+│   └── scripts/             # stack-validate/info/ci/push, registry-login, build-and-push, deploy-ec2/vmss/mig/k8s, smoke-test, cloud-lib.sh
 │
-├── security/
-│   ├── iam/               # least-privilege policy documents
-│   ├── waf/               # WAF rule documentation
-│   └── policies/
+├── ansible/ / argocd/ / helm/ / chaos/ / load-testing/
+├── security/iam, waf, policies/  # least-privilege, WAF docs
+├── monitoring/alarms, dashboards, logs/
+├── examples/programming/    # language examples: cpp, csharp, go, java-gradle, java-maven, javascript, kotlin, php, python, ruby, rust, scala, swift, typescript
 │
-├── monitoring/
-│   ├── alarms/
-│   ├── dashboards/        # CloudWatch dashboard JSON
-│   └── logs/
+├── scripts/                 # Utility scripts
+│   ├── setup.sh / health-check.sh / verify.sh / deploy.sh / cleanup.sh
+│   ├── create_diagrams.py   # generate diagrams/assets/*.svg
+│   └── generate_thumbnails.py
 │
-├── scripts/               # setup, health-check, verify, cleanup
 └── tests/
-    ├── infrastructure/    # terraform-validate, tfplan-check, stack-validate, kubernetes-validate
-    ├── application/
-    ├── security/
-    └── integration/
+    ├── infrastructure/terraform-validate, tfplan-check, stack-validate, kubernetes-validate
+    ├── application/integration.sh
+    ├── security/security-tests.sh
+    └── integration/e2e.sh
 ```
 
 ---
@@ -496,19 +483,21 @@ and CI/CD setup — see the comprehensive guide:
 
 Everything below is copy-paste ready. Windows users: run the bash blocks in Git Bash / WSL.
 
-### 1. Clone the repository
+> **Step files:** the full zero-to-deployed walkthrough lives in [`docs/getting-started.md`](./docs/getting-started.md) (Steps 0–10) and the phase build guide in [`docs/phases.md`](./docs/phases.md). Each step below links to its dedicated doc.
+
+### 1. Clone the repository — [`Step file: docs/getting-started.md#2-clone-the-repository`](./docs/getting-started.md#2-clone-the-repository)
 
 ```bash
-git clone https://github.com/<YOUR_USERNAME>/secure-ntier-cloud-platform.git
+git clone https://github.com/shubhu-io/secure-ntier-cloud-platform.git
 cd secure-ntier-cloud-platform
 ```
 
-> Or with SSH: `git clone git@github.com:<YOUR_USERNAME>/secure-ntier-cloud-platform.git`
+> Or with SSH: `git clone git@github.com:shubhu-io/secure-ntier-cloud-platform.git`
 
 Skim [`stack.json`](./stack.json) first — it is the single source of truth that
 drives CI/CD, Terraform, and Kubernetes rendering.
 
-### 2. Verify the toolchain
+### 2. Verify the toolchain — [`Step file: docs/deployment/prerequisites.md`](./docs/deployment/prerequisites.md) · [`docs/getting-started.md#1-install-required-tools`](./docs/getting-started.md#1-install-required-tools)
 
 ```bash
 terraform -version   # >= 1.5
@@ -522,7 +511,7 @@ az --version
 gcloud --version
 ```
 
-### 3. Run the app locally (free, no cloud account)
+### 3. Run the app locally (free, no cloud account) — [`Step file: docs/deployment/application.md`](./docs/deployment/application.md) · [`docs/getting-started.md#3-run-the-application-locally`](./docs/getting-started.md#3-run-the-application-locally)
 
 ```bash
 cd docker
@@ -535,7 +524,7 @@ curl http://localhost/health     # expect {"status":"ok","db":"connected"}
 
 Stop it with `Ctrl+C`, then `docker compose down` (add `-v` to wipe the DB).
 
-### 4. Authenticate to your cloud
+### 4. Authenticate to your cloud — [`Step file: docs/deployment/aws-setup.md`](./docs/deployment/aws-setup.md) · [`Azure`](./docs/deployment/azure-setup.md) · [`GCP`](./docs/deployment/gcp-setup.md)
 
 ```bash
 aws configure                    # AWS access/secret keys + region
@@ -549,7 +538,7 @@ Least-privilege principal setup per cloud:
 [`Azure`](./docs/deployment/azure-setup.md) ·
 [`GCP`](./docs/deployment/gcp-setup.md).
 
-### 5. Configure the deployment
+### 5. Configure the deployment — [`Step file: docs/getting-started.md#5-configure-the-deployment`](./docs/getting-started.md#5-configure-the-deployment) · [`docs/deployment/terraform.md`](./docs/deployment/terraform.md)
 
 ```bash
 cp terraform/environments/dev/terraform.tfvars.example \
@@ -559,7 +548,7 @@ cp terraform/environments/dev/terraform.tfvars.example \
 Edit at minimum `notification_email`; tune region/sizes per the
 [Configuration](#-configuration) table (AWS/Azure/GCP variants included).
 
-### 6. Provision infrastructure
+### 6. Provision infrastructure — [`Step file: docs/deployment/terraform.md`](./docs/deployment/terraform.md) · [`docs/getting-started.md#6-provision-infrastructure-terraform`](./docs/getting-started.md#6-provision-infrastructure-terraform)
 
 Full per-cloud commands live in [Deployment](#-deployment). The AWS quick path:
 
@@ -570,7 +559,7 @@ terraform plan  -var="cloud=aws" -var-file="environments/dev/terraform.tfvars" -
 terraform apply plan.tfplan     # ~10-15 min; prints app_url at the end
 ```
 
-### 7. Ship a change through CI/CD
+### 7. Ship a change through CI/CD — [`Step file: docs/deployment/cicd.md`](./docs/deployment/cicd.md)
 
 ```bash
 git checkout -b feature/my-change
@@ -582,7 +571,7 @@ git push -u origin feature/my-change    # opens a PR → CI runs tests+scans
 Merging to `main` triggers the deploy pipeline: build → Trivy scan → registry
 push → rolling compute swap → smoke test. Watch it under the repo's **Actions** tab.
 
-### 8. Tear down when done
+### 8. Tear down when done — [`Step file: docs/operations/backup.md`](./docs/operations/backup.md) · [`README#cleanup`](#-cleanup)
 
 ```bash
 cd terraform
@@ -593,18 +582,21 @@ Then follow the [Cleanup](#-cleanup) checklist so nothing keeps billing.
 
 ---
 
-Then follow the deep-dive guides **in order**:
+Then follow the deep-dive guides **in order** (each is a step file):
 
-| Step | Guide |
+| Step | Guide (step file) |
 | ---- | ----- |
+| 0. Getting started | [`docs/getting-started.md`](./docs/getting-started.md) |
 | 1. Understand the phases | [`docs/phases.md`](./docs/phases.md) |
 | 2. Prepare your machine | [`docs/deployment/prerequisites.md`](./docs/deployment/prerequisites.md) |
-| 3. Prepare AWS | [`docs/deployment/aws-setup.md`](./docs/deployment/aws-setup.md) |
+| 3. Prepare cloud | [`AWS`](./docs/deployment/aws-setup.md) · [`Azure`](./docs/deployment/azure-setup.md) · [`GCP`](./docs/deployment/gcp-setup.md) |
 | 4. Deploy infrastructure | [`docs/deployment/terraform.md`](./docs/deployment/terraform.md) |
 | 5. Run the app locally first | [`docs/deployment/application.md`](./docs/deployment/application.md) |
 | 6. Set up CI/CD | [`docs/deployment/cicd.md`](./docs/deployment/cicd.md) |
-| 7. (Optional) Kubernetes / EKS | [`docs/deployment/eks.md`](./docs/deployment/eks.md) |
+| 7. (Optional) Kubernetes / EKS/AKS/GKE | [`docs/deployment/eks.md`](./docs/deployment/eks.md) |
 | 8. (Optional) Self-hosted Jenkins | [`docs/deployment/jenkins.md`](./docs/deployment/jenkins.md) |
+| 9. Operations & troubleshooting | [`docs/operations/troubleshooting.md`](./docs/operations/troubleshooting.md) |
+| 10. Cost guide | [`docs/cost-guide.md`](./docs/cost-guide.md) |
 
 ---
 

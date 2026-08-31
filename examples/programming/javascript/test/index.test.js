@@ -1,14 +1,13 @@
 import { createServer } from 'http';
-import { test } from 'node:test';
+import { describe, it, before, after } from 'node:test';
 import assert from 'node:assert';
 
-const BASE = 'http://127.0.0.1:3000';
-
 let server;
+let BASE;
 
-const startServer = (done) => {
+before(async () => {
   server = createServer(async (req, res) => {
-    const url = new URL(req.url, BASE);
+    const url = new URL(req.url, `http://${req.headers.host}`);
     const path = url.pathname;
 
     if (req.method === 'GET' && path === '/') {
@@ -46,58 +45,38 @@ const startServer = (done) => {
       res.end(JSON.stringify({ error: 'Not found' }));
     }
   });
-  server.listen(3000, done);
-};
+  await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
+  const addr = server.address();
+  BASE = `http://127.0.0.1:${addr.port}`;
+});
 
-const stopServer = (done) => {
-  if (server) {
-    server.close(done);
-  }
-};
+after(async () => {
+  if (server) await new Promise(resolve => server.close(resolve));
+});
 
-test('GET / returns welcome message', async () => {
-  const srv = await new Promise(resolve => startServer(resolve));
-  try {
-    const fetch = (await import('node:fetch')).default;
+describe('JavaScript HTTP server', () => {
+  it('GET / returns welcome message', async () => {
     const res = await fetch(`${BASE}/`);
     const data = await res.json();
     assert.strictEqual(res.status, 200);
     assert.strictEqual(data.message, 'Welcome');
-  } finally {
-    stopServer(() => {});
-  }
-});
+  });
 
-test('GET /health returns healthy', async () => {
-  const srv = await new Promise(resolve => startServer(resolve));
-  try {
-    const fetch = (await import('node:fetch')).default;
+  it('GET /health returns healthy', async () => {
     const res = await fetch(`${BASE}/health`);
     const data = await res.json();
     assert.strictEqual(res.status, 200);
     assert.strictEqual(data.status, 'healthy');
-  } finally {
-    stopServer(() => {});
-  }
-});
+  });
 
-test('GET /items returns empty items', async () => {
-  const srv = await new Promise(resolve => startServer(resolve));
-  try {
-    const fetch = (await import('node:fetch')).default;
+  it('GET /items returns empty items', async () => {
     const res = await fetch(`${BASE}/items`);
     const data = await res.json();
     assert.strictEqual(res.status, 200);
     assert.deepStrictEqual(data.items, []);
-  } finally {
-    stopServer(() => {});
-  }
-});
+  });
 
-test('POST /items with valid name', async () => {
-  const srv = await new Promise(resolve => startServer(resolve));
-  try {
-    const fetch = (await import('node:fetch')).default;
+  it('POST /items with valid name', async () => {
     const res = await fetch(`${BASE}/items`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -106,15 +85,9 @@ test('POST /items with valid name', async () => {
     const data = await res.json();
     assert.strictEqual(res.status, 201);
     assert.strictEqual(data.name, 'widget');
-  } finally {
-    stopServer(() => {});
-  }
-});
+  });
 
-test('POST /items without name returns 400', async () => {
-  const srv = await new Promise(resolve => startServer(resolve));
-  try {
-    const fetch = (await import('node:fetch')).default;
+  it('POST /items without name returns 400', async () => {
     const res = await fetch(`${BASE}/items`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -123,20 +96,12 @@ test('POST /items without name returns 400', async () => {
     const data = await res.json();
     assert.strictEqual(res.status, 400);
     assert.strictEqual(data.error, 'name is required');
-  } finally {
-    stopServer(() => {});
-  }
-});
+  });
 
-test('DELETE /items clears items', async () => {
-  const srv = await new Promise(resolve => startServer(resolve));
-  try {
-    const fetch = (await import('node:fetch')).default;
+  it('DELETE /items clears items', async () => {
     const res = await fetch(`${BASE}/items`, { method: 'DELETE' });
     const data = await res.json();
     assert.strictEqual(res.status, 200);
     assert.strictEqual(data.removed, true);
-  } finally {
-    stopServer(() => {});
-  }
+  });
 });

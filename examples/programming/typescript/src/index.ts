@@ -5,18 +5,18 @@ const HOST = process.env.HOST || '0.0.0.0';
 
 let items: Array<{ id: string; name: string }> = [];
 
-function sendJson(res: NodeJS.WritableStream, statusCode: number, data: unknown) {
+function sendJson(res: import('http').ServerResponse, statusCode: number, data: unknown) {
   const body = JSON.stringify(data);
   res.writeHead(statusCode, {
     'Content-Type': 'application/json',
-    'Content-Length': body.length,
+    'Content-Length': Buffer.byteLength(body).toString(),
     'Cache-Control': 'no-cache',
   });
   res.end(body);
 }
 
 const server = createServer(async (req, res) => {
-  const url = new URL(req.url, `http://${req.headers.host}`);
+  const url = new URL(req.url ?? '/', `http://${req.headers.host}`);
   const path = url.pathname;
 
   if (req.method === 'GET' && path === '/') {

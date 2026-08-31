@@ -7,7 +7,11 @@
 set -euo pipefail
 
 ENV_FILE="${1:-environments/dev/terraform.tfvars}"
-cd terraform
+
+# Get the directory where this script is located
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(dirname "$SCRIPT_DIR")"
+cd "$REPO_ROOT/terraform"
 
 echo "==> terraform plan"
 terraform plan -var-file="$ENV_FILE" -out=/tmp/tfplan.bin >/dev/null

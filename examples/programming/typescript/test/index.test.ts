@@ -1,12 +1,13 @@
 import { createServer } from 'http';
+import { describe, it, before, after } from 'node:test';
+import assert from 'node:assert';
 
-const BASE = 'http://127.0.0.1:3000';
+let server: ReturnType<typeof createServer>;
+let BASE: string;
 
-let server: NodeJS.Server;
-
-beforeAll((done) => {
-  const s = server = createServer(async (req, res) => {
-    const url = new URL(req.url, BASE);
+before(async () => {
+  server = createServer(async (req, res) => {
+    const url = new URL(req.url, `http://${req.headers.host}`);
     const path = url.pathname;
 
     if (req.method === 'GET' && path === '/') {
@@ -44,59 +45,63 @@ beforeAll((done) => {
       res.end(JSON.stringify({ error: 'Not found' }));
     }
   });
-  s.listen(3000, done);
+  await new Promise<void>(resolve => server.listen(0, '127.0.0.1', () => resolve()));
+  const addr = server.address() as { port: number };
+  BASE = `http://127.0.0.1:${addr.port}`;
 });
 
-afterAll((done) => {
-  server.close(done);
+after(async () => {
+  if (server) await new Promise<void>(resolve => server.close(() => resolve()));
 });
 
-test('GET / returns welcome message', async () => {
-  const res = await fetch(`${BASE}/`);
-  const data = await res.json();
-  expect(res.status).toBe(200);
-  expect(data.message).toBe('Welcome');
-});
-
-test('GET /health returns healthy', async () => {
-  const res = await fetch(`${BASE}/health`);
-  const data = await res.json();
-  expect(res.status).toBe(200);
-  expect(data.status).toBe('healthy');
-});
-
-test('GET /items returns empty items', async () => {
-  const res = await fetch(`${BASE}/items`);
-  const data = await res.json();
-  expect(res.status).toBe(200);
-  expect(data.items).toEqual([]);
-});
-
-test('POST /items with valid name', async () => {
-  const res = await fetch(`${BASE}/items`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ name: 'widget' }),
+describe('TypeScript HTTP server', () => {
+  it('GET / returns welcome message', async () => {
+    const res = await fetch(`${BASE}/`);
+    const data: any = await res.json();
+    assert.strictEqual(res.status, 200);
+    assert.strictEqual(data.message, 'Welcome');
   });
-  const data = await res.json();
-  expect(res.status).toBe(201);
-  expect(data.name).toBe('widget');
-});
 
-test('POST /items without name returns 400', async () => {
-  const res = await fetch(`${BASE}/items`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({}),
+  it('GET /health returns healthy', async () => {
+    const res = await fetch(`${BASE}/health`);
+    const data: any = await res.json();
+    assert.strictEqual(res.status, 200);
+    assert.strictEqual(data.status, 'healthy');
   });
-  const data = await res.json();
-  expect(res.status).toBe(400);
-  expect(data.error).toBe('name is required');
-});
 
-test('DELETE /items clears items', async () => {
-  const res = await fetch(`${BASE}/items`, { method: 'DELETE' });
-  const data = await res.json();
-  expect(res.status).toBe(200);
-  expect(data.removed).toBe(true);
+  it('GET /items returns empty items', async () => {
+    const res = await fetch(`${BASE}/items`);
+    const data: any = await res.json();
+    assert.strictEqual(res.status, 200);
+    assert.deepStrictEqual(data.items, []);
+  });
+
+  it('POST /items with valid name', async () => {
+    const res = await fetch(`${BASE}/items`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: 'widget' }),
+    });
+    const data: any = await res.json();
+    assert.strictEqual(res.status, 201);
+    assert.strictEqual(data.name, 'widget');
+  });
+
+  it('POST /items without name returns 400', async () => {
+    const res = await fetch(`${BASE}/items`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({}),
+    });
+    const data: any = await res.json();
+    assert.strictEqual(res.status, 400);
+    assert.strictEqual(data.error, 'name is required');
+  });
+
+  it('DELETE /items clears items', async () => {
+    const res = await fetch(`${BASE}/items`, { method: 'DELETE' });
+    const data: any = await res.json();
+    assert.strictEqual(res.status, 200);
+    assert.strictEqual(data.removed, true);
+  });
 });

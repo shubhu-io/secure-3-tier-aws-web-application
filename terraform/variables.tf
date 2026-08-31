@@ -179,7 +179,7 @@ variable "aws_ecr_push_principal_arns" {
 }
 
 variable "aws_enable_eks" {
-  description = "Provision an EKS cluster + managed node group"
+  description = "Provision an EKS cluster + managed node group (OPTIONAL — everything runs on EC2 by default; set true only if you want K8s alongside EC2)"
   type        = bool
   default     = false
 }

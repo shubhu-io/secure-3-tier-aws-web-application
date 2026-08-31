@@ -43,11 +43,11 @@ If any check fails, see the [Prerequisites doc](./docs/deployment/prerequisites.
 ## 2. Clone the Repository
 
 ```bash
-git clone https://github.com/<YOUR_USERNAME>/secure-ntier-cloud-platform.git
+git clone https://github.com/shubhu-io/secure-ntier-cloud-platform.git
 cd secure-ntier-cloud-platform
 ```
 
-> Or with SSH: `git clone git@github.com:<YOUR_USERNAME>/secure-ntier-cloud-platform.git`
+> Or with SSH: `git clone git@github.com:shubhu-io/secure-ntier-cloud-platform.git`
 
 Skim [`stack.json`](./stack.json) first — it is the single source of truth that drives CI/CD, Terraform, and Kubernetes rendering.
 

@@ -36,7 +36,7 @@
     "engine_version": "16.4",
     "port": 5432
   },
-  "runtime": ["ec2-compose", "eks"],
+  "runtime": ["ec2-compose"],
   "clouds": ["aws", "azure", "gcp"],
   "default_cloud": "aws",
   "cloud_config": {

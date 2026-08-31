@@ -2,9 +2,12 @@
 """Generate PNG thumbnails from SVG diagrams for web usage."""
 
 import os
+from pathlib import Path
 from PIL import Image, ImageDraw, ImageFont
 
-os.makedirs("diagrams/assets", exist_ok=True)
+REPO_ROOT = Path(__file__).resolve().parent.parent
+ASSETS_DIR = REPO_ROOT / "diagrams" / "assets"
+ASSETS_DIR.mkdir(parents=True, exist_ok=True)
 
 svg_files = [
     "overall-architecture.svg",
@@ -16,8 +19,8 @@ svg_files = [
 
 png_files = []
 for svg_file in svg_files:
-    svg_path = f"diagrams/assets/{svg_file}"
-    png_path = f"diagrams/assets/{svg_file.replace('.svg', '.png')}"
+    svg_path = ASSETS_DIR / svg_file
+    png_path = ASSETS_DIR / svg_file.replace('.svg', '.png')
     
     try:
         # Since PIL can't directly render SVG, create a colored PNG placeholder

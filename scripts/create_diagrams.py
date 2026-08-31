@@ -2,9 +2,12 @@
 """Create professional SVG diagram assets for the secure n-tier cloud platform."""
 
 import os
+from pathlib import Path
 
-# Create assets directory
-os.makedirs("diagrams/assets", exist_ok=True)
+# Resolve repo root (one level up from scripts/) so the script works from any cwd
+REPO_ROOT = Path(__file__).resolve().parent.parent
+ASSETS_DIR = REPO_ROOT / "diagrams" / "assets"
+ASSETS_DIR.mkdir(parents=True, exist_ok=True)
 
 # Colors - AWS-inspired blue/white theme
 DARK_BLUE = "#1a3c6e"
@@ -29,7 +32,7 @@ def create_svg(filename, width=800, height=600, shapes=None, text_elements=None)
             lines.append(text)
     lines.append(f"</svg>")
     
-    with open(f"diagrams/assets/{filename}", "w") as f:
+    with open(ASSETS_DIR / filename, "w") as f:
         f.write("\n".join(lines))
     print(f"Created: {filename}")
 

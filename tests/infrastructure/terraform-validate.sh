@@ -5,7 +5,8 @@
 # ============================================================================
 set -euo pipefail
 
-cd terraform
+# Change to the repository root (two levels up from this script) and then into terraform
+cd "$(dirname "$0")/../.." && cd terraform
 
 echo "==> terraform fmt check"
 terraform fmt -check -recursive

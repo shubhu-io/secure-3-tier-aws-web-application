@@ -15,7 +15,7 @@ def clear_items():
     items.clear()
 
 
-@pytest.fixture
+@pytest.fixture(autouse=True)
 def start_server():
     import os
     import http.server
@@ -31,7 +31,7 @@ def start_server():
 
 class TestPythonHTTPServer:
     def _make_request(self, method: str, path: str, body: dict = None) -> dict:
-        url = f'http://127.0.0.1:{port}{path}'
+        url = f'http://127.0.0.1:3001{path}'
         headers = {'Content-Type': 'application/json'} if body else {}
         data = json.dumps(body).encode('utf-8') if body else None
 
