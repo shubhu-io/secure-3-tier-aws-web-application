@@ -1,4 +1,4 @@
-# End-to-End Automated & Secure n-Tier Cloud Infrastructure with Application Deployment
+# End-to-End Automated & Secure n-Tier Cloud Infrastructure with Application Deployment and Web Application
 
 > A production-inspired, fully automated **AWS EC2** platform: **React + Node/Express + PostgreSQL**
 > running **entirely on AWS EC2** (Auto Scaling Group + ALB) inside an **n-tier VPC**
