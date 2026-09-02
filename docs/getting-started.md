@@ -43,11 +43,11 @@ If any check fails, see the [Prerequisites doc](./docs/deployment/prerequisites.
 ## 2. Clone the Repository
 
 ```bash
-git clone https://github.com/shubhu-io/secure-ntier-cloud-infrastructure-with-application-deployment-and-web-app.git
-cd secure-ntier-cloud-infrastructure-with-application-deployment-and-web-app
+git clone https://github.com/shubhu-io/secure-3-tier-aws-web-application.git
+cd secure-3-tier-aws-web-application
 ```
 
-> Or with SSH: `git clone git@github.com:shubhu-io/secure-ntier-cloud-infrastructure-with-application-deployment-and-web-app.git`
+> Or with SSH: `git clone git@github.com:shubhu-io/secure-3-tier-aws-web-application.git`
 
 Skim [`stack.json`](./stack.json) first — it is the single source of truth that drives CI/CD, Terraform, and Kubernetes rendering.
 
