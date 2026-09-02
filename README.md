@@ -349,7 +349,7 @@ AWS reference implementation — each row has an Azure/GCP twin per the
 > **Folder map updated 2026-08-27** — reflects the organized layout (`project/` removed, `scripts/` consolidated). See step files: [`docs/getting-started.md`](./docs/getting-started.md) · [`docs/phases.md`](./docs/phases.md) · [`docs/deployment/terraform.md`](./docs/deployment/terraform.md)
 
 ```text
-secure-ntier-cloud-platform/
+secure-ntier-cloud-infrastructure-with-application-deployment-and-web-app/
 ├── README.md, LICENSE, SECURITY.md, CONTRIBUTING.md, CHANGELOG.md
 ├── stack.json               # THE manifest: services, ports, toolchain, db, clouds — drives CI/CD + Terraform + k8s
 ├── Makefile                 # language-agnostic build/test helpers (examples/programming/*)
@@ -488,11 +488,11 @@ Everything below is copy-paste ready. Windows users: run the bash blocks in Git 
 ### 1. Clone the repository — [`Step file: docs/getting-started.md#2-clone-the-repository`](./docs/getting-started.md#2-clone-the-repository)
 
 ```bash
-git clone https://github.com/shubhu-io/secure-ntier-cloud-platform.git
-cd secure-ntier-cloud-platform
+git clone https://github.com/shubhu-io/secure-ntier-cloud-infrastructure-with-application-deployment-and-web-app.git
+cd secure-ntier-cloud-infrastructure-with-application-deployment-and-web-app
 ```
 
-> Or with SSH: `git clone git@github.com:shubhu-io/secure-ntier-cloud-platform.git`
+> Or with SSH: `git clone git@github.com:shubhu-io/secure-ntier-cloud-infrastructure-with-application-deployment-and-web-app.git`
 
 Skim [`stack.json`](./stack.json) first — it is the single source of truth that
 drives CI/CD, Terraform, and Kubernetes rendering.
