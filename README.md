@@ -142,7 +142,7 @@ to a running, verified application in the target cloud.
 
 ### The big picture
 
-![Big picture](diagrams/rendered/Big%20picture.png)
+![Big picture](diagrams/rendered/architecture.png)
 
 1. **Developer commits & pushes** — the change lands on a branch (`feature/*`,
    `develop`, or `main`). Pushing triggers the CI/CD engine automatically:
@@ -170,7 +170,7 @@ to a running, verified application in the target cloud.
 
 ### Full deployment lifecycle (with rollback)
 
-![Full deployment lifecycle (with rollback)](diagrams/rendered/Full%20deployment%20lifecycle%20(with%20rollback).png)
+![Full deployment lifecycle (with rollback)](diagrams/rendered/deployment-flow.png)
 
 If the new version ever fails its health checks, the pipeline rolls back by
 re-pointing the previous image tag (SSM parameter on AWS, template/MIG update on
@@ -278,12 +278,12 @@ Full diagrams (rendered PNGs + Mermaid source) are in [`diagrams/`](./diagrams/R
 
 | # | Diagram | Rendered image | Mermaid source |
 | - | ------- | -------------- | -------------- |
-| 1 | Overall architecture (Big picture) | [Big picture.png](diagrams/rendered/Big%20picture.png) | [`architecture.mmd`](./diagrams/architecture.mmd) |
+| 1 | Overall architecture (Big picture) | [architecture.png](diagrams/rendered/architecture.png) | [`architecture.mmd`](./diagrams/architecture.mmd) |
 | 2 | Network layout | [network.png](diagrams/rendered/network.png) | [`network.mmd`](./diagrams/network.mmd) |
 | 3 | Security layers | [security.png](diagrams/rendered/security.png) | [`security.mmd`](./diagrams/security.mmd) |
 | 4 | CI/CD pipeline | [cicd.png](diagrams/rendered/cicd.png) | [`cicd.mmd`](./diagrams/cicd.mmd) |
 | 5 | Request flow | [request-flow.png](diagrams/rendered/request-flow.png) | [`request-flow.mmd`](./diagrams/request-flow.mmd) |
-| 6 | Deployment flow (Full lifecycle + rollback) | [Full deployment lifecycle (with rollback).png](diagrams/rendered/Full%20deployment%20lifecycle%20(with%20rollback).png) | [`deployment-flow.mmd`](./diagrams/deployment-flow.mmd) |
+| 6 | Deployment flow (Full lifecycle + rollback) | [deployment-flow.png](diagrams/rendered/deployment-flow.png) | [`deployment-flow.mmd`](./diagrams/deployment-flow.mmd) |
 | 7 | Failure recovery | [failure-flow.png](diagrams/rendered/failure-flow.png) | [`failure-flow.mmd`](./diagrams/failure-flow.mmd) |
 | 8 | Disaster recovery | [disaster-recovery.png](diagrams/rendered/disaster-recovery.png) | [`disaster-recovery.mmd`](./diagrams/disaster-recovery.mmd) |
 | 9 | Kubernetes (EKS) | [kubernetes.png](diagrams/rendered/kubernetes.png) | [`kubernetes.mmd`](./diagrams/kubernetes.mmd) |
@@ -768,6 +768,8 @@ in [`docs/runbooks/`](./docs/runbooks/):
 | AZ failure | terminate the instance in AZ A | AZ B instance keeps serving; ASG rebalances |
 | DB unreachable | stop RDS briefly (dev) | alarms fire; `/health` reports `db: disconnected`; no crash-loop |
 
+![EC2 Instance Failure Auto Recovery Flow](diagrams/rendered/failure-flow.png)
+
 Documented results for a real run are kept in [`docs/runbooks/`](./docs/runbooks/).
 
 ---
@@ -793,6 +795,8 @@ and [`monitoring/alarms/README.md`](./monitoring/alarms/README.md).
 ---
 
 ## 🔐 Security
+
+![Security Architecture — Defence in Depth](diagrams/rendered/security.png)
 
 | Layer | Control |
 | ----- | ------- |
@@ -887,6 +891,12 @@ Placeholders for deployment evidence (the `.gitignore` intentionally keeps
 
 Capture instructions: [`screenshots/README.md`](./screenshots/README.md).
 
+### Live Deployment Verification
+
+![Application UI Login](screenshots/deployment/01-app-ui-login.png)
+
+![ALB /health & API Endpoint Verification](screenshots/deployment/02-app-health-json.png)
+
 ---
 
 ## 🔮 Future Improvements
@@ -914,7 +924,7 @@ Capture instructions: [`screenshots/README.md`](./screenshots/README.md).
 | **⚡ EC2 quick-start runbook** | [`docs/deployment/ec2-quickstart.md`](./docs/deployment/ec2-quickstart.md) |
 | Full build, phase by phase | [`docs/phases.md`](./docs/phases.md) |
 | Explain it like I'm five | [`docs/explain-like-im-five.md`](./docs/explain-like-im-five.md) |
-| **Architecture diagrams** | **`assets/images/`** |
+| **Architecture diagrams** | [`diagrams/`](./diagrams/README.md) |
 | Architecture overview | [`docs/architecture/overview.md`](./docs/architecture/overview.md) |
 | Network design | [`docs/architecture/network.md`](./docs/architecture/network.md) |
 | Security design | [`docs/architecture/security.md`](./docs/architecture/security.md) |

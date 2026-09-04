@@ -11,18 +11,18 @@ without any rendering step.
 
 ## Diagram index
 
-| File | What it shows |
-| ---- | ------------- |
-| [`architecture.mmd`](./architecture.mmd) | End-to-end platform: user → Route 53 → WAF → ALB → EC2/ASG → RDS, plus supporting services (NAT, Secrets Manager, CloudWatch) |
-| [`network.mmd`](./network.mmd) | VPC + subnet layout with CIDR blocks, route tables, and NACLs per tier |
-| [`security.mmd`](./security.mmd) | Defense-in-depth: WAF → ALB SG → App SG → DB SG, encryption, IAM, secrets, auditing |
-| [`cicd.mmd`](./cicd.mmd) | CI/CD pipeline (manifest-driven): commit → validate → test/scan → build → ECR → deploy EC2/EKS → smoke test; failure blocks the release |
-| [`stack.mmd`](./stack.mmd) | `stack.json` manifest: how one source of truth drives CI/CD, Terraform, and Kubernetes, and how a new service is added |
-| [`request-flow.mmd`](./request-flow.mmd) | Sequence diagram of one browser request through every layer |
-| [`deployment-flow.mmd`](./deployment-flow.mmd) | Deployment lifecycle including a rollback branch |
-| [`failure-flow.mmd`](./failure-flow.mmd) | Sequence diagram of EC2 failure and self-healing by the ASG |
-| [`disaster-recovery.mmd`](./disaster-recovery.mmd) | RPO / RTO targets and how data + infrastructure are recovered |
-| [`kubernetes.mmd`](./kubernetes.mmd) | The EKS deployment path: NLB → frontend → backend → RDS, plus HPA/PDB/secrets |
+| Source | Rendered image | What it shows |
+| ------ | -------------- | ------------- |
+| [`architecture.mmd`](./architecture.mmd) | [`architecture.png`](./rendered/architecture.png) | End-to-end platform: user → Route 53 → WAF → ALB → EC2/ASG → RDS, plus supporting services (NAT, Secrets Manager, CloudWatch) |
+| [`network.mmd`](./network.mmd) | [`network.png`](./rendered/network.png) | VPC + subnet layout with CIDR blocks, route tables, and NACLs per tier |
+| [`security.mmd`](./security.mmd) | [`security.png`](./rendered/security.png) | Defense-in-depth: WAF → ALB SG → App SG → DB SG, encryption, IAM, secrets, auditing |
+| [`cicd.mmd`](./cicd.mmd) | [`cicd.png`](./rendered/cicd.png) | CI/CD pipeline (manifest-driven): commit → validate → test/scan → build → ECR → deploy EC2/EKS → smoke test; failure blocks the release |
+| [`stack.mmd`](./stack.mmd) | [`stack.png`](./rendered/stack.png) | `stack.json` manifest: how one source of truth drives CI/CD, Terraform, and Kubernetes, and how a new service is added |
+| [`request-flow.mmd`](./request-flow.mmd) | [`request-flow.png`](./rendered/request-flow.png) | Sequence diagram of one browser request through every layer |
+| [`deployment-flow.mmd`](./deployment-flow.mmd) | [`deployment-flow.png`](./rendered/deployment-flow.png) | Deployment lifecycle including a rollback branch |
+| [`failure-flow.mmd`](./failure-flow.mmd) | [`failure-flow.png`](./rendered/failure-flow.png) | Sequence diagram of EC2 failure and self-healing by the ASG |
+| [`disaster-recovery.mmd`](./disaster-recovery.mmd) | [`disaster-recovery.png`](./rendered/disaster-recovery.png) | RPO / RTO targets and how data + infrastructure are recovered |
+| [`kubernetes.mmd`](./kubernetes.mmd) | [`kubernetes.png`](./rendered/kubernetes.png) | The EKS deployment path: NLB → frontend → backend → RDS, plus HPA/PDB/secrets |
 
 ## How to render
 
@@ -36,15 +36,15 @@ without any rendering step.
 
 ```bash
 # needs Node.js + npx
-npx -y @mermaid-js/mermaid-cli -i diagrams/architecture.mmd -o artifacts/architecture.png -b white
+npx -y @mermaid-js/mermaid-cli -i diagrams/architecture.mmd -o diagrams/rendered/architecture.png -b white
 ```
 
 For a batch render of all diagrams:
 
 ```bash
-mkdir -p artifacts
+mkdir -p diagrams/rendered
 for f in diagrams/*.mmd; do
-  npx -y @mermaid-js/mermaid-cli -i "$f" -o "artifacts/$(basename "${f%.mmd}").png" -b white
+  npx -y @mermaid-js/mermaid-cli -i "$f" -o "diagrams/rendered/$(basename "${f%.mmd}").png" -b white
 done
 ```
 
