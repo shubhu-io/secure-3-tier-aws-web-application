@@ -374,9 +374,8 @@ secure-3-tier-aws-web-application/
 │   ├── cost-guide.md / testing.md / interview-questions.md / explain-like-im-five.md
 │   └── archive/             # PROPOSED_STRUCTURE.md (historical plan)
 │
-├── diagrams/                # Mermaid sources (architecture, network, security, cicd, request-flow, deployment-flow, failure-flow, disaster-recovery, kubernetes, stack)
-│   ├── rendered/            # Pre-rendered PNGs embedded in README
-│   └── assets/              # Generated SVG/PNG via scripts/create_diagrams.py
+├── diagrams/                # Architecture diagrams & Mermaid sources (.mmd)
+│   └── rendered/            # Pre-rendered 1080p Full HD PNGs embedded across documentation
 ├── screenshots/             # capture instructions (png ignored by .gitignore)
 ├── assets/images/           # static platform images
 │
@@ -419,9 +418,7 @@ secure-3-tier-aws-web-application/
 ├── examples/programming/    # language examples: cpp, csharp, go, java-gradle, java-maven, javascript, kotlin, php, python, ruby, rust, scala, swift, typescript
 │
 ├── scripts/                 # Utility scripts
-│   ├── setup.sh / health-check.sh / verify.sh / deploy.sh / cleanup.sh
-│   ├── create_diagrams.py   # generate diagrams/assets/*.svg
-│   └── generate_thumbnails.py
+│   └── setup.sh / health-check.sh / verify.sh / deploy.sh / deploy-to-ec2.sh / cleanup.sh
 │
 └── tests/
     ├── infrastructure/terraform-validate, tfplan-check, stack-validate, kubernetes-validate
