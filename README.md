@@ -18,6 +18,13 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](./CONTRIBUTING.md)
 
+> ### 🚀 New here? Start with the [**Step-by-Step Deploy Guide**](./docs/deployment/DEPLOY_STEPS.md)
+> *Written so simply, anyone can follow it — from zero to live on AWS in 20 minutes.*
+>
+> | 🖥️ Run locally (no AWS) | ☁️ Deploy to AWS EC2 | 💥 Tear down |
+> |---|---|---|
+> | `make local-up` | `make deploy-aws` | `make tf-destroy` |
+
 ---
 
 ## Table of Contents
