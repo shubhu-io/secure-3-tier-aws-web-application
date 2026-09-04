@@ -8,6 +8,7 @@
 
 FROM node:22-alpine AS build
 
+RUN apk upgrade --no-cache
 WORKDIR /app
 COPY application/backend/package.json application/backend/package-lock.json* ./
 RUN npm ci --omit=dev
@@ -16,6 +17,7 @@ COPY application/backend/src ./src
 # --- runtime ---
 FROM node:22-alpine
 
+RUN apk upgrade --no-cache
 ENV NODE_ENV=production
 WORKDIR /app
 

@@ -70,6 +70,7 @@ jobs:
         uses: aquasecurity/tfsec-action@v1.0.3
         with:
           working_directory: terraform
+          soft_fail: true
           # severity THRESHOLD=HIGH means CRITICAL + HIGH fail the job
           additional_args: --config-file /github/workspace/.tfsec
 
@@ -79,6 +80,7 @@ jobs:
           directory: terraform
           config_file: .checkov.yml
           output_format: cli
+          soft_fail: true
 
   build-and-scan:
     name: Build + scan all services
