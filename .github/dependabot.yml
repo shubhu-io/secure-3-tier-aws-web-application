@@ -1,35 +1,64 @@
-# Auto-update GitHub Actions and Docker base image versions.
-# Runs: github-dependabot[bot] on weekly cadence.
+# Auto-update GitHub Actions, dependencies, and Terraform providers.
+# Configured with dependency grouping and major-version guards to prevent branch spam.
 version: 2
 updates:
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
-      interval: "weekly"
-      day: "monday"
-    open-pull-requests-limit: 5
+      interval: "monthly"
+    open-pull-requests-limit: 2
     labels: ["dependencies", "ci"]
+    groups:
+      actions:
+        patterns: ["*"]
 
   - package-ecosystem: "npm"
     directory: "/application/backend"
     schedule:
-      interval: "weekly"
-      day: "monday"
-    open-pull-requests-limit: 10
+      interval: "monthly"
+    open-pull-requests-limit: 2
     labels: ["dependencies", "security"]
+    ignore:
+      - dependency-name: "express"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "bcryptjs"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "dotenv"
+        update-types: ["version-update:semver-major"]
+    groups:
+      backend-deps:
+        patterns: ["*"]
 
   - package-ecosystem: "npm"
     directory: "/application/frontend"
     schedule:
-      interval: "weekly"
-      day: "monday"
-    open-pull-requests-limit: 10
+      interval: "monthly"
+    open-pull-requests-limit: 2
     labels: ["dependencies"]
+    ignore:
+      - dependency-name: "react"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "react-dom"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "vite"
+        update-types: ["version-update:semver-major"]
+    groups:
+      frontend-deps:
+        patterns: ["*"]
 
   - package-ecosystem: "terraform"
     directory: "/terraform"
     schedule:
-      interval: "weekly"
-      day: "monday"
-    open-pull-requests-limit: 10
+      interval: "monthly"
+    open-pull-requests-limit: 2
     labels: ["dependencies", "terraform"]
+    ignore:
+      - dependency-name: "hashicorp/aws"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "hashicorp/azurerm"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "hashicorp/google"
+        update-types: ["version-update:semver-major"]
+    groups:
+      terraform-providers:
+        patterns: ["*"]
