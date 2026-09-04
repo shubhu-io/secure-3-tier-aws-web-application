@@ -11,7 +11,7 @@ tests. CI/CD makes deployment **automatic, gated, and reproducible**.
 The pipelines are **manifest-driven**: every stage reads `stack.json`, so the
 number of services, their toolchains and their CI steps are data, not code.
 
-![CI/CD Pipeline Architecture](../../diagrams/rendered/cicd.png)
+![CI/CD Pipeline Architecture](../../diagrams/cicd.png)
 
 ## Two engines, one pipeline
 

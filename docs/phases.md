@@ -98,7 +98,7 @@ those as one coherent, executable system.
 
 ### Architecture
 
-See [`diagrams/architecture.mmd`](../diagrams/architecture.mmd) and
+See [`diagrams/architecture.png`](../diagrams/architecture.png) and
 [`docs/architecture/overview.md`](./architecture/overview.md).
 
 ### Components
@@ -1693,7 +1693,7 @@ aws elbv2 describe-target-health --target-group-arn <TG_ARN> --region ap-south-1
 
 - Instances land in **private subnets** — the ASG provides no public IPs.
 - ASG is the rebalancing + replacement engine; combined with the health check
-  this delivers the "failure flow" in [`diagrams/failure-flow.mmd`](../diagrams/failure-flow.mmd).
+  this delivers the "failure flow" in [`diagrams/failure-flow.png`](../diagrams/failure-flow.png).
 
 ### Production notes
 
@@ -2275,7 +2275,7 @@ security gates that stop bad code.
 
 ### Architecture
 
-See [`diagrams/cicd.mmd`](../diagrams/cicd.mmd). The pipeline is
+See [`diagrams/cicd.png`](../diagrams/cicd.png). The pipeline is
 **manifest-driven**: every stage loops over `stack.json` (services, toolchain,
 `ci_steps`, ports), so a new service needs **only a `stack.json` entry**.
 
@@ -2957,7 +2957,7 @@ much data loss is acceptable* (RPO), and the steps to rebuild everything.
 
 ### Architecture
 
-See [`diagrams/disaster-recovery.mmd`](../diagrams/disaster-recovery.mmd).
+See [`diagrams/disaster-recovery.png`](../diagrams/disaster-recovery.png).
 
 ### Recovery targets
 

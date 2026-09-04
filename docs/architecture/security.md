@@ -3,7 +3,7 @@
 Security in this project is **defense in depth**: seven layers, each of which
 must be bypassed for an attack to succeed.
 
-![Security Architecture — Defence in Depth](../../diagrams/rendered/security.png)
+![Security Architecture — Defence in Depth](../../diagrams/security.png)
 
 | # | Layer | Control | Stops |
 | - | ----- | ------- | ----- |

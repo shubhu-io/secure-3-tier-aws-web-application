@@ -54,7 +54,7 @@ every resource gets a public IP, which is exactly what we are avoiding.
 
 ## Diagram
 
-![VPC Network Architecture](../../diagrams/rendered/network.png)
+![VPC Network Architecture](../../diagrams/network.png)
 
 ## Routing
 

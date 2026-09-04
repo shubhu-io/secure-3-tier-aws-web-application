@@ -17,7 +17,7 @@ Everything you need installed before touching this project. Run
 ## Optional but useful
 
 - `jq` — parse JSON in scripts.
-- `mermaid-cli` or the mermaid.live website — render the `.mmd` diagrams.
+- Markdown viewer / image previewer — inspect architecture diagrams in `diagrams/`.
 - A GitHub account + repository.
 
 ## Verify the install

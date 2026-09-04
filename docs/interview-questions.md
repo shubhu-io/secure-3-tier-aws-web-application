@@ -41,7 +41,7 @@ topic. "Real project example" always refers to specific files in this repo.
   template + user-data self-provision replacements; CPU target-tracking scales
   out at 70%.
 - *Project example:* `terraform/modules/compute/main.tf`, `user-data.sh`, and
-  the failure diagram `diagrams/failure-flow.mmd`.
+  the failure diagram `diagrams/failure-flow.png`.
 
 **Q: How is the app deployed to EC2 without SSH?**
 - *Short:* CI pushes images, updates an SSM parameter, and starts an ASG
@@ -224,7 +224,7 @@ storage <20%. (modules/monitoring/main.tf)
 
 **Q: Walk me through an instance failure.** — ALB marks target unhealthy → ASG
 (health=ELB) launches a replacement from the launch template → user-data boots
-the Docker stack → ALB re-marks healthy. (diagrams/failure-flow.mmd)
+the Docker stack → ALB re-marks healthy. (diagrams/failure-flow.png)
 
 **Q: What are RTO and RPO in this project?** — RTO < 60 min (Terraform state +
 ECR rebuild); RPO ~5 min (RDS point-in-time recovery).
@@ -313,7 +313,7 @@ voluntarily evicted during node drains / cluster upgrades. Here `minAvailable:
 > destroy when done), and the future improvements you'd prioritize.
 
 ### "Explain the architecture to an interviewer"
-> Draw the n-tier diagram (diagrams/architecture.mmd). Label each tier, its
+> Draw the n-tier diagram (diagrams/architecture.png). Label each tier, its
 > threat model, and its controls:
 > - **Public:** Internet → Route 53 → WAF → ALB (TLS). Only these ports open.
 > - **App:** private, outbound-only via NAT, ASG-managed, self-healing,

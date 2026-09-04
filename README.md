@@ -26,7 +26,7 @@
 
 The platform implements a strict **Multi-AZ 3-Tier Defence-in-Depth Architecture** in `ap-south-1` (Mumbai). Zero compute instances or databases have public IP addresses.
 
-![Overall Architecture](diagrams/rendered/architecture.png)
+![Overall Architecture](diagrams/architecture.png)
 
 ### 3-Tier Architecture Highlights
 

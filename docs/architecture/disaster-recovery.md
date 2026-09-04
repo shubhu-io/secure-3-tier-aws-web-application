@@ -19,7 +19,7 @@
 
 ## Disaster recovery diagram
 
-![Disaster Recovery & Multi-AZ Architecture](../../diagrams/rendered/disaster-recovery.png)
+![Disaster Recovery & Multi-AZ Architecture](../../diagrams/disaster-recovery.png)
 
 ## Backups
 

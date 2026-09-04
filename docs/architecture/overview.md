@@ -29,7 +29,7 @@ and cloud-native monitoring + notifications provide observability.
 The diagram below shows the **AWS reference implementation**; each cloud maps
 its own services 1:1 onto the same shape (see the table below).
 
-![Overall Architecture](../../diagrams/rendered/architecture.png)
+![Overall Architecture](../../diagrams/architecture.png)
 
 For a hand-drawn walkthrough of the same design, see the annotated notes:
 
@@ -83,7 +83,7 @@ clouds: `app_url`, `lb_dns_name`, `db_host`, `db_secret_ref`, `registry_url`,
 
 ## The deployment model (how code becomes running software)
 
-![Deployment Flow](../../diagrams/rendered/deployment-flow.png)
+![Deployment Flow](../../diagrams/deployment-flow.png)
 
 Every pipeline stage reads **`stack.json`** — the single source of truth for
 the tech stack (services, ports, toolchain, database engine/version, runtimes).
