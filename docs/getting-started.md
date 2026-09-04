@@ -9,7 +9,7 @@ on AWS, Azure, or GCP. Follow the steps in order; each step builds on the one be
 | ---- | --- | --- |
 | **GitHub account** | Source code + CI/CD | <https://github.com/join> |
 | **Cloud account** (choose one: AWS / Azure / GCP) | Infrastructure provisioning | <https://aws.amazon.com/free> · <https://azure.microsoft.com/free> · <https://cloud.google.com/free> |
-| **Least-privilege credentials** | Secure access to cloud APIs | Create a dedicated IAM user / service principal (never root). Store results with `aws configure` / `az login` / `gcloud auth login`. Per-cloud setup: [AWS](./docs/deployment/aws-setup.md) · [Azure](./docs/deployment/azure-setup.md) · [GCP](./docs/deployment/gcp-setup.md). |
+| **Least-privilege credentials** | Secure access to cloud APIs | Create a dedicated IAM user / service principal (never root). Store results with `aws configure` / `az login` / `gcloud auth login`. Per-cloud setup: [AWS](./deployment/aws-setup.md) · [Azure](./deployment/azure-setup.md) · [GCP](./deployment/gcp-setup.md). |
 
 ## 1. Install Required Tools
 
@@ -23,7 +23,7 @@ on AWS, Azure, or GCP. Follow the steps in order; each step builds on the one be
 | **Azure CLI** | 2.x | Azure API access (if targeting Azure) | <https://learn.microsoft.com/cli/azure/install-azure-cli> |
 | **Google Cloud SDK** | — | GCP API access (if targeting GCP) | <https://cloud.google.com/sdk/docs/install> |
 | **jq** | — | Parse JSON in scripts | Package manager (`apt`, `brew`, `choco`) |
-| **mermaid-cli** (optional) | — | Render mermaid diagrams | `npm i -g mermaid.cli` or use <https://mermaid.live> |
+| **Image / markdown viewer** (optional) | — | Inspect architecture diagrams (`diagrams/*.png`) | VS Code Markdown Preview or browser |
 
 ### Verify your install
 
@@ -38,7 +38,7 @@ az --version
 gcloud --version
 ```
 
-If any check fails, see the [Prerequisites doc](./docs/deployment/prerequisites.md) for troubleshooting.
+If any check fails, see the [Prerequisites doc](./deployment/prerequisites.md) for troubleshooting.
 
 ## 2. Clone the Repository
 
@@ -49,7 +49,7 @@ cd secure-3-tier-aws-web-application
 
 > Or with SSH: `git clone git@github.com:shubhu-io/secure-3-tier-aws-web-application.git`
 
-Skim [`stack.json`](./stack.json) first — it is the single source of truth that drives CI/CD, Terraform, and Kubernetes rendering.
+Skim [`stack.json`](../stack.json) first — it is the single source of truth that drives CI/CD, Terraform, and Kubernetes rendering.
 
 ## 3. Run the Application Locally (Free, No Cloud Account)
 
@@ -82,9 +82,9 @@ gcloud config set project <PROJECT_ID>   # set your GCP project
 
 Per-cloud least-privilege setup:
 
-- [AWS](./docs/deployment/aws-setup.md)
-- [Azure](./docs/deployment/azure-setup.md)
-- [GCP](./docs/deployment/gcp-setup.md)
+- [AWS](./deployment/aws-setup.md)
+- [Azure](./deployment/azure-setup.md)
+- [GCP](./deployment/gcp-setup.md)
 
 ## 5. Configure the Deployment
 
@@ -93,7 +93,7 @@ cp terraform/environments/dev/terraform.tfvars.example \
    terraform/environments/dev/terraform.tfvars
 ```
 
-Edit at minimum `notification_email`; tune region/sizes per the [Configuration table](./README.md#-configuration) (AWS/Azure/GCP variants included).
+Edit at minimum `notification_email`; tune region/sizes per the [Configuration table](../README.md#-configuration) (AWS/Azure/GCP variants included).
 
 ## 6. Provision Infrastructure (Terraform)
 
@@ -175,7 +175,7 @@ bash scripts/health-check.sh
 
 ### 8b. Self-Hosted Jenkins (optional alternative)
 
-See [`docs/deployment/jenkins.md`](./docs/deployment/jenkins.md) for prerequisites,
+See [`docs/deployment/jenkins.md`](./deployment/jenkins.md) for prerequisites,
 credential setup, and pipeline job creation.
 
 ## 9. Optional: Kubernetes / EKS / AKS / GKE
@@ -196,7 +196,7 @@ cd terraform
 terraform destroy -var="cloud=aws" -var-file="environments/dev/terraform.tfvars"
 ```
 
-Then follow the [Cleanup checklist](./README.md#-cleanup) so nothing keeps billing.
+Then follow the [Cleanup checklist](../README.md#-cleanup) so nothing keeps billing.
 
 ## 11. Multi-Cloud Note
 
@@ -217,14 +217,14 @@ Same logic applies for `azure` and `gcp`. This means:
 
 | Step | Guide |
 | ---- | ----- |
-| 1. Understand the phases | [`docs/phases.md`](../phases.md) |
-| 2. Prepare your machine | [`docs/deployment/prerequisites.md`](../deployment/prerequisites.md) |
-| 3. Prepare your cloud | [AWS](./docs/deployment/aws-setup.md) · [Azure](./docs/deployment/azure-setup.md) · [GCP](./docs/deployment/gcp-setup.md) |
-| 4. Deploy infrastructure | [`docs/deployment/terraform.md`](../deployment/terraform.md) |
-| 5. Run the app locally first | [`docs/deployment/application.md`](../deployment/application.md) |
-| 6. Set up CI/CD | [`docs/deployment/cicd.md`](../deployment/cicd.md) |
-| 7. (Optional) Kubernetes / EKS | [`docs/deployment/eks.md`](../deployment/eks.md) |
-| 8. (Optional) Self-hosted Jenkins | [`docs/deployment/jenkins.md`](../deployment/jenkins.md) |
+| 1. Understand the phases | [`docs/phases.md`](./phases.md) |
+| 2. Prepare your machine | [`docs/deployment/prerequisites.md`](./deployment/prerequisites.md) |
+| 3. Prepare your cloud | [AWS](./deployment/aws-setup.md) · [Azure](./deployment/azure-setup.md) · [GCP](./deployment/gcp-setup.md) |
+| 4. Deploy infrastructure | [`docs/deployment/terraform.md`](./deployment/terraform.md) |
+| 5. Run the app locally first | [`docs/deployment/application.md`](./deployment/application.md) |
+| 6. Set up CI/CD | [`docs/deployment/cicd.md`](./deployment/cicd.md) |
+| 7. (Optional) Kubernetes / EKS | [`docs/deployment/eks.md`](./deployment/eks.md) |
+| 8. (Optional) Self-hosted Jenkins | [`docs/deployment/jenkins.md`](./deployment/jenkins.md) |
 
 ---
 *This guide is intentionally beginner-friendly and covers every basic step from

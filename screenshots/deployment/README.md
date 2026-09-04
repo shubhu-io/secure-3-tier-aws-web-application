@@ -25,3 +25,15 @@ This folder contains live operational verification screenshots confirming end-to
 | `08-sg-chain.png` | EC2 Security Group rules showing chained ingress restriction (ALB → EC2 → RDS) | Least-Privilege Network |
 
 Refer to [`docs/deployment/application.md`](../../docs/deployment/application.md) for application runtime and endpoint specifications.
+
+---
+
+## 🖼️ Live Verification Preview
+
+### 1. Web Application Ingress & Authentication Interface (`ap-south-1`)
+![Web Application UI](./01-app-ui-login.png)
+
+---
+
+### 2. ALB `/health` & Database Probe (`ap-south-1`)
+![ALB Health Probe](./02-app-health-json.png)
