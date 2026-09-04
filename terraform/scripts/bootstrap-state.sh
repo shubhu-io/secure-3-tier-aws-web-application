@@ -10,8 +10,8 @@
 #   bash terraform/scripts/bootstrap-state.sh <region> [bucket-name]
 #
 # Examples:
-#   bash terraform/scripts/bootstrap-state.sh eu-west-1
-#   bash terraform/scripts/bootstrap-state.sh eu-west-1 my-org-terraform-state
+#   bash terraform/scripts/bootstrap-state.sh ap-south-1
+#   bash terraform/scripts/bootstrap-state.sh ap-south-1 my-org-terraform-state
 #
 # Then point environments/{dev,prod}/backend.hcl at the created bucket.
 # ============================================================================

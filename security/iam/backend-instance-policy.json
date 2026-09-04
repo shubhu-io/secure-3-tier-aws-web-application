@@ -6,15 +6,15 @@
       "Effect": "Allow",
       "Action": ["ssm:GetParameter"],
       "Resource": [
-        "arn:aws:ssm:eu-west-1:*:parameter/secure-ntier/dev/backend-image",
-        "arn:aws:ssm:eu-west-1:*:parameter/secure-ntier/dev/frontend-image"
+        "arn:aws:ssm:ap-south-1:*:parameter/secure-ntier/dev/backend-image",
+        "arn:aws:ssm:ap-south-1:*:parameter/secure-ntier/dev/frontend-image"
       ]
     },
     {
       "Sid": "ReadDbSecret",
       "Effect": "Allow",
       "Action": ["secretsmanager:GetSecretValue", "secretsmanager:DescribeSecret"],
-      "Resource": ["arn:aws:secretsmanager:eu-west-1:*:secret:secure-ntier-dev-db-credentials-*"]
+      "Resource": ["arn:aws:secretsmanager:ap-south-1:*:secret:secure-ntier-dev-db-credentials-*"]
     },
     {
       "Sid": "EcrPull",
@@ -34,7 +34,7 @@
         "logs:PutLogEvents",
         "logs:DescribeLogStreams"
       ],
-      "Resource": ["arn:aws:logs:eu-west-1:*:log-group:/secure-ntier-dev/*:*"]
+      "Resource": ["arn:aws:logs:ap-south-1:*:log-group:/secure-ntier-dev/*:*"]
     }
   ]
 }

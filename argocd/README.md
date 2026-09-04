@@ -21,7 +21,7 @@ source:
   helm:
     valuesObject:
       image:
-        registry: <account>.dkr.ecr.eu-west-1.amazonaws.com
+        registry: <account>.dkr.ecr.ap-south-1.amazonaws.com
         tag: main-abc1234
       backend:
         env:

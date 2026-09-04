@@ -5,7 +5,7 @@
 #
 # Usage:
 #   bash scripts/verify.sh <region> <project> <env> <alb_url>
-#   bash scripts/verify.sh eu-west-1 secure-ntier dev http://...
+#   bash scripts/verify.sh ap-south-1 secure-ntier dev http://...
 # ============================================================================
 set -uo pipefail
 

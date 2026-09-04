@@ -8,7 +8,7 @@
 [app:vars]
 ansible_user=ec2-user
 # If tunnelling over SSM Session Manager port forwarding:
-# ansible_ssh_common_args='-o ProxyCommand="aws ssm start-session --target %h --document-name AWS-StartPortForwardingSessionToRemoteHost --parameters host=%h,portName=22 --region eu-west-1"'
+# ansible_ssh_common_args='-o ProxyCommand="aws ssm start-session --target %h --document-name AWS-StartPortForwardingSessionToRemoteHost --parameters host=%h,portName=22 --region ap-south-1"'
 
 [jenkins]
 # jenkins-controller ansible_host=10.0.5.10

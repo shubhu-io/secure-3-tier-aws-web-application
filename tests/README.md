@@ -95,6 +95,6 @@ docker compose up -d --build     # in docker/
 bash tests/integration/e2e.sh
 
 # against a deployed environment
-bash tests/security/security-tests.sh eu-west-1 secure-ntier dev https://app.example.com
+bash tests/security/security-tests.sh ap-south-1 secure-ntier dev https://app.example.com
 bash tests/application/integration.sh https://app.example.com
 ```

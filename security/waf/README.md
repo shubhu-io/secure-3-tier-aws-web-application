@@ -41,8 +41,8 @@ the application.
 ## Verification
 
 ```bash
-aws wafv2 list-web-acls --scope REGIONAL --region eu-west-1
-aws wafv2 get-web-acl --name <name> --id <id> --scope REGIONAL --region eu-west-1
+aws wafv2 list-web-acls --scope REGIONAL --region ap-south-1
+aws wafv2 get-web-acl --name <name> --id <id> --scope REGIONAL --region ap-south-1
 ```
 
 Send a test attack payload through the ALB:

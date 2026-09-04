@@ -11,7 +11,7 @@ environment  = "dev"
 aws_region   = "ap-south-1"          # Mumbai, India (ap-south-1)
 
 # Optional: pin AZs explicitly, otherwise the first two available are used
-# azs = ["eu-west-1a", "eu-west-1b"]
+# azs = ["ap-south-1a", "ap-south-1b"]
 
 vpc_cidr           = "10.0.0.0/16"
 public_subnet_cidrs = ["10.0.1.0/24", "10.0.2.0/24"]

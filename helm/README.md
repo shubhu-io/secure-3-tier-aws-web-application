@@ -33,7 +33,7 @@ kubectl -n secure-ntier create secret generic app-db-secret \
 
 helm upgrade --install ntier helm/secure-ntier-platform \
   --namespace secure-ntier --create-namespace \
-  --set image.registry=<account>.dkr.ecr.eu-west-1.amazonaws.com \
+  --set image.registry=<account>.dkr.ecr.ap-south-1.amazonaws.com \
   --set image.tag=main-abc1234 \
   --set backend.env.DB_HOST=<rds-endpoint>
 ```

@@ -28,7 +28,7 @@ terraform init -backend-config="cloud/gcp/backend.hcl"
 ```bash
 # --- AWS (reference implementation) ---
 terraform init -backend-config="cloud/aws/backend.hcl"
-terraform plan  -var="cloud=aws" -var="aws_region=eu-west-1" \
+terraform plan  -var="cloud=aws" -var="aws_region=ap-south-1" \
                 -var-file="environments/dev/terraform.tfvars" -out=plan.tfplan
 terraform apply plan.tfplan
 
@@ -163,8 +163,8 @@ terraform apply plan.tfplan
 Apply complete! Resources: 60 added, 0 changed, 0 destroyed.
 
 Outputs:
-alb_dns_name = "secure-ntier-dev-alb-1234567890.eu-west-1.elb.amazonaws.com"
-db_host      = "secure-ntier-dev-db.xxxxx.eu-west-1.rds.amazonaws.com"
+alb_dns_name = "secure-ntier-dev-alb-1234567890.ap-south-1.elb.amazonaws.com"
+db_host      = "secure-ntier-dev-db.xxxxx.ap-south-1.rds.amazonaws.com"
 ...
 ```
 

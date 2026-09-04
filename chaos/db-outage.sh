@@ -8,7 +8,7 @@
 # ============================================================================
 set -euo pipefail
 
-REGION="${AWS_REGION:-eu-west-1}"
+REGION="${AWS_REGION:-ap-south-1}"
 DB_ID=""
 CONFIRM=false
 

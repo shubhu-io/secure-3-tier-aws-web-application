@@ -7,7 +7,7 @@
 #
 # Usage:
 #   bash scripts/cleanup.sh <region> <project> <env>
-#   bash scripts/cleanup.sh eu-west-1 secure-ntier dev
+#   bash scripts/cleanup.sh ap-south-1 secure-ntier dev
 # ============================================================================
 set -uo pipefail
 

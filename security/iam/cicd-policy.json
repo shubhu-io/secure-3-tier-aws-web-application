@@ -20,8 +20,8 @@
         "ecr:CompleteLayerUpload"
       ],
       "Resource": [
-        "arn:aws:ecr:eu-west-1:*:repository/secure-ntier-dev-backend",
-        "arn:aws:ecr:eu-west-1:*:repository/secure-ntier-dev-frontend"
+        "arn:aws:ecr:ap-south-1:*:repository/secure-ntier-dev-backend",
+        "arn:aws:ecr:ap-south-1:*:repository/secure-ntier-dev-frontend"
       ]
     },
     {
@@ -29,8 +29,8 @@
       "Effect": "Allow",
       "Action": ["ssm:PutParameter", "ssm:GetParameter"],
       "Resource": [
-        "arn:aws:ssm:eu-west-1:*:parameter/secure-ntier/dev/backend-image",
-        "arn:aws:ssm:eu-west-1:*:parameter/secure-ntier/dev/frontend-image"
+        "arn:aws:ssm:ap-south-1:*:parameter/secure-ntier/dev/backend-image",
+        "arn:aws:ssm:ap-south-1:*:parameter/secure-ntier/dev/frontend-image"
       ]
     },
     {

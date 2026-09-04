@@ -112,8 +112,8 @@ bash terraform/scripts/bootstrap-state.sh <region> [bucket-name]
 Examples:
 
 ```bash
-bash terraform/scripts/bootstrap-state.sh eu-west-1
-bash terraform/scripts/bootstrap-state.sh eu-west-1 my-org-terraform-state
+bash terraform/scripts/bootstrap-state.sh ap-south-1
+bash terraform/scripts/bootstrap-state.sh ap-south-1 my-org-terraform-state
 ```
 
 Then the environments already point at this bucket (see
@@ -185,7 +185,7 @@ or GKE depending on your cloud choice). To deploy updated images:
 
 ```bash
 # Example: update image tag in the manifests, then:
-aws eks update-kubeconfig --region eu-west-1 --name <cluster-name>
+aws eks update-kubeconfig --region ap-south-1 --name <cluster-name>
 kubectl apply -k k8s/overlays/prod
 ```
 

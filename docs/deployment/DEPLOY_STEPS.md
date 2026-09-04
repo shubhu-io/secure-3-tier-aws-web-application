@@ -299,8 +299,8 @@ When the script finishes, you will see a banner like this:
 ║           ✅  Deployment complete!                       ║
 ╚══════════════════════════════════════════════════════════╝
 
-[INFO]  App URL:  http://secure-ntier-dev-alb-123456789.eu-west-1.elb.amazonaws.com
-[INFO]  Health:   http://secure-ntier-dev-alb-123456789.eu-west-1.elb.amazonaws.com/health
+[INFO]  App URL:  http://secure-ntier-dev-alb-123456789.ap-south-1.elb.amazonaws.com
+[INFO]  Health:   http://secure-ntier-dev-alb-123456789.ap-south-1.elb.amazonaws.com/health
 [INFO]  Tear down: make tf-destroy   (or cd terraform && terraform destroy)
 ```
 
@@ -312,7 +312,7 @@ When the script finishes, you will see a banner like this:
 
 ### Step 8: Visit Your Application in the Browser
 
-1. Copy the **App URL** from the terminal output (e.g. `http://secure-ntier-dev-alb-XXXX.eu-west-1.elb.amazonaws.com`).
+1. Copy the **App URL** from the terminal output (e.g. `http://secure-ntier-dev-alb-XXXX.ap-south-1.elb.amazonaws.com`).
 2. Open Chrome, Firefox, Edge, or Safari, and paste the URL.
 3. You will see the **SecureNTier Live Dashboard**!
 4. Click on **Health Check** or navigate to:
@@ -366,7 +366,7 @@ Simply run:
 ```bash
 make push-aws
 ```
-*(Or if not using make: `bash cicd/scripts/build-and-push.sh $(git rev-parse --short HEAD) eu-west-1 dev secure-ntier && bash cicd/scripts/deploy-ec2.sh $(git rev-parse --short HEAD) eu-west-1 dev secure-ntier`)*
+*(Or if not using make: `bash cicd/scripts/build-and-push.sh $(git rev-parse --short HEAD) ap-south-1 dev secure-ntier && bash cicd/scripts/deploy-ec2.sh $(git rev-parse --short HEAD) ap-south-1 dev secure-ntier`)*
 
 This builds new Docker images, pushes them to ECR, and triggers a **zero-downtime rolling update** across your EC2 instances.
 

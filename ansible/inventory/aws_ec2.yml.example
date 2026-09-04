@@ -1,12 +1,12 @@
 # Dynamic AWS inventory — copy to aws_ec2.yml and run:
-#   AWS_REGION=eu-west-1 ansible-inventory -i inventory/aws_ec2.yml --graph
+#   AWS_REGION=ap-south-1 ansible-inventory -i inventory/aws_ec2.yml --graph
 #
 # Discovers instances by the tags Terraform sets (project + environment),
 # so new ASG-launched instances are picked up automatically.
 plugin: amazon.aws.aws_ec2
 
 regions:
-  - eu-west-1
+  - ap-south-1
 
 filters:
   tag:Project: secure-ntier

@@ -47,7 +47,7 @@ installed, AWS credentials configured, and the CI/CD IAM principal granted
 cluster access (see `docs/deployment/eks.md`).
 
 ```bash
-bash kubernetes/scripts/deploy.sh <git-sha> eu-west-1 dev secure-ntier
+bash kubernetes/scripts/deploy.sh <git-sha> ap-south-1 dev secure-ntier
 ```
 
 This:
@@ -76,7 +76,7 @@ kubectl -n secure-ntier create secret generic app-db-secret \
   --from-literal=JWT_SECRET=local-dev-secret-change-me-1234567890
 
 # 2. deploy without touching AWS
-AWS_CREDS_MODE=local bash kubernetes/scripts/deploy.sh <tag> eu-west-1 dev secure-ntier
+AWS_CREDS_MODE=local bash kubernetes/scripts/deploy.sh <tag> ap-south-1 dev secure-ntier
 
 # 3. port-forward to reach the public service locally
 kubectl -n secure-ntier port-forward svc/frontend 8080:80

@@ -63,7 +63,7 @@ Configure in **Settings → Secrets and variables → Actions**:
 | ------ | ------- | ------- |
 | `AWS_ACCESS_KEY_ID` | `AKIA...` | deploy |
 | `AWS_SECRET_ACCESS_KEY` | `...` | deploy |
-| `AWS_REGION` | `eu-west-1` | deploy |
+| `AWS_REGION` | `ap-south-1` | deploy |
 | `ALB_URL` | `http://secure-ntier-dev-alb-…elb.amazonaws.com` | smoke test |
 | `ECR_PROJECT` | `secure-ntier` | image naming |
 | `ECR_ENV` | `dev` | image naming |

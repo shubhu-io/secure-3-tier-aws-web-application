@@ -114,7 +114,7 @@ Specifier `*/develop`, no parameters.
 | Parameter | Default | Meaning |
 | --------- | ------- | ------- |
 | `ENVIRONMENT` | `dev` | `dev` / `prod` — controls ECR/SSM/ASG naming |
-| `REGION` | `eu-west-1` | AWS region |
+| `REGION` | `ap-south-1` | AWS region |
 | `PROJECT` | `secure-ntier` | name prefix used everywhere |
 | `AUTO_DEPLOY` | `true` | `false` = build+scan only (dry run, no push/deploy) |
 | `IMAGE_TAG` | *(empty)* | override the tag; empty = current git SHA |
@@ -134,13 +134,13 @@ bash cicd/scripts/stack-validate.sh
 bash cicd/scripts/stack-ci.sh
 
 # deploy a specific commit
-bash cicd/scripts/ecr-login.sh eu-west-1
-bash cicd/scripts/stack-push.sh 1a2b3c4d eu-west-1 secure-ntier dev
-bash cicd/scripts/deploy-ec2.sh 1a2b3c4d eu-west-1 dev secure-ntier
+bash cicd/scripts/ecr-login.sh ap-south-1
+bash cicd/scripts/stack-push.sh 1a2b3c4d ap-south-1 secure-ntier dev
+bash cicd/scripts/deploy-ec2.sh 1a2b3c4d ap-south-1 dev secure-ntier
 ALB_URL="http://..." ATTEMPTS=36 bash cicd/scripts/smoke-test.sh
 
 # or deploy to EKS instead (or as well)
-bash cicd/scripts/deploy-eks.sh 1a2b3c4d eu-west-1 dev secure-ntier
+bash cicd/scripts/deploy-eks.sh 1a2b3c4d ap-south-1 dev secure-ntier
 ```
 
 ---

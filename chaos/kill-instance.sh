@@ -11,7 +11,7 @@ set -euo pipefail
 
 PROJECT="secure-ntier"
 ENVIRONMENT="dev"
-REGION="${AWS_REGION:-eu-west-1}"
+REGION="${AWS_REGION:-ap-south-1}"
 CONFIRM=false
 
 while [[ $# -gt 0 ]]; do

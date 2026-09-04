@@ -4,7 +4,7 @@
 # container registry (Amazon ECR | Azure Container Registry | GCP Artifact
 # Registry).
 # Usage: bash cicd/scripts/build-and-push.sh <service> <tag> <region> <project> <env> [dockerfile]
-# Example: bash cicd/scripts/build-and-push.sh backend 1a2b3c4d eu-west-1 secure-ntier dev
+# Example: bash cicd/scripts/build-and-push.sh backend 1a2b3c4d ap-south-1 secure-ntier dev
 #   [dockerfile] defaults to docker/<service>/Dockerfile; stack-push.sh always
 #   passes the exact path from stack.json so any layout works.
 #

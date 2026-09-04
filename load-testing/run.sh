@@ -2,7 +2,7 @@
 # ============================================================================
 # Load test runner - k6 (preferred) or hey (fallback).
 #
-#   ./load-testing/run.sh https://my-alb.eu-west-1.elb.amazonaws.com smoke
+#   ./load-testing/run.sh https://my-alb.ap-south-1.elb.amazonaws.com smoke
 #   ./load-testing/run.sh http://localhost stress
 #
 # Profiles:

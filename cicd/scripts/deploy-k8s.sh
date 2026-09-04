@@ -5,7 +5,7 @@
 # Actions (deploy.yml) and Jenkins (Jenkinsfile).
 #
 # Usage: bash cicd/scripts/deploy-k8s.sh <tag> <region> <env> <project> [cluster]
-# Example: bash cicd/scripts/deploy-k8s.sh 1a2b3c4d eu-west-1 dev secure-ntier
+# Example: bash cicd/scripts/deploy-k8s.sh 1a2b3c4d ap-south-1 dev secure-ntier
 #
 # Cloud selection: CLOUD env var (aws | azure | gcp, default from stack.json).
 #   kubeconfig: aws eks update-kubeconfig | az aks get-credentials |

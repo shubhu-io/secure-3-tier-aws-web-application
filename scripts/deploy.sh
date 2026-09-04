@@ -6,7 +6,7 @@
 #
 # Usage:
 #   bash scripts/deploy.sh <tag> <region> <project> <env>
-#   bash scripts/deploy.sh my-release-1 eu-west-1 secure-ntier dev
+#   bash scripts/deploy.sh my-release-1 ap-south-1 secure-ntier dev
 # ============================================================================
 set -euo pipefail
 

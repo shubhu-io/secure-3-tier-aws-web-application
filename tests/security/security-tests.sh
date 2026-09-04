@@ -3,7 +3,7 @@
 # Security tests - verify the platform actually enforces its security model.
 # Usage:
 #   bash tests/security/security-tests.sh <region> <project> <env> <url>
-#   bash tests/security/security-tests.sh eu-west-1 secure-ntier dev https://app.example.com
+#   bash tests/security/security-tests.sh ap-south-1 secure-ntier dev https://app.example.com
 # ============================================================================
 set -uo pipefail
 

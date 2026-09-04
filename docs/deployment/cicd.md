@@ -9,7 +9,7 @@ variables → Actions → New repository secret):
 | ------ | ----- |
 | `AWS_ACCESS_KEY_ID` | Access key of the CI/CD IAM user |
 | `AWS_SECRET_ACCESS_KEY` | Matching secret key |
-| `AWS_REGION` | `eu-west-1` (your region) |
+| `AWS_REGION` | `ap-south-1` (your region) |
 | `ALB_URL` | `http://<your-alb-dns>` from `terraform output alb_dns_name` (or `https://app.example.com`) |
 | `ECR_PROJECT` | `secure-ntier` (must match `project_name`) |
 | `ECR_ENV` | `dev` (must match `environment`) |

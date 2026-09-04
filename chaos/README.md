@@ -18,7 +18,7 @@ instances, health checks drain bad targets, alarms page you.
 ## Example session
 
 ```bash
-export AWS_REGION=eu-west-1
+export AWS_REGION=ap-south-1
 
 # terminal 1: keep an eye on the public endpoint
 watch -n5 'curl -s https://<alb>/health'
@@ -27,7 +27,7 @@ watch -n5 'curl -s https://<alb>/health'
 ./chaos/kill-instance.sh --project secure-ntier --env dev --yes
 
 # watch the fleet heal:
-aws autoscaling describe-auto-scaling-groups --region eu-west-1 \
+aws autoscaling describe-auto-scaling-groups --region ap-south-1 \
   --query 'AutoScalingGroups[].Instances[].{id:InstanceId,h:HealthStatus,l:LifecycleState}'
 ```
 

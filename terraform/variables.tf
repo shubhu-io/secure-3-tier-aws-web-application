@@ -151,7 +151,7 @@ variable "asg_desired_capacity" {
 variable "aws_region" {
   description = "AWS region"
   type        = string
-  default     = "eu-west-1"
+  default     = "ap-south-1"
 }
 
 variable "aws_instance_type" {

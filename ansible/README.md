@@ -38,7 +38,7 @@ ansible all -m ping                                   # reachability check
 
 # 2. Or dynamic inventory from AWS
 cp inventory/aws_ec2.yml.example inventory/aws_ec2.yml
-export AWS_REGION=eu-west-1
+export AWS_REGION=ap-south-1
 ansible-inventory -i inventory/aws_ec2.yml --graph
 ansible-playbook -i inventory/aws_ec2.yml playbooks/site.yml
 ```

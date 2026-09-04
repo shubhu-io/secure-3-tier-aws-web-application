@@ -508,8 +508,8 @@ Values are injected per environment with `-backend-config`.
 
 ```bash
 # Create the S3 bucket (versioning + encryption)
-aws s3api create-bucket --bucket your-org-terraform-state --region eu-west-1 \
-  --create-bucket-configuration LocationConstraint=eu-west-1
+aws s3api create-bucket --bucket your-org-terraform-state --region ap-south-1 \
+  --create-bucket-configuration LocationConstraint=ap-south-1
 aws s3api put-bucket-versioning --bucket your-org-terraform-state \
   --versioning-configuration Status=Enabled
 aws s3api put-bucket-encryption --bucket your-org-terraform-state \
@@ -657,8 +657,8 @@ terraform apply -var-file="environments/dev/terraform.tfvars" -auto-approve
 ### Verification
 
 ```bash
-aws ec2 describe-vpcs --region eu-west-1
-aws ec2 describe-internet-gateways --region eu-west-1
+aws ec2 describe-vpcs --region ap-south-1
+aws ec2 describe-internet-gateways --region ap-south-1
 ```
 
 ### Common errors
@@ -769,7 +769,7 @@ terraform apply -var-file="environments/dev/terraform.tfvars" -auto-approve
 Six subnets with the expected CIDRs and AZs:
 
 ```bash
-aws ec2 describe-subnets --region eu-west-1 --query 'Subnets[*].{CIDR:CidrBlock,AZ:AvailabilityZone,Pub:MapPublicIpOnLaunch}'
+aws ec2 describe-subnets --region ap-south-1 --query 'Subnets[*].{CIDR:CidrBlock,AZ:AvailabilityZone,Pub:MapPublicIpOnLaunch}'
 ```
 
 ### Verification
@@ -880,7 +880,7 @@ terraform apply -var-file="environments/dev/terraform.tfvars" -auto-approve
 ### Expected output
 
 ```bash
-aws ec2 describe-route-tables --region eu-west-1 \
+aws ec2 describe-route-tables --region ap-south-1 \
   --query 'RouteTables[*].Routes[?DestinationCidrBlock==`0.0.0.0/0`][].{Cidr:CidrBlock,GW:GatewayId,NAT:NatGatewayId}'
 ```
 
@@ -993,7 +993,7 @@ Three security groups. From the [security-tests](../tests/security/security-test
 
 ```bash
 aws ec2 describe-security-groups \
-  --group-ids <ALB_SG> <APP_SG> <DB_SG> --region eu-west-1
+  --group-ids <ALB_SG> <APP_SG> <DB_SG> --region ap-south-1
 ```
 
 ### Verification
@@ -1095,7 +1095,7 @@ terraform apply -var-file="environments/dev/terraform.tfvars" -auto-approve
 Then confirm flow logs:
 
 ```bash
-aws ec2 describe-flow-logs --region eu-west-1 \
+aws ec2 describe-flow-logs --region ap-south-1 \
   --query 'FlowLogs[*].{Status:FlowLogStatus,Resource:ResourceId}'
 ```
 
@@ -1110,7 +1110,7 @@ aws ec2 describe-flow-logs --region eu-west-1 \
 ```bash
 # read a few accepted/rejected flows
 aws logs filter-log-events --log-group-name /aws/vpc-flow-log/secure-ntier-dev \
-  --region eu-west-1 --limit 5
+  --region ap-south-1 --limit 5
 ```
 
 ### Common errors
@@ -1196,7 +1196,7 @@ resource "aws_ecr_repository" "this" {
 terraform apply -var-file="environments/dev/terraform.tfvars"
 
 # List repos
-aws ecr describe-repositories --region eu-west-1 \
+aws ecr describe-repositories --region ap-south-1 \
   --query 'repositories[*].repositoryName'
 ```
 
@@ -1451,7 +1451,7 @@ terraform output alb_dns_name
 ### Expected output
 
 ```text
-secure-ntier-dev-alb-1234567890.eu-west-1.elb.amazonaws.com
+secure-ntier-dev-alb-1234567890.ap-south-1.elb.amazonaws.com
 ```
 
 ### Verification
@@ -1566,7 +1566,7 @@ A launch template resource; no running instances yet.
 ### Verification
 
 ```bash
-aws ec2 describe-launch-templates --region eu-west-1
+aws ec2 describe-launch-templates --region ap-south-1
 ```
 
 ### Common errors
@@ -1664,7 +1664,7 @@ resource "aws_autoscaling_policy" "cpu" {
 terraform apply -var-file="environments/dev/terraform.tfvars"
 
 # Watch it come up
-aws autoscaling describe-auto-scaling-groups --region eu-west-1 \
+aws autoscaling describe-auto-scaling-groups --region ap-south-1 \
   --query 'AutoScalingGroups[*].{Name:AutoScalingGroupName,Min:MinSize,Desired:DesiredCapacity,Cur:Instances[].InstanceId}'
 ```
 
@@ -1677,7 +1677,7 @@ aws autoscaling describe-auto-scaling-groups --region eu-west-1 \
 
 ```bash
 # Target health
-aws elbv2 describe-target-health --target-group-arn <TG_ARN> --region eu-west-1 \
+aws elbv2 describe-target-health --target-group-arn <TG_ARN> --region ap-south-1 \
   --query 'TargetHealthDescriptions[*].{Id:Target.Id,State:TargetHealth.State}'
 # Expect: healthy 2x
 ```
@@ -1794,7 +1794,7 @@ terraform output db_secret_arn
 ### Verification
 
 ```bash
-aws rds describe-db-instances --region eu-west-1 \
+aws rds describe-db-instances --region ap-south-1 \
   --query 'DBInstances[*].{Pub:PubliclyAccessible,Enc:StorageEncrypted,MultiAZ:MultiAZ,Class:DBInstanceClass}'
 # Expect: Pub=false, Enc=true, MultiAZ=false (dev)
 aws secretsmanager get-secret-value --secret-id <ARN> \
@@ -1885,7 +1885,7 @@ resource "aws_ssm_parameter" "frontend_image" {
 ```bash
 terraform apply -var-file="environments/dev/terraform.tfvars"
 
-aws ssm get-parameter --name "/secure-ntier/dev/backend-image" --region eu-west-1 \
+aws ssm get-parameter --name "/secure-ntier/dev/backend-image" --region ap-south-1 \
   --query Parameter.Value
 ```
 
@@ -1995,7 +1995,7 @@ The ALB module then uses `certificate_arn` on the 443 listener and adds a
 terraform apply -var-file="environments/dev/terraform.tfvars"
 
 # certificate should become ISSUED within a few minutes
-aws acm list-certificates --region eu-west-1 \
+aws acm list-certificates --region ap-south-1 \
   --query 'CertificateSummaryList[*].{Domain:CertificateDomainName,Status:CertificateArn}'
 aws acm describe-certificate --certificate-arn <ARN> --query 'Certificate.Status'
 ```
@@ -2099,7 +2099,7 @@ dig +short app.example.com          # or: nslookup app.example.com
 ### Expected output
 
 ```text
-secure-ntier-dev-alb-1234567890.eu-west-1.elb.amazonaws.com.
+secure-ntier-dev-alb-1234567890.ap-south-1.elb.amazonaws.com.
 ```
 
 ### Verification
@@ -2191,7 +2191,7 @@ resource "aws_wafv2_web_acl_association" "this" {
 ```bash
 terraform apply -var-file="environments/dev/terraform.tfvars"
 
-aws wafv2 list-web-acls --scope REGIONAL --region eu-west-1 \
+aws wafv2 list-web-acls --scope REGIONAL --region ap-south-1 \
   --query 'WebACLs[*].{Id:Id,Name:Name}'
 ```
 
@@ -2299,7 +2299,7 @@ See [`diagrams/cicd.mmd`](../diagrams/cicd.mmd). The pipeline is
 | ------ | ----- |
 | `AWS_ACCESS_KEY_ID` | CI/CD IAM user key |
 | `AWS_SECRET_ACCESS_KEY` | CI/CD IAM user secret |
-| `AWS_REGION` | e.g. `eu-west-1` |
+| `AWS_REGION` | e.g. `ap-south-1` |
 | `ALB_URL` | `http://<ALB_DNS>` (or `https://app.example.com`) |
 | `ECR_PROJECT` | `secure-ntier` |
 | `ECR_ENV` | `dev` |
@@ -2503,7 +2503,7 @@ Plus top-level alarms for **ALB 5xx**, **RDS CPU**, and a CloudWatch dashboard
 terraform apply -var-file="environments/dev/terraform.tfvars"
 
 # list alarms
-aws cloudwatch describe-alarms --region eu-west-1 \
+aws cloudwatch describe-alarms --region ap-south-1 \
   --query 'MetricAlarms[*].{Name:AlarmName,State:StateValue}'
 ```
 
@@ -2613,8 +2613,8 @@ frontend: awslogs-group = /secure-ntier-{env}/app  awslogs-stream-prefix = front
 ```bash
 terraform apply -var-file="environments/dev/terraform.tfvars"
 
-aws cloudtrail get-trail-status --name secure-ntier-dev-trail --region eu-west-1
-aws logs describe-log-groups --region eu-west-1 \
+aws cloudtrail get-trail-status --name secure-ntier-dev-trail --region ap-south-1
+aws logs describe-log-groups --region ap-south-1 \
   --query 'logGroups[*].{Group:logGroupName}'
 ```
 
@@ -2628,7 +2628,7 @@ aws logs describe-log-groups --region eu-west-1 \
 
 ```bash
 aws logs filter-log-events --log-group-name /secure-ntier-dev/app \
-  --filter-pattern "ERROR" --region eu-west-1 --limit 5
+  --filter-pattern "ERROR" --region ap-south-1 --limit 5
 ```
 
 (Returns app error logs after the app has run.)
@@ -2710,7 +2710,7 @@ secrets anywhere).
 
 ```bash
 cd tests/security
-bash security-tests.sh --region eu-west-1 --alb-url http://<ALB_DNS>
+bash security-tests.sh --region ap-south-1 --alb-url http://<ALB_DNS>
 ```
 
 ### Expected output
@@ -2867,13 +2867,13 @@ scenarios from the runbooks on the live dev environment.
 **Test 1 — Kill an EC2 instance (ASG replace).**
 
 ```bash
-aws autoscaling describe-auto-scaling-groups --region eu-west-1 \
+aws autoscaling describe-auto-scaling-groups --region ap-south-1 \
   --query 'AutoScalingGroups[0].Instances[0].InstanceId'
 
-aws ec2 terminate-instances --instance-ids <INSTANCE_ID> --region eu-west-1
+aws ec2 terminate-instances --instance-ids <INSTANCE_ID> --region ap-south-1
 
 # watch the ASG replace it
-aws autoscaling describe-auto-scaling-groups --region eu-west-1 \
+aws autoscaling describe-auto-scaling-groups --region ap-south-1 \
   --query 'AutoScalingGroups[0].{Instances:Instances[].InstanceId,Healthy:Instances[].HealthStatus}'
 ```
 
@@ -3173,7 +3173,7 @@ A platform is only finished when every claim is *verified*, not just written.
 ### The one-command verification
 
 ```bash
-bash scripts/verify.sh eu-west-1 secure-ntier dev http://<ALB_URL>
+bash scripts/verify.sh ap-south-1 secure-ntier dev http://<ALB_URL>
 ```
 
 (expected output: a checklist summary of the environment.)
@@ -3250,7 +3250,7 @@ aws eks associate-access-policy \
 ### Deploy the application to EKS
 
 ```bash
-bash kubernetes/scripts/deploy.sh <git-sha> eu-west-1 dev secure-ntier
+bash kubernetes/scripts/deploy.sh <git-sha> ap-south-1 dev secure-ntier
 ```
 
 The script configures `kubectl`, materializes the DB credentials into the
@@ -3328,7 +3328,7 @@ gone.
 
 ```bash
 # helper
-bash scripts/cleanup.sh eu-west-1 secure-ntier dev
+bash scripts/cleanup.sh ap-south-1 secure-ntier dev
 ```
 
 ### Verification

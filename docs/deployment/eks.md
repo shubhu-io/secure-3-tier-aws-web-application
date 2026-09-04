@@ -64,10 +64,10 @@ The CI/CD IAM policy already includes `eks:DescribeCluster` + `eks:ListClusters`
 
 ```bash
 # connect kubectl
-aws eks update-kubeconfig --name secure-ntier-dev-eks --region eu-west-1
+aws eks update-kubeconfig --name secure-ntier-dev-eks --region ap-south-1
 
 # deploy (kubeconfig + secret materialization + apply + roll + smoke test)
-bash kubernetes/scripts/deploy.sh <git-sha> eu-west-1 dev secure-ntier
+bash kubernetes/scripts/deploy.sh <git-sha> ap-south-1 dev secure-ntier
 ```
 
 The per-service Deployment/Service/HPA/PDB manifests are **rendered from
@@ -105,7 +105,7 @@ full design and production upgrades.
 ## Cleanup
 
 ```bash
-bash kubernetes/scripts/undeploy.sh eu-west-1 secure-ntier-dev-eks   # removes the namespace
+bash kubernetes/scripts/undeploy.sh ap-south-1 secure-ntier-dev-eks   # removes the namespace
 # then remove the cluster itself:
 #   set enable_eks = false (or terraform destroy) and re-apply
 ```

@@ -30,8 +30,8 @@ changes between releases is a value in **SSM Parameter Store** — **one
 parameter per service**:
 
 ```text
-/secure-ntier/<env>/backend-image  = 123456789.dkr.ecr.eu-west-1.amazonaws.com/secure-ntier-dev-backend:<git-sha>
-/secure-ntier/<env>/frontend-image = 123456789.dkr.ecr.eu-west-1.amazonaws.com/secure-ntier-dev-frontend:<git-sha>
+/secure-ntier/<env>/backend-image  = 123456789.dkr.ecr.ap-south-1.amazonaws.com/secure-ntier-dev-backend:<git-sha>
+/secure-ntier/<env>/frontend-image = 123456789.dkr.ecr.ap-south-1.amazonaws.com/secure-ntier-dev-frontend:<git-sha>
 ```
 
 CI/CD writes these parameters (iterating over `stack.json`), then starts a

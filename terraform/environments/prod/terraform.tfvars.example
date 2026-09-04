@@ -5,7 +5,7 @@
 
 project_name = "secure-ntier"
 environment  = "prod"
-aws_region   = "eu-west-1"          # <YOUR_REGION>
+aws_region   = "ap-south-1"          # Mumbai, India (ap-south-1)
 
 vpc_cidr           = "10.0.0.0/16"
 public_subnet_cidrs = ["10.0.1.0/24", "10.0.2.0/24"]

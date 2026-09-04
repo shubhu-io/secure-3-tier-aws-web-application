@@ -17,7 +17,7 @@ autoscaling actually triggers. Pairs with the "Load spike" failure test in
 ./load-testing/run.sh http://localhost smoke
 
 # deployed ALB
-./load-testing/run.sh https://my-alb-123.eu-west-1.elb.amazonaws.com stress
+./load-testing/run.sh https://my-alb-123.ap-south-1.elb.amazonaws.com stress
 ```
 
 ## While the stress test runs, watch

@@ -265,7 +265,7 @@ by default — set `sonar.qualitygate.wait=true` to make it a hard gate.
 
 ```bash
 cd tests/security
-bash security-tests.sh --region eu-west-1 --alb-url http://<ALB_DNS>
+bash security-tests.sh --region ap-south-1 --alb-url http://<ALB_DNS>
 ```
 
 Assertions (see `tests/security/security-tests.sh` for full list):

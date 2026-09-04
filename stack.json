@@ -40,7 +40,7 @@
   "clouds": ["aws", "azure", "gcp"],
   "default_cloud": "aws",
   "cloud_config": {
-    "aws":   { "region": "eu-west-1",    "registry": "ecr",              "kubernetes": "eks" },
+    "aws":   { "region": "ap-south-1",    "registry": "ecr",              "kubernetes": "eks" },
     "azure": { "region": "westeurope",   "registry": "acr",              "kubernetes": "aks" },
     "gcp":   { "region": "europe-west1", "registry": "artifact-registry","kubernetes": "gke" }
   }

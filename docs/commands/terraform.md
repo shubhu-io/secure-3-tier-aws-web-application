@@ -84,7 +84,7 @@ terraform init
 terraform init -backend="s3" \
   -backend-config="bucket=my-tf-state-bucket" \
   -backend-config="key=prod/terraform.tfstate" \
-  -backend-config="region=eu-west-1"
+  -backend-config="region=ap-south-1"
 
 # Initialize without backend (local state)
 terraform init -backend=false

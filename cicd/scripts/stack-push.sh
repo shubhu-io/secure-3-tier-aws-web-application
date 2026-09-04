@@ -7,7 +7,7 @@
 # new service needs no pipeline edits - just a stack.json entry.
 #
 # Usage: bash cicd/scripts/stack-push.sh <tag> <region> <project> <env>
-# Example: bash cicd/scripts/stack-push.sh 1a2b3c4d eu-west-1 secure-ntier dev
+# Example: bash cicd/scripts/stack-push.sh 1a2b3c4d ap-south-1 secure-ntier dev
 # ============================================================================
 set -euo pipefail
 

@@ -101,7 +101,7 @@ Job config (both):
 | Parameter | Default | Meaning |
 | --------- | ------- | ------- |
 | `ENVIRONMENT` | `dev` | `dev` / `prod` — ECR/SSM/ASG naming |
-| `REGION` | `eu-west-1` | AWS region |
+| `REGION` | `ap-south-1` | AWS region |
 | `PROJECT` | `secure-ntier` | name prefix |
 | `AUTO_DEPLOY` | `true` | `false` = build + scan only (no push/deploy) |
 | `IMAGE_TAG` | *(empty)* | override; empty = git SHA |
@@ -139,9 +139,9 @@ The same scripts the pipelines call run by hand:
 ```bash
 bash cicd/scripts/stack-validate.sh
 bash cicd/scripts/stack-ci.sh                      # local build + scan
-bash cicd/scripts/ecr-login.sh eu-west-1
-bash cicd/scripts/stack-push.sh <git-sha> eu-west-1 secure-ntier dev
-bash cicd/scripts/deploy-ec2.sh <git-sha> eu-west-1 dev secure-ntier
+bash cicd/scripts/ecr-login.sh ap-south-1
+bash cicd/scripts/stack-push.sh <git-sha> ap-south-1 secure-ntier dev
+bash cicd/scripts/deploy-ec2.sh <git-sha> ap-south-1 dev secure-ntier
 ALB_URL="http://..." ATTEMPTS=36 bash cicd/scripts/smoke-test.sh
 ```
 

@@ -3,7 +3,7 @@
 # Override per environment, e.g.:
 #   helm upgrade --install ntier helm/secure-ntier-platform \
 #     --namespace secure-ntier --create-namespace \
-#     --set image.registry=123456789.dkr.ecr.eu-west-1.amazonaws.com \
+#     --set image.registry=123456789.dkr.ecr.ap-south-1.amazonaws.com \
 #     --set image.tag=main-abc1234
 #
 # Service names/ports intentionally mirror stack.json so both deployment paths

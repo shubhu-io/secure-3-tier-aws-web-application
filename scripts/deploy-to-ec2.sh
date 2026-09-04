@@ -15,7 +15,7 @@
 #   bash scripts/deploy-to-ec2.sh <region> [environment] [project]
 #
 # Examples:
-#   bash scripts/deploy-to-ec2.sh eu-west-1
+#   bash scripts/deploy-to-ec2.sh ap-south-1
 #   bash scripts/deploy-to-ec2.sh ap-south-1 dev secure-ntier
 #
 # Prerequisites (set before running):

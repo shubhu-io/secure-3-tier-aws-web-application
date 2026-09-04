@@ -2,7 +2,7 @@
 # Shared variables — override per environment with -e or group_vars/<env>.
 project_name: secure-ntier
 environment: dev
-aws_region: eu-west-1
+aws_region: ap-south-1
 
 # hardening defaults
 sshd_password_auth: "no"

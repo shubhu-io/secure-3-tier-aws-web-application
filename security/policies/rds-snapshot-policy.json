@@ -5,7 +5,7 @@
       "Sid": "CreateManualSnapshot",
       "Effect": "Allow",
       "Action": ["rds:CreateDBSnapshot"],
-      "Resource": "arn:aws:rds:eu-west-1:*:snapshot:*"
+      "Resource": "arn:aws:rds:ap-south-1:*:snapshot:*"
     },
     {
       "Sid": "DescribeSnapshots",
@@ -17,7 +17,7 @@
       "Sid": "RestoreFromSnapshot",
       "Effect": "Allow",
       "Action": ["rds:RestoreDBInstanceFromDBSnapshot"],
-      "Resource": "arn:aws:rds:eu-west-1:*:db:*"
+      "Resource": "arn:aws:rds:ap-south-1:*:db:*"
     }
   ]
 }

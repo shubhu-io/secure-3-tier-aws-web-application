@@ -34,7 +34,7 @@ aws configure
 ```text
 AWS Access Key ID [None]: AKIA................
 AWS Secret Access Key [None]: ................
-Default region name [None]: eu-west-1
+Default region name [None]: ap-south-1
 Default output format [None]: json
 ```
 
@@ -68,7 +68,7 @@ aws s3api put-public-access-block \
   BlockPublicAcls=true,IgnorePublicAcls=true,BlockPublicPolicy=true,RestrictPublicBuckets=true
 ```
 
-Example: `aws s3api create-bucket --bucket my-org-terraform-state --region eu-west-1 --create-bucket-configuration LocationConstraint=eu-west-1`
+Example: `aws s3api create-bucket --bucket my-org-terraform-state --region ap-south-1 --create-bucket-configuration LocationConstraint=ap-south-1`
 
 > Bucket names are globally unique. If you get `BucketAlreadyExists`, pick
 > another name.

@@ -29,7 +29,7 @@ Choose one method:
 **Option A — IAM User keys (simplest):**
 ```bash
 aws configure
-# Enter: Access Key ID, Secret Key, Region (e.g. eu-west-1), output format (json)
+# Enter: Access Key ID, Secret Key, Region (e.g. ap-south-1), output format (json)
 ```
 
 **Option B — Named profile:**
@@ -62,7 +62,7 @@ cp terraform/environments/dev/terraform.tfvars.example \
 Open `terraform/environments/dev/terraform.tfvars` and set **at minimum**:
 
 ```hcl
-aws_region         = "eu-west-1"        # your AWS region
+aws_region         = "ap-south-1"        # your AWS region
 notification_email = "you@example.com"  # for CloudWatch alarm emails
 ```
 
@@ -81,7 +81,7 @@ notification_email = "you@example.com"  # for CloudWatch alarm emails
 ```bash
 make deploy-aws
 # or directly:
-bash scripts/deploy-to-ec2.sh eu-west-1 dev
+bash scripts/deploy-to-ec2.sh ap-south-1 dev
 ```
 
 This runs all 7 steps automatically:
@@ -134,9 +134,9 @@ For a manual re-deploy without Terraform:
 ```bash
 make push-aws TAG=$(git rev-parse --short HEAD)
 # or:
-bash cicd/scripts/registry-login.sh eu-west-1
-bash cicd/scripts/stack-push.sh $(git rev-parse --short HEAD) eu-west-1 secure-ntier dev
-bash cicd/scripts/deploy-ec2.sh $(git rev-parse --short HEAD) eu-west-1 dev secure-ntier
+bash cicd/scripts/registry-login.sh ap-south-1
+bash cicd/scripts/stack-push.sh $(git rev-parse --short HEAD) ap-south-1 secure-ntier dev
+bash cicd/scripts/deploy-ec2.sh $(git rev-parse --short HEAD) ap-south-1 dev secure-ntier
 ```
 
 ---
