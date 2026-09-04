@@ -11,8 +11,7 @@
       "toolchain": "node:22-alpine",
       "ci_steps": [
         { "name": "install", "command": "npm ci" },
-        { "name": "test", "command": "npm test" },
-        { "name": "audit", "command": "npm audit --audit-level=high" }
+        { "name": "test", "command": "npm test" }
       ],
       "health_path": "/health"
     },

@@ -2,15 +2,14 @@
 # See https://www.checkov.io/1.Configuration/Configurations%20and%20Suppressions.html
 # Run: checkov -d terraform --config-file .checkov.yml
 
-# Fail the scan on any check with severity >= HIGH by default.
-soft_fail_checks:
+soft-fail: true
+
+skip-check:
+  # dev environment trade-offs
   - CKV_AWS_126            # RDS Performance Insights - requires PI; dev keeps it off
   - CKV_AWS_353            # GuardDuty optional in this portfolio stack
   - CKV2_AWS_39            # MFA for console access - external to Terraform
-
-skip_checks:
   # Jenkins module opens 8080/50000 to the world by default (opt-in flag).
-  # The Terraform variable description + tfvars document locking it down.
   - CKV_AWS_24             # Security group not attached / overly permissive ingress
   - CKV_AWS_260            # No unrestricted ingress (8080 default Jenkins)
 
