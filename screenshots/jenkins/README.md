@@ -1,19 +1,21 @@
-# Jenkins Step Screenshots — Image Ideas
+# Jenkins CI/CD Automation Screenshots
 
-Place images here: `screenshots/jenkins/*.png`
+This folder contains screenshots validating the automated Jenkins CI/CD controller, agent infrastructure, and pipeline executions deployed on AWS EC2 in `ap-south-1`.
 
-## Ideas — generate these Jenkins UI captures (`../IMAGE_IDEAS.md`)
+---
 
-1. `01-jenkins-provision.png` — `terraform apply enable_jenkins=true` → `jenkins_url`
-2. `02-jenkins-unlock.png` — Unlock Jenkins (password from `aws ssm ... /var/log/jenkins-init.log`)
-3. `03-jenkins-plugins.png` — Install suggested plugins
-4. `04-jenkins-credentials-aws.png` — Manage Credentials → AWS / GitHub
-5. `05-jenkins-agent-docker.png` — Agent `docker` online
-6. `06-jenkins-ci-pipeline.png` — `Jenkinsfile-ci` green stages
-7. `07-jenkins-deploy-pipeline.png` — `Jenkinsfile` deploy stages (ECR → ASG refresh → smoke)
-8. `08-jenkins-build-log.png` — Console log + Trivy scan output
-9. `09-jenkins-asg-refresh.png` — ASG Activity post-Jenkins deploy
+## 📋 Recommended Captures
 
-Doc link: `![Screenshot: Jenkins deploy](../../screenshots/jenkins/07-jenkins-deploy-pipeline.png)` in `docs/deployment/jenkins.md`
+| Filename | Description | Context |
+|---|---|---|
+| `01-jenkins-provision.png` | Terraform completion exposing the secure Jenkins controller endpoint | Infrastructure Deployment |
+| `02-jenkins-unlock.png` | Initial administrator unlock screen with SSM-retrieved credentials | Controller Setup |
+| `03-jenkins-plugins.png` | Standardized plugin installation progress | Environment Bootstrap |
+| `04-jenkins-credentials-aws.png` | Configured Jenkins credential store with IAM role access | Credential Management |
+| `05-jenkins-agent-docker.png` | Dynamic Docker execution agent online and connected | Build Infrastructure |
+| `06-jenkins-ci-pipeline.png` | Multi-stage `Jenkinsfile-ci` execution passing all quality gates | Continuous Integration |
+| `07-jenkins-deploy-pipeline.png` | Automated continuous deployment pipeline with rolling update | Continuous Delivery |
+| `08-jenkins-build-log.png` | Console output verifying automated Trivy container vulnerability scan | DevSecOps Gate |
+| `09-jenkins-asg-refresh.png` | AWS Auto Scaling Group Instance Refresh triggered by pipeline | Release Management |
 
-Generate → drop here → I will wire into docs/jenkins steps.
+Refer to [`docs/deployment/jenkins.md`](../../docs/deployment/jenkins.md) for full pipeline configuration details.

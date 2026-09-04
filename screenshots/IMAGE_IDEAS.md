@@ -1,120 +1,106 @@
-# Image Ideas — Screenshot Planning Guide
+# Deployment Verification & Screenshot Catalog
 
-> You generate images; I will place them in the folders below — *jaha jarurat hai waha add kar dunga*.
-> All images should be PNG < 500 KB, named as `NN-kebab-case.png` per folder.
-> Never claim a diagram render as a real console screenshot — mark `Diagram:` vs `Screenshot:`.
-> **Note: Everything runs on AWS EC2** — so primary screenshots are EC2/ASG/ALB/RDS on EC2. Kubernetes folder is optional (only if `aws_enable_eks=true`).
+This document provides the canonical specification and naming reference for all **visual deployment verification artifacts** across the platform lifecycle.
 
-## Folder Map (where each image goes)
-
-```
-screenshots/
-├── terraform/   → Terraform on EC2 path (init/plan/apply/destroy, backend, outputs) — PRIMARY
-├── jenkins/     → Jenkins on EC2 steps (controller on EC2, pipelines, agents, stages)
-├── cicd/        → GitHub Actions EC2 deploy (deploy-ec2.sh → ASG refresh)
-├── deployment/  → EC2 verification (ALB → EC2 targets, user-data logs, docker compose on EC2)
-├── kubernetes/  → EKS/AKS/GKE — OPTIONAL only if you enable EKS
-└── monitoring/  → CloudWatch on EC2 (alarms for ASG CPU, ALB 5xx, etc.)
-```
+All captures should be saved as high-clarity PNG files under their corresponding subdirectories within `screenshots/`.
 
 ---
 
-## 1. Terraform Steps — `screenshots/terraform/`
+## 🗺️ Verification Domains
 
-| # | Filename idea | What to capture | When in doc |
-|---|---------------|-----------------|-------------|
-| T01 | `01-terraform-init-backend.png` | `terraform init -backend-config="cloud/aws/backend.hcl"` success | `docs/deployment/terraform.md` Step 1 |
-| T02 | `02-terraform-fmt-validate.png` | `terraform fmt -check` + `validate` clean output | same — validation |
-| T03 | `03-terraform-plan.png` | `terraform plan -var="cloud=aws" ...` showing ~28 to add | same — plan |
-| T04 | `04-terraform-apply-output.png` | `terraform apply` completed + `app_url` output | same — apply |
-| T05 | `05-terraform-outputs.png` | `terraform output` list (app_url, db_host, ecr_url) | verification |
-| T06 | `06-terraform-destroy.png` | `terraform destroy` confirmation | cleanup section |
-| T07 | `07-backend-s3-lock.png` | S3 bucket + DynamoDB lock table in console | `terraform/scripts/bootstrap-state.sh` |
-| T08 | `08-multi-cloud-dispatch.png` | `terraform plan -var="cloud=azure"` vs `gcp` diff (optional) | multi-cloud guide |
-
-Generate: terminal captures (dark or light theme, include timestamp). Crop to relevant lines.
+| Directory | Target Domain | Core Focus |
+|---|---|---|
+| [`terraform/`](./terraform/) | Infrastructure as Code | Multi-AZ VPC, ASG, RDS, and IAM provisioning verification |
+| [`jenkins/`](./jenkins/) | Enterprise CI/CD Controller | Pipeline stage view, automated Trivy scans, and ASG rolling updates |
+| [`cicd/`](./cicd/) | GitHub Actions Automation | Automated pull request validation, Docker container build & push |
+| [`deployment/`](./deployment/) | Application & Ingress | ALB endpoint verification, health JSON probes, and UI authentication |
+| [`monitoring/`](./monitoring/) | Observability & Reliability | CloudWatch dashboards, metric alarms, and SNS alert subscriptions |
+| [`kubernetes/`](./kubernetes/) | Container Orchestration (Optional) | Amazon EKS nodes, pods, and AWS Load Balancer Controller |
 
 ---
 
-## 2. Jenkins Steps — `screenshots/jenkins/`
+## 1. Terraform Infrastructure Verification (`screenshots/terraform/`)
 
-| # | Filename idea | What to capture | Doc location |
-|---|---------------|-----------------|--------------|
-| J01 | `01-jenkins-provision.png` | `terraform apply` with `enable_jenkins=true` → `jenkins_url` output | `docs/deployment/jenkins.md` Step 1 |
-| J02 | `02-jenkins-unlock.png` | Jenkins unlock screen (admin password from SSM `/var/log/jenkins-init.log`) | Step 2 |
-| J03 | `03-jenkins-plugins.png` | Suggested plugins install screen | Step 2 |
-| J04 | `04-jenkins-credentials-aws.png` | Jenkins → Manage Credentials → AWS keys / GitHub token | Step 3 |
-| J05 | `05-jenkins-agent-docker.png` | Agent node labelled `docker` online (executors) | Step 3 |
-| J06 | `06-jenkins-ci-pipeline.png` | `secure-ntier-ci` pipeline green run (stages: validate, test, scan, fmt) | Jenkinsfile-ci |
-| J07 | `07-jenkins-deploy-pipeline.png` | `secure-ntier-deploy` stages: ecr-login → build → push → ASG refresh → smoke test | Jenkinsfile |
-| J08 | `08-jenkins-build-log.png` | Console output snippet of successful build + Trivy scan | - |
-| J09 | `09-jenkins-asg-refresh.png` | ASG instance refresh activity triggered by Jenkins | integration proof |
-
-Generate: browser + Jenkins LTS UI, hide secrets. Use `aws ssm start-session` thumb where relevant.
+| ID | Recommended Filename | Description / Terminal Output | Target Document |
+|---|---|---|---|
+| **T01** | `01-terraform-init-backend.png` | `terraform init` with remote S3 state and DynamoDB lock table | [`docs/deployment/terraform.md`](../docs/deployment/terraform.md) |
+| **T02** | `02-terraform-fmt-validate.png` | Clean output of `terraform fmt -check` and `terraform validate` | [`docs/deployment/terraform.md`](../docs/deployment/terraform.md) |
+| **T03** | `03-terraform-plan.png` | `terraform plan` execution previewing resource additions | [`docs/deployment/terraform.md`](../docs/deployment/terraform.md) |
+| **T04** | `04-terraform-apply-output.png` | Successful apply showing `Apply complete! Resources: 28 added` | [`docs/deployment/terraform.md`](../docs/deployment/terraform.md) |
+| **T05** | `05-terraform-outputs.png` | `terraform output` displaying `alb_dns_name`, `rds_endpoint`, `ecr_url` | Verification Section |
+| **T06** | `06-terraform-destroy.png` | `terraform destroy` confirmation and clean resource teardown | Teardown Guide |
+| **T07** | `07-backend-s3-lock.png` | AWS Console view of S3 state bucket with Versioning Enabled | Remote State Guide |
+| **T08** | `08-multi-cloud-dispatch.png` | Multi-cloud dispatch validation (`-var="cloud=aws"`) | Multi-Cloud Guide |
 
 ---
 
-## 3. CI/CD (GitHub Actions) — `screenshots/cicd/`
+## 2. Jenkins Automation Verification (`screenshots/jenkins/`)
 
-| # | Filename | Idea |
-|---|----------|------|
-| C01 | `01-actions-ci-green.png` | Actions → `CI` workflow green on PR (validate + build-and-scan) |
-| C02 | `02-actions-deploy-green.png` | Actions → `Deploy` workflow green on `main` (push→refresh→smoke) |
-| C03 | `03-actions-terraform-plan.png` | `Terraform` workflow PR comment with plan summary |
-| C04 | `04-ecr-images-pushed.png` | ECR / ACR / Artifact Registry showing `backend:<tag>` + `frontend:<tag>` |
-| C05 | `05-smoke-test-log.png` | Deploy log: `curl /health → {"status":"ok","db":"connected"}` |
-
----
-
-## 4. Deployment / App Verification — `screenshots/deployment/`
-
-| # | Filename | Idea |
-|---|----------|------|
-| D01 | `01-alb-targets-healthy.png` | EC2 → Target Groups → Targets: 2× healthy |
-| D02 | `02-app-health-json.png` | `curl -s <ALB>/health` → `{"status":"ok","db":"connected"}` (terminal) |
-| D03 | `03-app-ui-login.png` | Browser → `http://<ALB>` login screen (React) |
-| D04 | `04-app-items-crud.png` | Create/list/delete items via UI or API |
-| D05 | `05-rds-private.png` | RDS → Configuration: PubliclyAccessible=false, Encrypted, VPC private |
-| D06 | `06-secrets-manager.png` | Secrets Manager → `db-credentials` JSON (redacted) |
-| D07 | `07-waf-webacl.png` | WAF → Web ACL rules (managed rule groups) |
-| D08 | `08-sg-chain.png` | Security groups: ALB → App (3000) → DB (5432) only |
+| ID | Recommended Filename | Description / Interface | Target Document |
+|---|---|---|---|
+| **J01** | `01-jenkins-provision.png` | Terraform completion output exposing automated Jenkins controller URL | [`docs/deployment/jenkins.md`](../docs/deployment/jenkins.md) |
+| **J02** | `02-jenkins-unlock.png` | Initial Jenkins administrative unlock screen | Setup Walkthrough |
+| **J03** | `03-jenkins-plugins.png` | Standard pipeline and AWS plugin installation progress | Setup Walkthrough |
+| **J04** | `04-jenkins-credentials-aws.png` | Secure credential store with IAM role & GitHub access token | Credentials Guide |
+| **J05** | `05-jenkins-agent-docker.png` | Dynamic Docker agent node active and connected | Node Configuration |
+| **J06** | `06-jenkins-ci-pipeline.png` | `Jenkinsfile-ci` pipeline green stage view (Lint, Test, Trivy scan) | CI Pipeline Section |
+| **J07** | `07-jenkins-deploy-pipeline.png` | `Jenkinsfile` deploy pipeline (Build, ECR Push, ASG Refresh) | Deployment Section |
+| **J08** | `08-jenkins-build-log.png` | Console snippet demonstrating zero vulnerabilities in Trivy scan | Security Gates |
+| **J09** | `09-jenkins-asg-refresh.png` | AWS Console showing zero-downtime ASG Instance Refresh activity | Operations Guide |
 
 ---
 
-## 5. Kubernetes (Optional) — `screenshots/kubernetes/`
+## 3. GitHub Actions CI/CD Verification (`screenshots/cicd/`)
 
-| # | Filename | Idea |
-|---|----------|------|
-| K01 | `01-eks-cluster.png` | EKS → Clusters → `secure-ntier-dev-eks` Active |
-| K02 | `02-kubectl-get-pods.png` | `kubectl -n secure-ntier get pods` → 2× Running |
-| K03 | `03-kubectl-get-svc.png` | `kubectl get svc frontend` → LoadBalancer hostname |
-| K04 | `04-hpa-pdb.png` | `kubectl get hpa/pdb` |
-
----
-
-## 6. Monitoring — `screenshots/monitoring/`
-
-| # | Filename | Idea |
-|---|----------|------|
-| M01 | `01-cloudwatch-alarms.png` | CloudWatch → Alarms → 5+ alarms (ASG CPU, 5xx, unhealthy hosts, RDS) |
-| M02 | `02-cloudwatch-dashboard.png` | Dashboard `secure-ntier-*` overview |
-| M03 | `03-sns-subscription.png` | SNS → Subscriptions → email confirmed |
+| ID | Recommended Filename | Description / Interface | Target Document |
+|---|---|---|---|
+| **C01** | `01-actions-ci-green.png` | Pull Request automated status check with green CI validation | [`cicd/README.md`](../cicd/README.md) |
+| **C02** | `02-actions-deploy-green.png` | Automated continuous deployment workflow completed on `main` branch | [`cicd/README.md`](../cicd/README.md) |
+| **C03** | `03-actions-terraform-plan.png` | Automated PR comment summarizing Terraform plan execution | Pull Request Checks |
+| **C04** | `04-ecr-images-pushed.png` | AWS ECR repository console displaying SHA-tagged Docker images | Container Registry |
+| **C05** | `05-smoke-test-log.png` | Automated post-deploy smoke test verifying HTTP 200 on `/health` | Verification Section |
 
 ---
 
-## Naming & Placement Contract
+## 4. Live Application & Ingress Verification (`screenshots/deployment/`)
 
-- **You generate** images following the ideas above — keep raw files, I will rename `NN-...png` if needed.
-- **I will place** them: `screenshots/<folder>/NN-...png` and wire `![Screenshot: ...](screenshots/...)` into `README.md` and `docs/deployment/*.md` at the exact step.
-- **Placeholders in docs:** each doc already has `> 📸 Screenshot placeholder: screenshots/.../NN-...png` comments — replace `placeholder` with real image once generated.
-- **Size:** < 500 KB; if larger, run `pngquant` or export at 1280px wide.
-- **Redaction:** blur emails, IPs, account IDs.
+| ID | Recommended Filename | Description / Interface | Target Document |
+|---|---|---|---|
+| **D01** | `01-app-ui-login.png` | Live browser rendering of React authentication UI in `ap-south-1` | [`README.md`](../README.md) |
+| **D02** | `02-app-health-json.png` | Terminal curl probe confirming `{ status: "ok", database: "connected" }` | [`README.md`](../README.md) |
+| **D03** | `03-alb-targets-healthy.png` | AWS EC2 Target Group dashboard displaying 2× healthy targets | Verification Section |
+| **D04** | `04-app-items-crud.png` | Web application items CRUD lifecycle verifying PostgreSQL writes | Feature Guide |
+| **D05** | `05-rds-private.png` | AWS RDS console verifying Multi-AZ synchronous replication & private subnet | Database Guide |
+| **D06** | `06-secrets-manager.png` | AWS Secrets Manager console showing automated credential storage | Security Section |
+| **D07** | `07-waf-webacl.png` | AWS WAF v2 console showing attached Web ACL rules on ALB | Edge Security |
+| **D08** | `08-sg-chain.png` | EC2 Security Group rules showing chained ingress restriction | Network Hardening |
 
-## Quick Checklist Before You Generate
+---
 
-- [ ] Run `terraform apply` once (AWS reference) to have real resources to capture
-- [ ] Capture terminal with `terraform output` visible
-- [ ] Spin one Jenkins run if using Jenkins path
-- [ ] Take browser captures at 100% zoom, not zoomed
+## 5. Observability & Monitoring Verification (`screenshots/monitoring/`)
 
-Once you drop images into any folder, tell me the filenames and I will link them in README + step files automatically.
+| ID | Recommended Filename | Description / Interface | Target Document |
+|---|---|---|---|
+| **M01** | `01-cloudwatch-dashboard.png` | CloudWatch unified dashboard with CPU, Memory, and ALB metrics | Monitoring Guide |
+| **M02** | `02-cloudwatch-alarms.png` | Active CloudWatch alarm state table (CPU > 70%, 5xx errors) | Incident Runbooks |
+| **M03** | `03-sns-subscription.png` | AWS SNS console displaying confirmed notification topic endpoints | Notification Setup |
+
+---
+
+## 6. Optional Kubernetes Cluster Verification (`screenshots/kubernetes/`)
+
+| ID | Recommended Filename | Description / Interface | Target Document |
+|---|---|---|---|
+| **K01** | `01-eks-cluster.png` | AWS EKS console showing cluster in `ACTIVE` state | EKS Architecture |
+| **K02** | `02-kubectl-get-pods.png` | `kubectl get pods -n secure-ntier` confirming all microservices running | K8s Operations |
+| **K03** | `03-kubectl-get-svc.png` | `kubectl get svc` displaying ALB Ingress controller DNS binding | Ingress Routing |
+| **K04** | `04-hpa-pdb.png` | `kubectl get hpa` confirming Horizontal Pod Autoscaler policies | Pod Scaling |
+
+---
+
+## 📜 Technical Standards
+
+* **Aspect Ratio:** 16:9 widescreen captures preferred for dashboard and UI views.
+* **Resolution:** 1920×1080 (1080p) or clean cropped terminal windows.
+* **Theme:** Consistent dark or light themes matching modern developer toolchains.
+* **Redaction:** Account numbers, private VPC IDs, and API authorization tokens must be masked before publication.

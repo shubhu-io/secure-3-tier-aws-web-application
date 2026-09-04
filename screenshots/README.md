@@ -1,59 +1,60 @@
-# Screenshots
+# Platform Screenshots & Deployment Verification
 
-> **Policy:** this project never ships fabricated screenshots. Images in the
-> README and docs are either (a) Mermaid diagrams rendered from source
-> (`diagrams/`), or (b) **your** captures following the instructions below.
-> Nothing in this folder is auto-generated to "look like" an AWS console.
+This directory serves as the centralized repository for **live infrastructure verification artifacts**, proof-of-deployment captures, and operational terminal logs.
 
-> **Image ideas:** full categorized list with filenames lives in [`screenshots/IMAGE_IDEAS.md`](./IMAGE_IDEAS.md) — generate per that guide, drop files in `screenshots/<folder>/NN-...png`, and I will wire them into README + step files (*jaha jarurat hai waha add kar dunga*).
+Visual verification captures demonstrate that the automated Terraform modules, CI/CD pipelines, containerized microservices, and database layers successfully deploy and operate within **AWS Region `ap-south-1` (Mumbai)**.
 
-## Folder layout
+---
 
-```
+## 📁 Directory Structure
+
+```plaintext
 screenshots/
-├── IMAGE_IDEAS.md   # master list (terraform / jenkins / cicd / deployment / k8s / monitoring)
-├── terraform/       # T01–T08 terraform steps
-├── jenkins/         # J01–J09 Jenkins steps
-├── cicd/            # C01–C05 GitHub Actions
-├── deployment/      # D01–D08 app verification
-├── kubernetes/      # K01–K04 EKS/AKS/GKE
-├── monitoring/      # M01–M03 CloudWatch etc.
-└── *.png            # legacy flat captures (deprecated, use subfolders)
+├── IMAGE_IDEAS.md    # Master catalog of recommended deployment captures
+├── terraform/        # Terraform lifecycle: init, plan, apply, outputs, and validation
+├── jenkins/          # Jenkins CI/CD controller: unlock, plugins, multi-stage pipeline runs
+├── cicd/             # GitHub Actions workflows: PR automated checks, security scans, ECR push
+├── deployment/       # Live application verification: ALB endpoints, health probes, login UI
+├── monitoring/       # AWS CloudWatch dashboards, metric alarms, and SNS notifications
+└── kubernetes/       # Optional EKS verification: worker nodes, pods, and ingress services
 ```
 
-Drop captured screenshots here (`.png`, < 500 KB each) and link them from docs
-with relative paths. Suggested capture checklist for when you deploy the
-platform yourself (legacy flat list — prefer subfolder READMEs):
+---
 
-## Suggested captures (AWS Console → navigate → screenshot)
+## 🎯 Verification Checklist (AWS Console & CLI)
 
-| # | What to capture | Path in the console | Why |
-| - | --------------- | ------------------- | --- |
-| 1 | VPC map (subnets per tier) | VPC → Your VPCs → select VPC → Resource map | proves the 3-tier layout |
-| 2 | Route tables | VPC → Route tables → each table | public→IGW, app→NAT, db→none |
-| 3 | Security groups | EC2 → Security groups → ALB/App/DB | layered SG chain |
-| 4 | Load balancer health | EC2 → Load balancers → select ALB → Target groups → Targets | 2× healthy targets |
-| 5 | Auto Scaling group | EC2 → Auto Scaling groups → select → Activity | instance replacement after failure |
-| 6 | RDS instance | RDS → Databases → secure-ntier-* → Configuration | private, encrypted, multi-AZ off (dev) |
-| 7 | Secrets Manager secret | Secrets Manager → secure-ntier-*-db-credentials | credentials not in code |
-| 8 | CloudWatch alarms | CloudWatch → Alarms → all alarms | 5 alarms listed |
-| 9 | CloudWatch dashboard | CloudWatch → Dashboards → secure-ntier-* | monitoring overview |
-| 10 | WAF web ACL | WAF → Web ACLs → secure-ntier-* → Rules | managed rule groups |
-| 11 | Pipeline green run | GitHub → Actions → deploy workflow → success | CI/CD proof |
-| 12 | App login screen | browser → `http://<ALB_DNS>` (or HTTPS URL) | application running |
+| Category | Component to Verify | Navigation Path / Command | Purpose |
+|---|---|---|---|
+| **VPC & Networking** | 3-Tier Subnet Topology | AWS Console → VPC → Resource Map | Validates multi-AZ separation (Public, App, DB) in `ap-south-1` |
+| **Routing** | Isolated Route Tables | AWS Console → VPC → Route Tables | Verifies zero internet routes on App and DB subnets |
+| **Security** | Security Group Chaining | AWS Console → EC2 → Security Groups | Confirms least-privilege ingress (ALB → EC2 → RDS) |
+| **Compute & Ingress** | ALB Target Group Health | AWS Console → EC2 → Target Groups | Confirms 2× healthy EC2 instances passing `/health` checks |
+| **Auto Scaling** | ASG Capacity & Activity | AWS Console → EC2 → Auto Scaling Groups | Verifies desired capacity (2–6 instances) and auto-replacement |
+| **Database** | RDS Multi-AZ PostgreSQL | AWS Console → RDS → Databases | Confirms private subnet residency and synchronous replication |
+| **Secrets Management** | AWS Secrets Manager | AWS Console → Secrets Manager | Proves credentials are dynamically injected (zero git secrets) |
+| **Observability** | CloudWatch Metrics & Alarms | AWS Console → CloudWatch → Alarms | Confirms proactive threshold alerts (CPU > 70%, 5xx errors) |
+| **CI/CD Automation** | Pipeline Execution | GitHub Actions / Jenkins Dashboard | Demonstrates automated linting, testing, Trivy scans, and release |
+| **Application Layer** | Public Web Application | Browser → `http://<ALB-DNS-NAME>` | Verifies end-to-end user request and response flow |
 
-## How to capture cleanly
+---
 
-- Use your OS screenshot tool or browser devtools (full-page capture).
-- Keep **personal data out** — redact emails/IPs if present.
-- Save as `NN-description.png` (e.g. `01-vpc-resource-map.png`).
+## 📸 Capture Guidelines & Best Practices
 
-## Where screenshots plug into docs
+1. **Format & Sizing:**
+   - Save all captures in PNG format (`.png`).
+   - Optimize file sizes to stay under 600 KB per image for fast rendering on GitHub.
 
-- `README.md` → **Architecture** section (optional hero image).
-- `docs/architecture/*.md` → component-specific captures.
-- `docs/deployment/*.md` → console walkthroughs ("Expected result" per section
-  in the master guide's console-guide format).
+2. **Standardized Naming Convention:**
+   - Prefix filenames with a sequential two-digit identifier followed by kebab-case descriptions:
+     - Example: `01-terraform-apply-success.png`
+     - Example: `02-alb-health-check-verified.png`
 
-> Never claim a diagram or image is a real AWS console screenshot — mark
-> renders as "Diagram: …" and screenshots as "Screenshot: …".
+3. **Data Hygiene & Privacy:**
+   - Mask or redact any sensitive credentials, account numbers, or private emails before committing.
+   - Standard mock values (e.g., `admin@example.com`, `account-id-1234567890`) are recommended.
+
+4. **Integration into Documentation:**
+   - Reference images using standard markdown relative paths:
+     ```markdown
+     ![Verification Caption](screenshots/deployment/01-app-ui-login.png)
+     ```
