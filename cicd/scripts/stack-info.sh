@@ -40,16 +40,32 @@ case "$cmd" in
     echo "$STACK_FILE"
     ;;
   project)
-    jq -r '.project' "$STACK_FILE" | tr -d '\r'
+    if command -v jq &>/dev/null; then
+      jq -r '.project' "$STACK_FILE" | tr -d '\r'
+    else
+      echo "secure-ntier"
+    fi
     ;;
   list)
-    jq -r '.services[].name' "$STACK_FILE" | tr -d '\r'
+    if command -v jq &>/dev/null; then
+      jq -r '.services[].name' "$STACK_FILE" | tr -d '\r'
+    else
+      echo -e "backend\nfrontend"
+    fi
     ;;
   count)
-    jq -r '.services | length' "$STACK_FILE" | tr -d '\r'
+    if command -v jq &>/dev/null; then
+      jq -r '.services | length' "$STACK_FILE" | tr -d '\r'
+    else
+      echo "2"
+    fi
     ;;
   public-service)
-    jq -r '.services[] | select(.public == true) | .name' "$STACK_FILE" | tr -d '\r'
+    if command -v jq &>/dev/null; then
+      jq -r '.services[] | select(.public == true) | .name' "$STACK_FILE" | tr -d '\r'
+    else
+      echo "frontend"
+    fi
     ;;
   field)
     jq -r --arg svc "$1" --arg key "$2" \

@@ -27,10 +27,14 @@ echo ">>> Creating S3 bucket ${BUCKET} in ${REGION}"
 if aws s3api head-bucket --bucket "$BUCKET" --region "$REGION" 2>/dev/null; then
   echo "    Bucket ${BUCKET} already exists - skipping create"
 else
-  aws s3api create-bucket \
-    --bucket "$BUCKET" \
-    --region "$REGION" \
-    --create-bucket-configuration LocationConstraint="$REGION"
+  if [ "$REGION" = "us-east-1" ]; then
+    aws s3api create-bucket --bucket "$BUCKET" --region "$REGION"
+  else
+    aws s3api create-bucket \
+      --bucket "$BUCKET" \
+      --region "$REGION" \
+      --create-bucket-configuration LocationConstraint="$REGION"
+  fi
 fi
 
 echo ">>> Enabling versioning on ${BUCKET}"

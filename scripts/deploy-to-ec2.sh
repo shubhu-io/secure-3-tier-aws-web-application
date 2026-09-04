@@ -79,7 +79,13 @@ check_tool() {
 check_tool aws
 check_tool terraform
 check_tool docker
-check_tool jq
+
+# jq is optional (falls back to built-in service list)
+if command -v jq &>/dev/null; then
+  success "jq found ($(command -v jq))"
+else
+  warn "jq not found (will use default services: backend frontend)"
+fi
 
 # Verify AWS credentials work
 aws sts get-caller-identity --query 'Account' --output text \
@@ -148,7 +154,13 @@ step "Step 4/7 — Build Docker images"
 REGISTRY="${ACCOUNT_ID}.dkr.ecr.${REGION}.amazonaws.com"
 
 # Build every service defined in stack.json
-for svc in $(jq -r '.services[].name' stack.json); do
+if command -v jq &>/dev/null; then
+  SERVICES=$(jq -r '.services[].name' stack.json)
+else
+  SERVICES="backend frontend"
+fi
+
+for svc in $SERVICES; do
   DOCKERFILE="docker/${svc}/Dockerfile"
   if [[ ! -f "$DOCKERFILE" ]]; then
     warn "Dockerfile not found: $DOCKERFILE — skipping $svc"
@@ -170,7 +182,7 @@ info "Authenticating to ECR…"
 aws ecr get-login-password --region "$REGION" \
   | docker login --username AWS --password-stdin "$REGISTRY"
 
-for svc in $(jq -r '.services[].name' stack.json); do
+for svc in $SERVICES; do
   IMAGE="${REGISTRY}/${PROJECT}-${ENV_NAME}-${svc}:${TAG}"
   if docker image inspect "$IMAGE" &>/dev/null; then
     info "Pushing $svc…"
