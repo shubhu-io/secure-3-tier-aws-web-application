@@ -76,18 +76,32 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       stdout: ${{ steps.plan.outputs.stdout }}
+      has_auth: ${{ steps.check-creds.outputs.has_auth }}
     env:
       TARGET_ENV: ${{ inputs.environment || 'dev' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Check AWS credentials
+        id: check-creds
+        env:
+          AWS_KEY: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        run: |
+          if [ -n "$AWS_KEY" ]; then
+            echo "has_auth=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_auth=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::AWS_ACCESS_KEY_ID secret is not set. Remote backend plan skipped."
+          fi
+
       - name: Configure AWS credentials
+        if: steps.check-creds.outputs.has_auth == 'true'
         uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION }}
+          aws-region: ${{ secrets.AWS_REGION || 'ap-south-1' }}
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
@@ -102,20 +116,28 @@ jobs:
                "environments/${{ env.TARGET_ENV }}/terraform.tfvars"
           fi
 
-      - name: Terraform Init
+      - name: Terraform Init (remote backend)
+        if: steps.check-creds.outputs.has_auth == 'true'
         working-directory: terraform
         run: terraform init -backend-config="environments/${{ env.TARGET_ENV }}/backend.hcl" -input=false
+
+      - name: Terraform Init (local validate fallback)
+        if: steps.check-creds.outputs.has_auth != 'true'
+        working-directory: terraform
+        run: terraform init -backend=false -input=false
 
       - name: Terraform Validate
         working-directory: terraform
         run: terraform validate -no-color
 
       - name: Terraform Plan
+        if: steps.check-creds.outputs.has_auth == 'true'
         id: plan
         working-directory: terraform
         run: terraform plan -no-color -input=false -var-file="environments/${{ env.TARGET_ENV }}/terraform.tfvars" -out=tfplan.bin
 
       - name: Save plan artifact
+        if: steps.check-creds.outputs.has_auth == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: tfplan-${{ env.TARGET_ENV }}
@@ -123,7 +145,7 @@ jobs:
           if-no-files-found: error
 
       - name: Comment plan on PR
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request' && steps.check-creds.outputs.has_auth == 'true'
         uses: actions/github-script@v7
         env:
           PLAN: ${{ steps.plan.outputs.stdout }}
@@ -146,7 +168,7 @@ jobs:
   # ==========================================================================
   apply-dev:
     name: terraform apply (dev)
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.plan.outputs.has_auth == 'true'
     needs: [validate-only, plan]
     runs-on: ubuntu-latest
     environment: dev
@@ -159,7 +181,7 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION }}
+          aws-region: ${{ secrets.AWS_REGION || 'ap-south-1' }}
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
@@ -190,7 +212,7 @@ jobs:
   # ==========================================================================
   apply-prod:
     name: terraform apply (prod)
-    if: github.event_name == 'workflow_dispatch' && inputs.environment == 'prod' && inputs.auto_apply == true
+    if: github.event_name == 'workflow_dispatch' && inputs.environment == 'prod' && inputs.auto_apply == true && needs.plan.outputs.has_auth == 'true'
     needs: [validate-only, plan]
     runs-on: ubuntu-latest
     environment: prod
@@ -203,7 +225,7 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION }}
+          aws-region: ${{ secrets.AWS_REGION || 'ap-south-1' }}
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3

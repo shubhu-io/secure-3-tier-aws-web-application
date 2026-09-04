@@ -2,7 +2,7 @@
 # See https://aquasecurity.github.io/tfsec/v1.28.1/configuration/configuration/
 
 # Severity threshold for CI failure (default is CRITICAL,HIGH)
-severity_threshold = HIGH
+minimum_severity: HIGH
 
 # Explicitly recognised checks - treated as context, not suppressed.
 include:

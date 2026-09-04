@@ -37,23 +37,63 @@ on:
 
 env:
   CLOUD: ${{ inputs.cloud || 'aws' }}
-  REGION: ${{ secrets.CLOUD_REGION || secrets.AWS_REGION }}
-  PROJECT: ${{ secrets.ECR_PROJECT }}
-  ENV: ${{ secrets.ECR_ENV }}
+  REGION: ${{ inputs.region || secrets.CLOUD_REGION || secrets.AWS_REGION || 'ap-south-1' }}
+  PROJECT: ${{ secrets.ECR_PROJECT || 'secure-ntier' }}
+  ENV: ${{ inputs.env_name || secrets.ECR_ENV || 'dev' }}
 
 jobs:
   deploy:
     name: Build, push, deploy (${{ inputs.cloud || 'aws' }})
     runs-on: ubuntu-latest
+    outputs:
+      has_auth: ${{ steps.check-creds.outputs.has_auth }}
     steps:
       - uses: actions/checkout@v4
 
       - name: Install jq (if missing)
         run: command -v jq || sudo apt-get install -y jq
 
-      # --- Cloud authentication (only the ACTIVE cloud logs in) -------------
+      - name: Make scripts executable
+        run: chmod +x cicd/scripts/*.sh
+
+      # --- Cloud authentication check ----------------------------------------
+      - name: Check cloud credentials
+        id: check-creds
+        env:
+          AWS_KEY: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AZURE_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          GCP_KEY: ${{ secrets.GCP_CREDENTIALS }}
+        run: |
+          case "$CLOUD" in
+            aws)
+              if [ -n "$AWS_KEY" ]; then
+                echo "has_auth=true" >> "$GITHUB_OUTPUT"
+              else
+                echo "has_auth=false" >> "$GITHUB_OUTPUT"
+                echo "::warning::AWS_ACCESS_KEY_ID secret is not configured. Cloud deploy skipped; validating stack manifest locally."
+              fi
+              ;;
+            azure)
+              if [ -n "$AZURE_ID" ]; then
+                echo "has_auth=true" >> "$GITHUB_OUTPUT"
+              else
+                echo "has_auth=false" >> "$GITHUB_OUTPUT"
+                echo "::warning::AZURE_CLIENT_ID secret is not configured. Cloud deploy skipped; validating stack manifest locally."
+              fi
+              ;;
+            gcp)
+              if [ -n "$GCP_KEY" ]; then
+                echo "has_auth=true" >> "$GITHUB_OUTPUT"
+              else
+                echo "has_auth=false" >> "$GITHUB_OUTPUT"
+                echo "::warning::GCP_CREDENTIALS secret is not configured. Cloud deploy skipped; validating stack manifest locally."
+              fi
+              ;;
+          esac
+
+      # --- Cloud authentication (only runs if credentials exist) -------------
       - name: Configure AWS credentials
-        if: env.CLOUD == 'aws'
+        if: env.CLOUD == 'aws' && steps.check-creds.outputs.has_auth == 'true'
         uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -61,7 +101,7 @@ jobs:
           aws-region: ${{ env.REGION }}
 
       - name: Azure login
-        if: env.CLOUD == 'azure' && secrets.AZURE_CLIENT_ID != ''
+        if: env.CLOUD == 'azure' && steps.check-creds.outputs.has_auth == 'true'
         uses: azure/login@v2
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
@@ -69,19 +109,30 @@ jobs:
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
       - name: Authenticate to Google Cloud
-        if: env.CLOUD == 'gcp' && secrets.GCP_CREDENTIALS != ''
+        if: env.CLOUD == 'gcp' && steps.check-creds.outputs.has_auth == 'true'
         uses: google-github-actions/auth@v2
         with:
           credentials_json: ${{ secrets.GCP_CREDENTIALS }}
 
-      # --- Registry + deploy -------------------------------------------------
+      # --- Local validation fallback (when credentials are not yet configured) ---
+      - name: Validate stack locally (dry-run)
+        if: steps.check-creds.outputs.has_auth != 'true'
+        run: |
+          echo "No cloud credentials configured for $CLOUD. Validating stack.json..."
+          bash cicd/scripts/stack-validate.sh
+          echo "Stack manifest is valid. Configure GitHub repository secrets to enable automated cloud deployment."
+
+      # --- Registry + deploy (only runs when authenticated) ------------------
       - name: Login to container registry
+        if: steps.check-creds.outputs.has_auth == 'true'
         run: bash cicd/scripts/registry-login.sh "$REGION"
 
       - name: Build + scan + push every service
+        if: steps.check-creds.outputs.has_auth == 'true'
         run: bash cicd/scripts/stack-push.sh "${{ github.sha }}" "$REGION" "$PROJECT" "$ENV"
 
       - name: Roll VM fleet onto new images (ASG / VMSS / MIG)
+        if: steps.check-creds.outputs.has_auth == 'true'
         run: |
           case "$CLOUD" in
             aws)
@@ -100,6 +151,7 @@ jobs:
           esac
 
       - name: Smoke test (wait for healthy app)
+        if: steps.check-creds.outputs.has_auth == 'true'
         env:
           ALB_URL: ${{ secrets.ALB_URL }}
           ATTEMPTS: "36"
@@ -109,7 +161,7 @@ jobs:
     name: Deploy to managed Kubernetes (${{ inputs.cloud || 'aws' }})
     # Opt-in: set the repository variable DEPLOY_K8S=true (or legacy DEPLOY_EKS).
     # Requires the Terraform k8s module applied for the active cloud.
-    if: vars.DEPLOY_K8S == 'true' || vars.DEPLOY_EKS == 'true'
+    if: (vars.DEPLOY_K8S == 'true' || vars.DEPLOY_EKS == 'true') && needs.deploy.outputs.has_auth == 'true'
     needs: deploy
     runs-on: ubuntu-latest
     steps:
@@ -117,6 +169,9 @@ jobs:
 
       - name: Install jq (if missing)
         run: command -v jq || sudo apt-get install -y jq
+
+      - name: Make scripts executable
+        run: chmod +x cicd/scripts/*.sh
 
       - name: Configure AWS credentials
         if: env.CLOUD == 'aws'
@@ -127,7 +182,7 @@ jobs:
           aws-region: ${{ env.REGION }}
 
       - name: Azure login
-        if: env.CLOUD == 'azure' && secrets.AZURE_CLIENT_ID != ''
+        if: env.CLOUD == 'azure'
         uses: azure/login@v2
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
@@ -135,7 +190,7 @@ jobs:
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
       - name: Authenticate to Google Cloud
-        if: env.CLOUD == 'gcp' && secrets.GCP_CREDENTIALS != ''
+        if: env.CLOUD == 'gcp'
         uses: google-github-actions/auth@v2
         with:
           credentials_json: ${{ secrets.GCP_CREDENTIALS }}
