@@ -1,7 +1,8 @@
 # ============================================================================
 # Local development stack (NO AWS required)
-#   docker compose up --build
-#   curl http://localhost/health
+#   bash scripts/local-up.sh          # recommended (includes health wait)
+#   docker compose up --build          # or directly
+#   curl http://localhost:3000/health
 # ============================================================================
 
 services:
@@ -27,7 +28,7 @@ services:
       dockerfile: docker/backend/Dockerfile
     environment:
       PORT: "3000"
-      NODE_ENV: production
+      NODE_ENV: development
       DB_HOST: db
       DB_PORT: "5432"
       DB_NAME: appdb
@@ -39,6 +40,13 @@ services:
         condition: service_healthy
     ports:
       - "3000:3000"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"fetch('http://127.0.0.1:3000/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))\""]
+      interval: 10s
+      timeout: 5s
+      start_period: 30s
+      retries: 5
 
   frontend:
     build:
