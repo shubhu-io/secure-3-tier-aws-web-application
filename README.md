@@ -18,7 +18,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](./CONTRIBUTING.md)
 
-> ### 🚀 New here? Start with the [**Step-by-Step Deploy Guide**](./docs/deployment/DEPLOY_STEPS.md)
+> ### 🚀 New here? Start with the [**Step-by-Step Deploy Guide**](./DEPLOY_STEPS.md)
 > *Written so simply, anyone can follow it — from zero to live on AWS in 20 minutes.*
 >
 > | 🖥️ Run locally (no AWS) | ☁️ Deploy to AWS EC2 | 💥 Tear down |
@@ -910,6 +910,8 @@ Capture instructions: [`screenshots/README.md`](./screenshots/README.md).
 
 | Topic | Doc |
 | ----- | --- |
+| **🚀 Step-by-step deploy guide (Beginner)** | [**`DEPLOY_STEPS.md`**](./DEPLOY_STEPS.md) |
+| **⚡ EC2 quick-start runbook** | [`docs/deployment/ec2-quickstart.md`](./docs/deployment/ec2-quickstart.md) |
 | Full build, phase by phase | [`docs/phases.md`](./docs/phases.md) |
 | Explain it like I'm five | [`docs/explain-like-im-five.md`](./docs/explain-like-im-five.md) |
 | **Architecture diagrams** | **`assets/images/`** |
