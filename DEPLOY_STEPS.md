@@ -5,7 +5,7 @@
 >
 > ⏱️ **Total time needed:** ~20 to 30 minutes (about 5 minutes of typing, and 15–20 minutes of AWS doing all the building in the background).
 >
-> 💰 **Cost:** About **$0.05 to $0.10 per hour** while running for testing. **When you follow Step 14 at the end to destroy it, your charges stop immediately!**
+> 💰 **Cost:** About **$0.05 to $0.10 per hour (~₹4 to ₹8 / hour)** while running for testing. **When you follow Step 11 at the end to destroy it, your charges stop immediately!**
 
 ---
 
@@ -105,6 +105,13 @@ Before we start, your computer needs 4 free tools. Think of these like your kitc
 
 Before your computer can create servers on AWS, AWS needs to verify who you are. We do this using **AWS Access Keys**.
 
+> 🇮🇳 **Namaste! Tips for Developers in India:**
+> - **Best AWS Region:** Always use **`ap-south-1` (Asia Pacific - Mumbai)**! It has all cloud services, the lowest latency (~15–30 ms) across India, and our project is pre-configured for it.
+> - **Card Verification:** When signing up, AWS charges a temporary **₹2 INR** (refunded) with OTP verification via AISPL (Amazon Internet Services Private Limited).
+> - **Enable International / Online Usage:** By RBI rules, online transactions are often disabled by default on new Indian debit/credit cards. Open your banking mobile app (SBI, HDFC, ICICI, Axis, Kotak, etc.) -> **Cards** -> **Manage Usage / Limits** -> turn ON **"International Usage"** and **"Online / E-Commerce"**.
+> - **Best Cards:** Visa or MasterCard debit/credit cards work smoothly. Standard domestic RuPay cards frequently fail recurring verification.
+> - **PAN Card:** During sign-up, choose **"Personal"** account and enter your **PAN card number** (mandatory for Indian tax compliance).
+
 ### Step 1: Log in to AWS and Create Access Keys
 
 1. Open your web browser and log in to the [AWS Management Console](https://console.aws.amazon.com).
@@ -122,7 +129,7 @@ Before your computer can create servers on AWS, AWS needs to verify who you are.
 10. Click **"Done"**.
 
 > 💡 **Best Practice — Set a $5 Budget Alert:**
-> In the AWS search bar at the top, type **"Budgets"**, click **AWS Budgets** -> **"Create budget"** -> choose **"Zero spend budget"** or **"Monthly cost budget"** with an amount of `$5.00`, and enter your email. If your bill ever reaches $5, AWS will instantly email you!
+> In the AWS search bar at the top, type **"Budgets"**, click **AWS Budgets** -> **"Create budget"** -> choose **"Zero spend budget"** or **"Monthly cost budget"** with an amount of `$5.00 (~₹400)`, and enter your email. If your bill ever reaches $5, AWS will instantly email you!
 
 ---
 
@@ -139,17 +146,14 @@ The terminal will ask you 4 questions one by one. Paste your details and press E
 ```text
 AWS Access Key ID [None]: PASTE_YOUR_ACCESS_KEY_ID_HERE
 AWS Secret Access Key [None]: PASTE_YOUR_SECRET_ACCESS_KEY_HERE
-Default region name [None]: eu-west-1
+Default region name [None]: ap-south-1
 Default output format [None]: json
 ```
 
-> 🌍 **Which Region Should You Choose?**
-> You can pick any region close to your physical location:
-> - **India / South Asia:** `ap-south-1` (Mumbai)
-> - **Europe / UK:** `eu-west-1` (Ireland) or `eu-central-1` (Frankfurt)
-> - **North America (East):** `us-east-1` (N. Virginia) or `us-east-2` (Ohio)
-> - **North America (West):** `us-west-2` (Oregon)
-> - **Southeast Asia:** `ap-southeast-1` (Singapore)
+> 🌍 **Region Guide:**
+> - **India / South Asia:** `ap-south-1` (Mumbai) — **Recommended!**
+> - **Europe / UK:** `eu-west-1` (Ireland)
+> - **North America (East):** `us-east-1` (N. Virginia)
 
 ---
 
@@ -204,7 +208,7 @@ You only need to customize two lines:
 ```hcl
 project_name = "secure-ntier"
 environment  = "dev"
-aws_region   = "eu-west-1"          # 👈 1. Set to your AWS region (e.g. "ap-south-1", "us-east-1", "eu-west-1")
+aws_region   = "ap-south-1"          # 👈 Default is Mumbai, India (ap-south-1)
 
 # ... other settings can stay as defaults ...
 
@@ -475,6 +479,11 @@ make tf-destroy
 - **Cause:** The EC2 instances are still booting up, pulling Docker images, or the database is finishing initial seeding.
 - **Fix:** Wait 2–3 minutes and refresh your browser. If it is still not responding, connect to the EC2 instance via AWS Systems Manager Session Manager or view instance logs:
   - Go to AWS Console -> EC2 -> Instances -> select instance -> click **Actions** -> **Monitor and troubleshoot** -> **Get system log**.
+
+### ❓ 8. Indian Debit or Credit Card Declined During AWS Sign-Up
+- **Cause 1: International Transactions disabled:** Due to RBI guidelines, cards often have online/international transactions turned off by default. Open your bank mobile app (SBI YONO, HDFC MyCards, iMobile, etc.) -> **Cards** -> **Manage Limits** -> turn **ON** both **"International Usage"** and **"Online/E-Commerce"** transactions, and set a limit of at least ₹500.
+- **Cause 2: RuPay card used:** Many basic domestic RuPay cards do not support international recurring mandates. Try a **Visa** or **Mastercard** debit or credit card, or an instant digital debit card (such as Kotak 811, Jupiter, Fi Money, HDFC, or ICICI).
+- **Cause 3: Temporary ₹2 verification charge failed:** Make sure your mobile phone has network reception to receive the OTP for the ₹2 refundable verification charge.
 
 ---
 

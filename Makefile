@@ -1,7 +1,7 @@
 SHELL := /bin/bash
 
 # ── deployment defaults (override via env or .env.aws) ──────────────────────
-REGION     ?= eu-west-1
+REGION     ?= ap-south-1
 ENV_NAME   ?= dev
 PROJECT    ?= secure-ntier
 TAG        ?= $(shell git rev-parse --short HEAD 2>/dev/null || echo latest)

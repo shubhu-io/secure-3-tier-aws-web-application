@@ -8,7 +8,7 @@
 
 project_name = "secure-ntier"
 environment  = "dev"
-aws_region   = "eu-west-1"          # <YOUR_REGION>
+aws_region   = "ap-south-1"          # Mumbai, India (ap-south-1)
 
 # Optional: pin AZs explicitly, otherwise the first two available are used
 # azs = ["eu-west-1a", "eu-west-1b"]

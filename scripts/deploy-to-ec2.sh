@@ -43,7 +43,7 @@ die()     { echo -e "${RED}[ERROR]${RESET} $*" >&2; exit 1; }
 step()    { echo -e "\n${BOLD}━━━ $* ${RESET}"; }
 
 # ── arguments ─────────────────────────────────────────────────────────────────
-REGION="${1:-${AWS_REGION:-eu-west-1}}"
+REGION="${1:-${AWS_REGION:-ap-south-1}}"
 ENV_NAME="${2:-dev}"
 PROJECT="${3:-secure-ntier}"
 STATE_BUCKET="${STATE_BUCKET:-${PROJECT}-${ENV_NAME}-tfstate}"
