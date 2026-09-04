@@ -18,3 +18,10 @@ This folder contains verification screenshots demonstrating automated infrastruc
 | `08-multi-cloud-dispatch.png` | Multi-cloud dispatch validation (`-var="cloud=aws"`) | Multi-Cloud Architecture |
 
 All screenshots should be placed in this folder as PNG files (`< 600 KB`).
+
+---
+
+## 🖼️ Live Verification Preview
+
+### Terraform Apply Success & Output Manifest (`ap-south-1`)
+![Terraform Apply Output](./04-terraform-apply-output.png)

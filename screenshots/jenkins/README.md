@@ -19,3 +19,10 @@ This folder contains screenshots validating the automated Jenkins CI/CD controll
 | `09-jenkins-asg-refresh.png` | AWS Auto Scaling Group Instance Refresh triggered by pipeline | Release Management |
 
 Refer to [`docs/deployment/jenkins.md`](../../docs/deployment/jenkins.md) for full pipeline configuration details.
+
+---
+
+## 🖼️ Live Verification Preview
+
+### Jenkins CI/CD Deploy Pipeline Stage View (`ap-south-1`)
+![Jenkins Pipeline Stage View](./07-jenkins-deploy-pipeline.png)

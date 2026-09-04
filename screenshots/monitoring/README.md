@@ -13,3 +13,10 @@ This folder contains verification screenshots for AWS CloudWatch metrics, dashbo
 | `03-sns-subscription.png` | Amazon SNS console displaying confirmed email and operational notification endpoints | Incident Notification |
 
 Refer to [`docs/operations/monitoring.md`](../../docs/operations/monitoring.md) for alarm thresholds and dashboard JSON templates.
+
+---
+
+## 🖼️ Live Verification Preview
+
+### AWS CloudWatch Unified Dashboard (`ap-south-1`)
+![CloudWatch Dashboard](./01-cloudwatch-dashboard.png)

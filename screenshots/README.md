@@ -58,3 +58,35 @@ screenshots/
      ```markdown
      ![Verification Caption](screenshots/deployment/01-app-ui-login.png)
      ```
+
+---
+
+## 🖼️ Featured Verification Gallery
+
+### 1. Web Application Ingress & Dashboard (`ap-south-1`)
+![Application Dashboard](./deployment/01-app-ui-login.png)
+
+---
+
+### 2. ALB `/health` & Database Probe (`ap-south-1`)
+![Health Endpoint](./deployment/02-app-health-json.png)
+
+---
+
+### 3. Terraform Infrastructure Apply & Output Manifest
+![Terraform Apply](./terraform/04-terraform-apply-output.png)
+
+---
+
+### 4. AWS CloudWatch Unified Observability Dashboard
+![CloudWatch Dashboard](./monitoring/01-cloudwatch-dashboard.png)
+
+---
+
+### 5. GitHub Actions Automated CI/CD Pipeline
+![GitHub Actions Pipeline](./cicd/01-actions-pipeline.png)
+
+---
+
+### 6. Jenkins Pipeline Controller Execution
+![Jenkins Pipeline](./jenkins/07-jenkins-deploy-pipeline.png)

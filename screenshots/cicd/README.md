@@ -15,3 +15,10 @@ This folder contains verification screenshots documenting automated continuous i
 | `05-smoke-test-log.png` | Post-deployment smoke test logs confirming HTTP 200 responses | Verification & Rollback |
 
 Refer to [`cicd/README.md`](../../cicd/README.md) for workflow definitions.
+
+---
+
+## 🖼️ Live Verification Preview
+
+### GitHub Actions CI/CD Automated Pipeline (`ap-south-1`)
+![GitHub Actions Pipeline](./01-actions-pipeline.png)
