@@ -11,21 +11,7 @@ tests. CI/CD makes deployment **automatic, gated, and reproducible**.
 The pipelines are **manifest-driven**: every stage reads `stack.json`, so the
 number of services, their toolchains and their CI steps are data, not code.
 
-```mermaid
-flowchart TD
-    A[Developer pushes to main] --> B[Checkout]
-    B --> V[stack-validate: validate stack.json]
-    V --> C[CI per service - stack-ci.sh<br/>toolchain ci_steps + Docker build + Trivy scan]
-    C --> H[stack-push: push every image to ECR :git-sha]
-    H --> I[deploy-ec2: update SSM image params per service]
-    I --> J[Rolling ASG instance refresh]
-    J --> K[Smoke test /health]
-    K -->|pass| L[Deployed]
-    K -->|fail| M[Pipeline fails - alert]
-    C -->|critical/high CVE| M
-    H --> I2[Optional: deploy-eks - render k8s manifests + apply + roll]
-    I2 --> K
-```
+![CI/CD Pipeline Architecture](../../diagrams/rendered/cicd.png)
 
 ## Two engines, one pipeline
 

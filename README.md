@@ -270,9 +270,8 @@ see **row 1 of the diagram table below** for the big-picture image.
 
 > The diagrams depict the **AWS reference implementation**; every layer has a
 > 1:1 native equivalent on Azure and GCP (see [Multi-Cloud Design](#multi-cloud-design)).
-> Rendered from [`diagrams/architecture.mmd`](./diagrams/architecture.mmd) — if images
-> don't display, re-render with the [Mermaid CLI](https://mermaid.js.org)
-> (see [`diagrams/README.md`](./diagrams/README.md)).
+> All diagrams are pre-rendered as crisp, high-resolution Full HD (1920x1080) PNG images in
+> [`diagrams/rendered/`](./diagrams/rendered/) and display out-of-the-box on GitHub without any rendering tools.
 
 Full diagrams (rendered PNGs + Mermaid source) are in [`diagrams/`](./diagrams/README.md):
 

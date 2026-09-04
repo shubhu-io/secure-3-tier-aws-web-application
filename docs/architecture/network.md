@@ -54,32 +54,7 @@ every resource gets a public IP, which is exactly what we are avoiding.
 
 ## Diagram
 
-```mermaid
-flowchart TD
-    subgraph VPC[VPC 10.0.0.0/16]
-        subgraph PUB[Public]
-            P1[public-a 10.0.1.0/24]
-            P2[public-b 10.0.2.0/24]
-        end
-        subgraph APP[Application - private]
-            A1[app-a 10.0.11.0/24]
-            A2[app-b 10.0.12.0/24]
-        end
-        subgraph DBT[Database - private]
-            D1[db-a 10.0.21.0/24]
-            D2[db-b 10.0.22.0/24]
-        end
-        IGW[Internet Gateway]
-        NAT[NAT Gateway]
-    end
-    IGW --> P1
-    IGW --> P2
-    P1 --> NAT
-    NAT -.outbound only.-> A1
-    NAT -.outbound only.-> A2
-    A1 --> D1
-    A2 --> D2
-```
+![VPC Network Architecture](../../diagrams/rendered/network.png)
 
 ## Routing
 

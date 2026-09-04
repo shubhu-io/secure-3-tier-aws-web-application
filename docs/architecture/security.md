@@ -3,18 +3,7 @@
 Security in this project is **defense in depth**: seven layers, each of which
 must be bypassed for an attack to succeed.
 
-```mermaid
-flowchart TD
-    INET[Internet]
-    INET --> WAF[1. AWS WAF]
-    WAF --> TLS[2. TLS / HTTPS]
-    TLS --> NACL[3. Network ACLs]
-    NACL --> ALB[4. ALB security group]
-    ALB --> APPSG[5. App security group]
-    APPSG --> DBSG[6. DB security group]
-    DBSG --> RDS[(RDS PostgreSQL)]
-    IAM[7. IAM - identity] -.authorizes every AWS call.-> AWS
-```
+![Security Architecture — Defence in Depth](../../diagrams/rendered/security.png)
 
 | # | Layer | Control | Stops |
 | - | ----- | ------- | ----- |

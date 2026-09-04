@@ -19,20 +19,7 @@
 
 ## Disaster recovery diagram
 
-```mermaid
-flowchart TD
-    subgraph Normal[Normal operation]
-        ALB1[ALB] --> E1[EC2 AZ-a]
-        ALB1 --> E2[EC2 AZ-b]
-        E1 --> RDS1[RDS Primary AZ-a]
-        E2 --> RDS1
-    end
-    subgraph Failover[EC2 loss / AZ-a failure]
-        ALB2[ALB] --> E3[EC2 replaced by ASG]
-        ALB2 --> E4[EC2 AZ-b]
-        E4 --> RDS2[RDS Multi-AZ standby promotes]
-    end
-```
+![Disaster Recovery & Multi-AZ Architecture](../../diagrams/rendered/disaster-recovery.png)
 
 ## Backups
 

@@ -29,32 +29,7 @@ and cloud-native monitoring + notifications provide observability.
 The diagram below shows the **AWS reference implementation**; each cloud maps
 its own services 1:1 onto the same shape (see the table below).
 
-```mermaid
-flowchart TD
-    U[Internet User] --> R53[Route 53 DNS]
-    R53 --> WAF[AWS WAF]
-    WAF --> ALB[ALB :443 HTTPS]
-    ALB -->|:80| A1[EC2 App - AZ-a]
-    ALB -->|:80| A2[EC2 App - AZ-b]
-    subgraph VPC[VPC 10.0.0.0/16]
-        subgraph PUB[Public subnets]
-            ALB
-            NG[NAT Gateway]
-        end
-        subgraph APP[Private app subnets]
-            A1[EC2 - Docker Compose<br/>frontend + backend]
-            A2[EC2 - Docker Compose<br/>frontend + backend]
-        end
-        subgraph DBT[Private DB subnets]
-            RDS[(RDS PostgreSQL)]
-        end
-        IGW[Internet Gateway]
-        IGW --> PUB
-    end
-    A1 --> RDS
-    A2 --> RDS
-    NG --> IGW
-```
+![Overall Architecture](../../diagrams/rendered/architecture.png)
 
 For a hand-drawn walkthrough of the same design, see the annotated notes:
 
@@ -108,18 +83,7 @@ clouds: `app_url`, `lb_dns_name`, `db_host`, `db_secret_ref`, `registry_url`,
 
 ## The deployment model (how code becomes running software)
 
-```mermaid
-flowchart LR
-    D[Developer] -->|git push| GH[GitHub]
-    GH --> CI[CI: stack-validate + stack-ci<br/>test + audit + build + Trivy]
-    CI --> ECR[Amazon ECR]
-    ECR --> DEP[stack-push + deploy-ec2<br/>SSM param + ASG refresh]
-    DEP --> EC2[EC2 + Docker Compose]
-    ECR --> DEPK[deploy-eks<br/>render k8s manifests from stack.json]
-    DEPK --> EKS[Amazon EKS]
-    EC2 --> HC[Health check]
-    EKS --> HC2[Health check]
-```
+![Deployment Flow](../../diagrams/rendered/deployment-flow.png)
 
 Every pipeline stage reads **`stack.json`** — the single source of truth for
 the tech stack (services, ports, toolchain, database engine/version, runtimes).

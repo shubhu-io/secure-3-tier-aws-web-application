@@ -1,64 +1,81 @@
-# Diagrams
+# Architecture Diagrams
 
-All diagrams are authored as **[Mermaid](https://mermaid.js.org) sources** so they
-are version-controllable, reviewable in pull requests, and renderable anywhere.
-No fake screenshots — every diagram is derived from the actual Terraform,
-pipeline, and application code in this repository.
+All platform diagrams are pre-rendered as crisp, high-resolution **Full HD (1920x1080) PNG images** in [`rendered/`](./rendered) and embedded directly throughout the project documentation and main [`README.md`](../README.md) so they display instantly on GitHub without any external tools or rendering steps required.
 
-Pre-rendered **PNG copies live in [`rendered/`](./rendered)** and are embedded
-in the main [`README.md`](../README.md), so the diagrams display on GitHub
-without any rendering step.
+The Mermaid sources (`.mmd`) are also preserved here for version-controlled design tracking.
 
-## Diagram index
+---
 
-| Source | Rendered image | What it shows |
-| ------ | -------------- | ------------- |
-| [`architecture.mmd`](./architecture.mmd) | [`architecture.png`](./rendered/architecture.png) | End-to-end platform: user → Route 53 → WAF → ALB → EC2/ASG → RDS, plus supporting services (NAT, Secrets Manager, CloudWatch) |
-| [`network.mmd`](./network.mmd) | [`network.png`](./rendered/network.png) | VPC + subnet layout with CIDR blocks, route tables, and NACLs per tier |
-| [`security.mmd`](./security.mmd) | [`security.png`](./rendered/security.png) | Defense-in-depth: WAF → ALB SG → App SG → DB SG, encryption, IAM, secrets, auditing |
-| [`cicd.mmd`](./cicd.mmd) | [`cicd.png`](./rendered/cicd.png) | CI/CD pipeline (manifest-driven): commit → validate → test/scan → build → ECR → deploy EC2/EKS → smoke test; failure blocks the release |
-| [`stack.mmd`](./stack.mmd) | [`stack.png`](./rendered/stack.png) | `stack.json` manifest: how one source of truth drives CI/CD, Terraform, and Kubernetes, and how a new service is added |
-| [`request-flow.mmd`](./request-flow.mmd) | [`request-flow.png`](./rendered/request-flow.png) | Sequence diagram of one browser request through every layer |
-| [`deployment-flow.mmd`](./deployment-flow.mmd) | [`deployment-flow.png`](./rendered/deployment-flow.png) | Deployment lifecycle including a rollback branch |
-| [`failure-flow.mmd`](./failure-flow.mmd) | [`failure-flow.png`](./rendered/failure-flow.png) | Sequence diagram of EC2 failure and self-healing by the ASG |
-| [`disaster-recovery.mmd`](./disaster-recovery.mmd) | [`disaster-recovery.png`](./rendered/disaster-recovery.png) | RPO / RTO targets and how data + infrastructure are recovered |
-| [`kubernetes.mmd`](./kubernetes.mmd) | [`kubernetes.png`](./rendered/kubernetes.png) | The EKS deployment path: NLB → frontend → backend → RDS, plus HPA/PDB/secrets |
+## 🗺️ Diagram Gallery
 
-## How to render
+| # | Architecture Diagram | Direct Image Link | Mermaid Source | Description |
+|---|----------------------|-------------------|----------------|-------------|
+| **1** | **Overall Architecture (Big Picture)** | [**`architecture.png`**](./rendered/architecture.png) | [`architecture.mmd`](./architecture.mmd) | Master architectural blueprint: User ➔ Route 53 ➔ WAF ➔ ALB ➔ EC2 ASG ➔ RDS Multi-AZ, plus supporting services. |
+| **2** | **VPC Network Architecture** | [**`network.png`**](./rendered/network.png) | [`network.mmd`](./network.mmd) | Multi-AZ VPC (10.0.0.0/16), 6 subnets across 2 AZs, Route Tables, Internet Gateway & NAT Gateway. |
+| **3** | **Security Architecture** | [**`security.png`**](./rendered/security.png) | [`security.mmd`](./security.mmd) | 5-layer Defence-in-Depth (Perimeter, Network, Application, Data, Identity) & Continuous Auditing. |
+| **4** | **CI/CD Pipeline Flow** | [**`cicd.png`**](./rendered/cicd.png) | [`cicd.mmd`](./cicd.mmd) | 8 sequential stages from git push to Trivy vulnerability scan, ECR push, and live deployment. |
+| **5** | **User Request Flow** | [**`request-flow.png`**](./rendered/request-flow.png) | [`request-flow.mmd`](./request-flow.mmd) | Step-by-step traffic and data path: Client ➔ WAF ➔ ALB ➔ React ➔ Node API ➔ PostgreSQL. |
+| **6** | **Deployment Lifecycle & Rollback** | [**`deployment-flow.png`**](./rendered/deployment-flow.png) | [`deployment-flow.mmd`](./deployment-flow.mmd) | Complete deployment lifecycle with automated health verification and zero-downtime rollback. |
+| **7** | **Failure Auto-Recovery** | [**`failure-flow.png`**](./rendered/failure-flow.png) | [`failure-flow.mmd`](./failure-flow.mmd) | Self-healing sequence when an EC2 instance dies; ALB traffic isolation and ASG replacement. |
+| **8** | **Disaster Recovery & Multi-AZ** | [**`disaster-recovery.png`**](./rendered/disaster-recovery.png) | [`disaster-recovery.mmd`](./disaster-recovery.mmd) | Multi-AZ synchronous replication, automated RDS snapshots, and RTO/RPO target metrics. |
+| **9** | **Kubernetes (EKS)** | [**`kubernetes.png`**](./rendered/kubernetes.png) | [`kubernetes.mmd`](./kubernetes.mmd) | AWS EKS cluster, Ingress ALB controller, Worker Nodes, Pods, HPA, and native cloud integrations. |
+| **10**| **Technology Stack** | [**`stack.png`**](./rendered/stack.png) | [`stack.mmd`](./stack.mmd) | Decoupled 4-tier specification across Presentation, Application, Database, and DevOps tiers. |
 
-### Option A — Mermaid Live Editor (no install)
+---
 
-1. Open https://mermaid.live
-2. Paste the content of the `.mmd` file
-3. Export as PNG / SVG / click "[ ] code"
+## 🖼️ Embedded Previews
 
-### Option B — Mermaid CLI (local, reproducible)
+### 1. Overall Architecture (Big Picture)
+![Overall Architecture](./rendered/architecture.png)
 
-```bash
-# needs Node.js + npx
-npx -y @mermaid-js/mermaid-cli -i diagrams/architecture.mmd -o diagrams/rendered/architecture.png -b white
-```
+---
 
-For a batch render of all diagrams:
+### 2. Full Deployment Lifecycle & Rollback Flow
+![Deployment Flow](./rendered/deployment-flow.png)
 
-```bash
-mkdir -p diagrams/rendered
-for f in diagrams/*.mmd; do
-  npx -y @mermaid-js/mermaid-cli -i "$f" -o "diagrams/rendered/$(basename "${f%.mmd}").png" -b white
-done
-```
+---
 
-> Note: the first `npx` run downloads the tool and Chromium, which takes a minute.
+### 3. VPC Network Architecture
+![VPC Network Architecture](./rendered/network.png)
 
-### Option C — GitHub / VS Code
+---
 
-- GitHub renders `mermaid` blocks directly in Markdown (the sources are also
-  embedded in the docs under `docs/architecture/`).
-- VS Code: install the "Mermaid Preview" or "Markdown Preview Mermaid Support"
-  extension and open the `.mmd` file.
+### 4. Security Architecture (Defence in Depth)
+![Security Architecture](./rendered/security.png)
 
-## Keeping diagrams accurate
+---
 
-- Diagrams must always match the Terraform resources in [`terraform/cloud/<cloud>/modules/`](../terraform).
-- If you change a CIDR, subnet tier, port, or pipeline stage, update the
-  corresponding `.mmd` file in the same change so docs never drift from code.
+### 5. CI/CD Pipeline Automation
+![CI/CD Pipeline](./rendered/cicd.png)
+
+---
+
+### 6. EC2 Failure Auto-Recovery Sequence
+![Failure Recovery](./rendered/failure-flow.png)
+
+---
+
+### 7. Disaster Recovery & Multi-AZ Architecture
+![Disaster Recovery](./rendered/disaster-recovery.png)
+
+---
+
+### 8. Kubernetes EKS Architecture
+![Kubernetes EKS](./rendered/kubernetes.png)
+
+---
+
+### 9. 3-Tier Technology Stack
+![Technology Stack](./rendered/stack.png)
+
+---
+
+### 10. End-to-End User Request Flow
+![User Request Flow](./rendered/request-flow.png)
+
+---
+
+## 📌 Accuracy Guarantee
+
+- Every diagram strictly matches the Terraform code in [`terraform/cloud/aws/`](../terraform/cloud/aws/).
+- If you modify CIDR blocks, subnet layouts, security groups, or deployment steps, update the corresponding diagram assets to keep the documentation synchronized.
