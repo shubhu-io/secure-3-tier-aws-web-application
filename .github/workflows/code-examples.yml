@@ -16,7 +16,7 @@ jobs:
       run:
         working-directory: examples/programming/javascript
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Install dependencies
         run: npm ci
@@ -34,7 +34,7 @@ jobs:
       run:
         working-directory: examples/programming/typescript
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Install dependencies
         run: npm ci
@@ -52,10 +52,10 @@ jobs:
       run:
         working-directory: examples/programming/python
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
           python-version: '3.13'
 
@@ -74,7 +74,7 @@ jobs:
       run:
         working-directory: examples/programming/go
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Install Go dependencies
         run: go mod download
@@ -92,7 +92,7 @@ jobs:
       run:
         working-directory: examples/programming/rust
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Install Rust toolchain
         uses: actions-rust-lang/setup-rust-toolchain@v1
@@ -110,7 +110,7 @@ jobs:
       run:
         working-directory: examples/programming/java-maven
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Set up Maven
         uses: stefanzweifel/setup-maven@v2
@@ -118,7 +118,7 @@ jobs:
           maven-version: '3.9.8'
 
       - name: Cache Maven repository
-        uses: actions/cache@v3
+        uses: actions/cache@v6
         with:
           path: ~/.m2/repository
           key: maven-${{ runner.os }}-${{ hashFiles('**/pom.xml') }}
@@ -136,13 +136,13 @@ jobs:
       run:
         working-directory: examples/programming/java-gradle
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v3
+        uses: gradle/actions/setup-gradle@v6
 
       - name: Cache Gradle cache
-        uses: actions/cache@v3
+        uses: actions/cache@v6
         with:
           path: ~/.gradle/cache
           key: gradle-${{ runner.os }}-${{ hashFiles('**/build.gradle') }}
@@ -160,7 +160,7 @@ jobs:
       run:
         working-directory: examples/programming/cpp
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Configure CMake
         run: cmake -S . -B build
@@ -178,10 +178,10 @@ jobs:
       run:
         working-directory: examples/programming/csharp
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Setup .NET
-        uses: actions/setup-dotnet@v3
+        uses: actions/setup-dotnet@v6
         with:
           dotnet-version: |
             9.0

@@ -35,7 +35,7 @@ jobs:
     name: Manifest + Terraform validate
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Install jq (if missing)
         run: command -v jq || sudo apt-get install -y jq
@@ -43,7 +43,7 @@ jobs:
       - name: Validate stack manifest
         run: bash cicd/scripts/stack-validate.sh
 
-      - uses: hashicorp/setup-terraform@v3
+      - uses: hashicorp/setup-terraform@v4
         with:
           terraform_version: 1.9.8
 
@@ -61,7 +61,7 @@ jobs:
     name: IaC security scan (tfsec + checkov)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Run tfsec
         uses: aquasecurity/tfsec-action@v1.0.4
@@ -81,7 +81,7 @@ jobs:
     name: Build + scan all services
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Install jq (if missing)
         run: command -v jq || sudo apt-get install -y jq
