@@ -51,10 +51,19 @@ case "$MODE" in
     success "Stack reset and started"
     exit 0
     ;;
+  --status|--ps)
+    info "Checking container status…"
+    docker compose -f "$COMPOSE_FILE" ps
+    exit 0
+    ;;
   --logs)
     info "Starting stack and following logs…"
     docker compose -f "$COMPOSE_FILE" up --build
     exit 0
+    ;;
+  --seed)
+    info "Building and starting stack before seeding…"
+    docker compose -f "$COMPOSE_FILE" up --build -d
     ;;
 esac
 
@@ -91,3 +100,11 @@ echo ""
 info "View logs:  docker compose -f docker/docker-compose.yml logs -f"
 info "Stop:       bash scripts/local-up.sh --down"
 info "Reset DB:   bash scripts/local-up.sh --reset"
+info "Test:       bash scripts/local-test.sh"
+
+if [[ "$MODE" == "--seed" ]]; then
+  echo ""
+  info "Auto-seeding requested via --seed..."
+  bash "$REPO_ROOT/scripts/seed-data.sh" "http://localhost"
+fi
+

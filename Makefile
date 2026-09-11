@@ -9,7 +9,7 @@ TAG        ?= $(shell git rev-parse --short HEAD 2>/dev/null || echo latest)
 .PHONY: help \
 	 prereqs bootstrap \
 	 deploy-aws push-aws tf-init tf-plan tf-apply tf-destroy \
-	 local-up local-down local-reset \
+	 local-up local-down local-reset local-status local-seed local-test health \
 	 build-node test-node build-typescript test-typescript \
 	 build-python test-python \
 	 build-java-maven test-java-maven build-java-gradle test-java-gradle \
@@ -39,6 +39,10 @@ help:
 	@echo "  make local-up                docker compose up --build (background)"
 	@echo "  make local-down              docker compose down"
 	@echo "  make local-reset             docker compose down -v + up (wipe DB)"
+	@echo "  make local-status            Show running container status and ports"
+	@echo "  make local-seed              Seed sample users and backlog items"
+	@echo "  make local-test              Run unit and E2E integration test suite"
+	@echo "  make health [URL=...]        Check health endpoint status & latency"
 	@echo ""
 	@echo "  ── Code Examples ───────────────────────────────────────────"
 	@echo "  make build-node / test-node"
@@ -97,6 +101,18 @@ local-down:
 
 local-reset:
 	@bash scripts/local-up.sh --reset
+
+local-status:
+	@bash scripts/local-up.sh --status
+
+local-seed:
+	@bash scripts/seed-data.sh $(if $(URL),$(URL),http://localhost)
+
+local-test:
+	@bash scripts/local-test.sh $(if $(URL),$(URL),http://localhost)
+
+health:
+	@bash scripts/health-check.sh $(if $(URL),$(URL),http://localhost)
 
 # ═════════════════════════════════════════════════════════════════════════════
 # Code example targets (unchanged)
