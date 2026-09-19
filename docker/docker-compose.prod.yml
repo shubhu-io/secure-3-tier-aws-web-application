@@ -1,0 +1,72 @@
+# ============================================================================
+# Production compose file - pulls PREBUILT images (ECR / ACR / Artifact
+# Registry) instead of building from source. The database is managed (RDS /
+# DBaaS), so there is no database service here.
+#
+# Usage:
+#   cp docker/.env.example docker/.env       # then edit image refs + DB_HOST
+#   docker compose --env-file docker/.env \
+#     -f docker/docker-compose.prod.yml up -d
+#
+# The real EC2/VMSS bootstraps emit an equivalent compose at first boot from
+# stack.json + SSM image URIs + Secrets Manager DB credentials (see
+# terraform/cloud/aws/modules/compute/user-data.sh). This file is the
+# human-readable reference for the same contract.
+#
+# Secrets are NOT hardcoded: DB_HOST/DB_* /JWT_SECRET must be provided in the
+# environment (or docker/.env) or the stack refuses to start (${:?} = fail).
+# ============================================================================
+
+services:
+  backend:
+    image: ${BACKEND_IMAGE:-secure-ntier-backend:latest}
+    restart: unless-stopped
+    environment:
+      PORT: "3000"
+      NODE_ENV: production
+      DB_HOST: ${DB_HOST:?DB_HOST is not set - point it at the managed database}
+      DB_PORT: ${DB_PORT:-5432}
+      DB_NAME: ${DB_NAME:?DB_NAME is not set}
+      DB_USER: ${DB_USER:?DB_USER is not set}
+      DB_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD is not set}
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is not set}
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"fetch('http://127.0.0.1:3000/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))\""]
+      interval: 10s
+      timeout: 5s
+      start_period: 30s
+      retries: 5
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+    networks:
+      - internal
+
+  frontend:
+    image: ${FRONTEND_IMAGE:-secure-ntier-frontend:latest}
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "80:80"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O - http://127.0.0.1/health >/dev/null 2>&1 || exit 1"]
+      interval: 30s
+      timeout: 5s
+      start_period: 10s
+      retries: 3
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+    networks:
+      - internal
+
+# Only the frontend is reachable from outside; the backend is internal-only.
+networks:
+  internal:
+    driver: bridge

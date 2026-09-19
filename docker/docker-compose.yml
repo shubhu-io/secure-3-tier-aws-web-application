@@ -1,21 +1,29 @@
 # ============================================================================
 # Local development stack (NO AWS required)
-#   bash scripts/local-up.sh          # recommended (includes health wait)
-#   docker compose up --build          # or directly
+#   bash docker/scripts/up.sh           # recommended (includes health wait)
+#   docker compose up --build           # or directly
 #   curl http://localhost:3000/health
+#
+# All overridable values are read from docker/.env (see .env.example).
+# Compose picks up docker/.env automatically for ${VAR} interpolation and
+# falls back to the safe local-development defaults shown below.
 # ============================================================================
+
+name: secure-ntier-local
 
 services:
   db:
-    image: postgres:16-alpine
+    build:
+      context: ..
+      dockerfile: docker/database/Dockerfile
     environment:
-      POSTGRES_DB: appdb
-      POSTGRES_USER: app_user
-      POSTGRES_PASSWORD: local-dev-password
+      POSTGRES_DB: ${DB_NAME:-appdb}
+      POSTGRES_USER: ${DB_USER:-app_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-local-dev-password}
     ports:
-      - "5432:5432"
+      - "${DB_PORT_MAP:-5432}:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U app_user -d appdb"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-app_user} -d ${DB_NAME:-appdb}"]
       interval: 5s
       timeout: 3s
       retries: 10
@@ -28,18 +36,18 @@ services:
       dockerfile: docker/backend/Dockerfile
     environment:
       PORT: "3000"
-      NODE_ENV: development
+      NODE_ENV: ${NODE_ENV:-development}
       DB_HOST: db
       DB_PORT: "5432"
-      DB_NAME: appdb
-      DB_USER: app_user
-      DB_PASSWORD: local-dev-password
-      JWT_SECRET: local-dev-secret-change-me-1234567890
+      DB_NAME: ${DB_NAME:-appdb}
+      DB_USER: ${DB_USER:-app_user}
+      DB_PASSWORD: ${DB_PASSWORD:-local-dev-password}
+      JWT_SECRET: ${JWT_SECRET:-local-dev-secret-change-me-1234567890}
     depends_on:
       db:
         condition: service_healthy
     ports:
-      - "3000:3000"
+      - "${BACKEND_PORT_MAP:-3000}:3000"
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "node -e \"fetch('http://127.0.0.1:3000/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))\""]
@@ -55,7 +63,7 @@ services:
     depends_on:
       - backend
     ports:
-      - "80:80"
+      - "${FRONTEND_PORT_MAP:-80}:80"
 
 volumes:
   pgdata:
