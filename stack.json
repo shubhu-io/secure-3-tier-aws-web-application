@@ -35,12 +35,9 @@
     "engine_version": "16.4",
     "port": 5432
   },
-  "runtime": ["ec2-compose"],
-  "clouds": ["aws", "azure", "gcp"],
-  "default_cloud": "aws",
+  "runtime": ["ec2-compose", "k8s"],
+  "clouds": ["aws"],
   "cloud_config": {
-    "aws":   { "region": "ap-south-1",    "registry": "ecr",              "kubernetes": "eks" },
-    "azure": { "region": "westeurope",   "registry": "acr",              "kubernetes": "aks" },
-    "gcp":   { "region": "europe-west1", "registry": "artifact-registry","kubernetes": "gke" }
+    "aws": { "region": "ap-south-1", "registry": "ecr", "kubernetes": "eks" }
   }
-}
+}

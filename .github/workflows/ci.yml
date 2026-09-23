@@ -10,8 +10,8 @@ name: CI
 #   build-and-scan  -> per-service ci_steps (in toolchain containers),
 #                      docker build, trivy scan
 #
-# CLOUD threads the target cloud (aws | azure | gcp) through every script;
-# defaults to aws and can be overridden on manual dispatch.
+# Generic: every job reads the stack.json manifest, so any service (any
+# language/framework) is tested, built and scanned with no workflow edits.
 
 on:
   pull_request:
@@ -19,16 +19,9 @@ on:
   push:
     branches: [main, develop]
   workflow_dispatch:
-    inputs:
-      cloud:
-        description: "Cloud to validate against"
-        required: false
-        default: aws
-        type: choice
-        options: [aws, azure, gcp]
 
 env:
-  CLOUD: ${{ inputs.cloud || 'aws' }}
+  CLOUD: aws
 
 jobs:
   validate:

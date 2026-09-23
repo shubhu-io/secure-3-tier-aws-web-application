@@ -1,20 +1,8 @@
 # ============================================================================
-# Root variables - multi-cloud dispatcher inputs
+# Root variables — AWS platform inputs
 # ============================================================================
 
-# --- Cloud selection ---------------------------------------------------------
-variable "cloud" {
-  description = "Target cloud provider. Selects which ./cloud/<cloud> implementation is instantiated."
-  type        = string
-  default     = "aws"
-
-  validation {
-    condition     = contains(["aws", "azure", "gcp"], var.cloud)
-    error_message = "cloud must be one of: aws, azure, gcp."
-  }
-}
-
-# --- Shared (passed to every cloud module) -----------------------------------
+# --- Shared (networking, compute, database, etc.) ----------------------------
 variable "project_name" {
   description = "Short project name used as a prefix for resource names"
   type        = string
@@ -28,13 +16,13 @@ variable "environment" {
 }
 
 variable "vpc_cidr" {
-  description = "VPC / VNet / VPC network CIDR block"
+  description = "VPC CIDR block"
   type        = string
   default     = "10.0.0.0/16"
 }
 
 variable "azs" {
-  description = "Availability zones / zones. Defaults to the first two available."
+  description = "Availability zones. Defaults to the first two available."
   type        = list(string)
   default     = null
 }
@@ -103,13 +91,13 @@ variable "db_username" {
 }
 
 variable "db_multi_az" {
-  description = "Multi-AZ / zone-redundant database (production)"
+  description = "Multi-AZ RDS instance (production)"
   type        = bool
   default     = false
 }
 
 variable "db_allocated_storage" {
-  description = "Database allocated storage (GB)"
+  description = "RDS allocated storage (GB)"
   type        = number
   default     = 20
 }
@@ -130,19 +118,19 @@ variable "skip_final_snapshot" {
 }
 
 variable "asg_min_size" {
-  description = "Minimum number of compute instances"
+  description = "Minimum number of EC2 instances in the ASG"
   type        = number
   default     = 2
 }
 
 variable "asg_max_size" {
-  description = "Maximum number of compute instances"
+  description = "Maximum number of EC2 instances in the ASG"
   type        = number
   default     = 4
 }
 
 variable "asg_desired_capacity" {
-  description = "Desired number of compute instances"
+  description = "Desired number of EC2 instances in the ASG"
   type        = number
   default     = 2
 }
@@ -239,133 +227,4 @@ variable "aws_jenkins_key_name" {
 variable "aws_jenkins_kubectl_version" {
   type    = string
   default = "v1.31.0"
-}
-
-# --- Azure-specific ----------------------------------------------------------
-variable "azure_location" {
-  description = "Azure region (e.g. westeurope)"
-  type        = string
-  default     = "westeurope"
-}
-
-variable "azure_vm_size" {
-  description = "Azure VM size for the scale set"
-  type        = string
-  default     = "Standard_B1s"
-}
-
-variable "azure_db_sku" {
-  description = "Azure PostgreSQL Flexible Server SKU name"
-  type        = string
-  default     = "B_Standard_B1ms"
-}
-
-variable "azure_enable_aks" {
-  description = "Provision an AKS cluster + node pool"
-  type        = bool
-  default     = false
-}
-
-variable "azure_aks_node_count" {
-  type    = number
-  default = 2
-}
-
-variable "azure_aks_node_vm_size" {
-  type    = string
-  default = "Standard_B2s"
-}
-
-variable "azure_aks_kubernetes_version" {
-  type    = string
-  default = "1.31.0"
-}
-
-variable "azure_aks_ci_principal_id" {
-  description = "Object ID of the CI/CD principal granted AKS access"
-  type        = string
-  default     = ""
-}
-
-variable "azure_enable_jenkins" {
-  description = "Provision a self-hosted Jenkins controller on a VM"
-  type        = bool
-  default     = false
-}
-
-variable "azure_jenkins_vm_size" {
-  type    = string
-  default = "Standard_B2s"
-}
-
-variable "azure_jenkins_ingress_cidrs" {
-  type    = list(string)
-  default = ["0.0.0.0/0"]
-}
-
-variable "azure_jenkins_admin_username" {
-  type    = string
-  default = "jenkinsadmin"
-}
-
-# --- GCP-specific ------------------------------------------------------------
-variable "gcp_project" {
-  description = "GCP project ID"
-  type        = string
-  default     = ""
-}
-
-variable "gcp_region" {
-  description = "GCP region (e.g. europe-west1)"
-  type        = string
-  default     = "europe-west1"
-}
-
-variable "gcp_machine_type" {
-  description = "GCP machine type for the managed instance group"
-  type        = string
-  default     = "e2-small"
-}
-
-variable "gcp_db_tier" {
-  description = "Cloud SQL tier (e.g. db-f1-micro)"
-  type        = string
-  default     = "db-f1-micro"
-}
-
-variable "gcp_enable_gke" {
-  description = "Provision a GKE cluster + node pool"
-  type        = bool
-  default     = false
-}
-
-variable "gcp_gke_node_count" {
-  type    = number
-  default = 2
-}
-
-variable "gcp_gke_machine_type" {
-  type    = string
-  default = "e2-medium"
-}
-
-variable "gcp_gke_kubernetes_version" {
-  type    = string
-  default = "1.31.0"
-}
-
-variable "gcp_enable_jenkins" {
-  description = "Provision a self-hosted Jenkins controller on a VM"
-  type        = bool
-  default     = false
-}
-
-variable "gcp_jenkins_machine_type" {
-  type    = string
-  default = "e2-medium"
-}
-
-variable "gcp_jenkins_ingress_cidrs" {
-  type    = list(string)
-  default = ["0.0.0.0/0"]
 }

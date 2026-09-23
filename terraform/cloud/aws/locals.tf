@@ -12,9 +12,8 @@ locals {
   # The tech stack lives in stack.json (single source of truth): which
   # services to run, the database engine/version/port and the runtimes.
   # path.root is the terraform/ directory when invoked as a child module, so
-  # ../stack.json resolves to the repo root (matches the Azure layout). When
-  # the module is validated/planned standalone from its own directory (depth
-  # varies), we also try the deeper relative paths.
+  # ../stack.json resolves to the repo root. When the module is validated
+  # standalone from its own directory, we also try the deeper relative paths.
   stack_file = try(
     file("${path.root}/../stack.json"),
     file("${path.root}/../../stack.json"),
