@@ -35,7 +35,7 @@ module "security" {
   vpc_id                  = module.vpc.vpc_id
   app_port                = 80
   db_port                 = local.db_port
-  db_ingress_extra_sg_ids = var.enable_eks ? [module.eks[0].cluster_security_group_id] : []
+  db_ingress_extra_sg_ids = []
 }
 
 # ---------------------------------------------------------------------------
@@ -351,10 +351,7 @@ resource "aws_iam_policy" "cicd" {
         Sid    = "KubernetesAccess"
         Effect = "Allow"
         Action = [
-          "eks:DescribeCluster",
-          "eks:ListClusters",
-          "eks:ListAccessEntries"
-        ]
+          ]
         Resource = ["*"]
       },
       {
@@ -376,4 +373,5 @@ output "cicd_policy_arn" {
   description = "ARN of the CI/CD IAM policy to attach to the Jenkins user"
   value       = aws_iam_policy.cicd.arn
 }
+
 
