@@ -159,7 +159,7 @@ bash scripts/health-check.sh
 
 ## 8. Set Up CI/CD
 
-### 8a. GitHub Actions (recommended)
+### 8a. Jenkins (recommended)
 
 1. Push this repo to your GitHub account.
 2. Add repository secrets (Settings → Secrets → Actions):

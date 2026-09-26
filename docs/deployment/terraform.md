@@ -6,7 +6,7 @@ GCP are selected with one variable, as shown below.
 
 > ⚠️ **COST WARNING** — `terraform apply` creates billable resources on
 > whichever cloud you target: EC2/ALB/NAT/RDS/WAF/CloudWatch on AWS, VMSS +
-> Application Gateway + PostgreSQL on Azure, MIG + HTTPS LB + Cloud SQL on
+> Application Gateway + MySQL on Azure, MIG + HTTPS LB + Cloud SQL on
 > GCP. See [`docs/cost-guide.md`](../cost-guide.md). Always run
 > `terraform destroy` when done.
 
@@ -236,3 +236,4 @@ terraform destroy -var-file="environments/dev/terraform.tfvars"
 Confirm with `yes`. Then check the **manual cleanup** list in
 [`scripts/cleanup.sh`](../../scripts/cleanup.sh) (S3 buckets, Route 53,
 log groups, final DB snapshots).
+

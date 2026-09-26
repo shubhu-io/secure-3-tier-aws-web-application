@@ -28,7 +28,7 @@ variable "public_subnet_ids" {
 }
 
 variable "cicd_policy_arn" {
-  description = "ARN of the CI/CD policy granted to the GitHub Actions user (reused for Jenkins)"
+  description = "ARN of the CI/CD policy granted to the Jenkins user (reused for Jenkins)"
   type        = string
 }
 
@@ -61,3 +61,4 @@ variable "kubectl_version" {
   type        = string
   default     = "v1.31.0"
 }
+

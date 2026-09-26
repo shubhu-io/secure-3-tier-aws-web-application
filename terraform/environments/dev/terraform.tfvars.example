@@ -49,9 +49,9 @@ aws_enable_eks = false
 # Leave empty to skip; you can add the access entry manually later.
 # aws_eks_ci_iam_arn = "arn:aws:iam::123456789012:user/github-actions-cicd"
 
-# --- Jenkins (optional, alternative to GitHub Actions) ---
+# --- Jenkins (optional, alternative to Jenkins) ---
 # Set to true to provision a self-hosted Jenkins controller on EC2.
-# WARNING: costs ~$15-25/month and overlaps GitHub Actions - run ONE engine.
+# WARNING: costs ~$15-25/month and overlaps Jenkins - run ONE engine.
 aws_enable_jenkins = false
 
 # LOCK THIS DOWN in real use - only your IP(s):
@@ -62,3 +62,4 @@ aws_enable_jenkins = false
 
 # kubectl version pinned in the controller image (match your EKS cluster):
 # aws_jenkins_kubectl_version = "v1.31.0"
+

@@ -74,12 +74,12 @@ asg_max_size         = 6             # pehle scale-out badao, phir instance size
 
 ---
 
-## Step 2 — Database Tier: RDS PostgreSQL 16
+## Step 2 — Database Tier: RDS MySQL 16
 
 **File:** `terraform/cloud/aws/modules/database/main.tf` → `var.db_instance_class`
 **Variable:** `db_instance_class` (default `db.t3.micro`), `db_multi_az`, `db_allocated_storage`
 
-DB private isolated subnets me hai, sirf App SG se port 5432 par reachable. DB ko **kabhi burstable se bada bina soch-samjhe mat karo** — storage + backup cost bhi judta hai.
+DB private isolated subnets me hai, sirf App SG se port 3306 par reachable. DB ko **kabhi burstable se bada bina soch-samjhe mat karo** — storage + backup cost bhi judta hai.
 
 ### 2A. Detail Comparison Table
 
@@ -90,7 +90,7 @@ DB private isolated subnets me hai, sirf App SG se port 5432 par reachable. DB k
 | **`db.t3.medium`** ⭐ Prod default | 2 / 4 GB | **~$52 + storage** | **Small prod (prod.tfvars.example default).** 200-500 connections + `db_multi_az=true` (standby replica, RPO≈0, failover <60s). | >500 connections / >100GB data (tab `db.m5.large`) |
 | **`db.m5.large`** | 2 / 8 GB | ~$110 + storage | Medium prod, reporting queries, 500-2000 connections, fixed performance | Dev (8x cost) |
 | **`db.r5.large`** | 2 / 16 GB | ~$140 + storage | Memory-heavy: bada `shared_buffers`, complex JOINs, analytics on same DB | Normal CRUD app (paise waste) |
-| **`db.t4g.micro/medium`** (ARM) | same, ~20% sasta | ~$10 / ~$42 | Sasta prod — Postgres 16 Graviton support karta hai, koi app change nahi chahiye | Agar `enhanced_monitoring` purane tool se check karte ho (test kar lo) |
+| **`db.t4g.micro/medium`** (ARM) | same, ~20% sasta | ~$10 / ~$42 | Sasta prod — mysql 16 Graviton support karta hai, koi app change nahi chahiye | Agar `enhanced_monitoring` purane tool se check karte ho (test kar lo) |
 
 ### 2B. Storage + HA ke saath faisla
 
@@ -148,7 +148,7 @@ eks_node_max_size       = 4
 
 ## Step 4 — Jenkins Controller (Optional CI/CD)
 
-**Enable:** `enable_jenkins = true` (default `false` — GitHub Actions free hai, Jenkins ~$15-25/mo)
+**Enable:** `enable_jenkins = true` (default `false` — Jenkins free hai, Jenkins ~$15-25/mo)
 **Variable:** `jenkins_instance_type` (default `t3.medium`)
 
 Jenkins controller par Java + Docker builds + `kubectl` chalta hai — **1GB RAM me Jenkins OOM ho jata hai**, isiliye default `t3.medium` hai, `micro` mat karo.
@@ -165,7 +165,7 @@ jenkins_instance_type = "t3.medium"   # micro mat karna
 # jenkins_ingress_cidrs = ["1.2.3.4/32"]  # apna IP likho, 0.0.0.0/0 mat rakho
 ```
 
-> **Ek CI engine rule:** GitHub Actions (managed, free) **YA** Jenkins (self-hosted) — dono mat chalao. Course/demo ke liye Actions kaafi hai.
+> **Ek CI engine rule:** Jenkins (managed, free) **YA** Jenkins (self-hosted) — dono mat chalao. Course/demo ke liye Actions kaafi hai.
 
 ---
 
@@ -173,7 +173,7 @@ jenkins_instance_type = "t3.medium"   # micro mat karna
 
 | Scenario | App EC2 | RDS | EKS nodes | Jenkins | ~Total/mo |
 |---|---|---|---|---|---|
-| **A. Free learning (local)** | — (Docker Compose) | — (local Postgres) | — | — | **$0** |
+| **A. Free learning (local)** | — (Docker Compose) | — (local mysql) | — | — | **$0** |
 | **B. Cheapest real AWS (single-AZ dev)** | `t3.micro` ×1 | `db.t3.micro` single-AZ | off | off | **~$45-60** |
 | **C. Default dev (repo default, Multi-AZ app)** | `t3.micro` ×2 | `db.t3.micro` single-AZ | off | off | **~$95-140** |
 | **D. Small prod (prod.tfvars.example)** | `t3.medium` ×2-6 | `db.t3.medium` Multi-AZ | off | off | **~$200-350** |
@@ -200,3 +200,4 @@ aws rds describe-db-instances --query "DBInstances[].DBInstanceClass"
 ```
 
 **Monitoring ke baad tune karo:** CloudWatch me `ASGAverageCPUUtilization`, `CPUCreditBalance`, `FreeableMemory`, `DatabaseConnections` alarms already repo me hain (`modules/monitoring`) — 2 hafte data dekh ke hi size final karo, pehle din bada instance mat lo.
+

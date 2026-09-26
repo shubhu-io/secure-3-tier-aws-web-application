@@ -1,5 +1,5 @@
 // ============================================================================
-// Jenkinsfile - Application deploy pipeline (alternative to GitHub Actions)
+// Jenkinsfile - Application deploy pipeline (alternative to Jenkins)
 //
 // Trigger: GitHub webhook to this job (push to main) or manual build with a
 //          parameter. Mirrors `.github/workflows/deploy.yml` exactly:

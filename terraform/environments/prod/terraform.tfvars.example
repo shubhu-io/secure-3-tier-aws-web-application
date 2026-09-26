@@ -41,9 +41,10 @@ aws_enable_eks = false
 # IAM principal (user/role ARN) granted cluster admin for CI/CD kubectl.
 # aws_eks_ci_iam_arn = "arn:aws:iam::123456789012:role/github-actions-cicd"
 
-# --- Jenkins (optional, alternative to GitHub Actions) ---
-# In prod, prefer GitHub Actions (managed) over self-hosted Jenkins unless you
+# --- Jenkins (optional, alternative to Jenkins) ---
+# In prod, prefer Jenkins (managed) over self-hosted Jenkins unless you
 # have a reason to run your own. If you do, LOCK the ingress CIDRs to your IPs.
 aws_enable_jenkins = false
 # aws_jenkins_ingress_cidrs = ["203.0.113.5/32"]
 # aws_jenkins_key_name = "prod-jenkins-key"
+

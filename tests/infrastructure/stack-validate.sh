@@ -44,10 +44,10 @@ PUBLIC=$(bash cicd/scripts/stack-info.sh public-service)
 [ "$PUBLIC" = "frontend" ] && ok "public-service = frontend" || miss "public-service = $PUBLIC"
 
 DB_ENGINE=$(bash cicd/scripts/stack-info.sh db-engine)
-[ "$DB_ENGINE" = "postgres" ] && ok "db-engine = postgres" || miss "db-engine = $DB_ENGINE"
+[ "$DB_ENGINE" = "mysql" ] && ok "db-engine = mysql" || miss "db-engine = $DB_ENGINE"
 
 DB_PORT=$(bash cicd/scripts/stack-info.sh db-port)
-[ "$DB_PORT" = "5432" ] && ok "db-port = 5432" || miss "db-port = $DB_PORT"
+[ "$DB_PORT" = "3306" ] && ok "db-port = 3306" || miss "db-port = $DB_PORT"
 
 DB_VER=$(bash cicd/scripts/stack-info.sh db-version)
 [ "$DB_VER" = "16.4" ] && ok "db-version = 16.4" || miss "db-version = $DB_VER"
@@ -97,7 +97,7 @@ cat > "$TMP_DIR/bad-two-public.json" <<'EOF'
     { "name": "frontend", "port": 80, "public": true, "source_dir": "application/frontend", "dockerfile": "docker/frontend/Dockerfile", "toolchain": "node:20-alpine", "ci_steps": [{ "name": "b", "command": "npm run build" }] },
     { "name": "admin", "port": 8080, "public": true, "source_dir": "application/frontend", "dockerfile": "docker/frontend/Dockerfile", "toolchain": "node:20-alpine", "ci_steps": [{ "name": "b", "command": "npm run build" }] }
   ],
-  "database": { "engine": "postgres", "engine_version": "16.4", "port": 5432 }
+  "database": { "engine": "mysql", "engine_version": "16.4", "port": 3306 }
 }
 EOF
 
@@ -114,7 +114,7 @@ cat > "$TMP_DIR/bad-missing-src.json" <<'EOF'
     { "name": "backend", "port": 3000, "public": false, "source_dir": "does/not/exist", "dockerfile": "docker/backend/Dockerfile", "toolchain": "node:20-alpine", "ci_steps": [{ "name": "t", "command": "npm test" }] },
     { "name": "frontend", "port": 80, "public": true, "source_dir": "application/frontend", "dockerfile": "docker/frontend/Dockerfile", "toolchain": "node:20-alpine", "ci_steps": [{ "name": "b", "command": "npm run build" }] }
   ],
-  "database": { "engine": "postgres", "engine_version": "16.4", "port": 5432 }
+  "database": { "engine": "mysql", "engine_version": "16.4", "port": 3306 }
 }
 EOF
 

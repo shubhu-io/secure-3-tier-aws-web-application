@@ -91,7 +91,7 @@ The recovery mechanisms are cloud-generic; the names differ:
 | Concern | AWS | Azure | GCP |
 | ------- | --- | ----- | --- |
 | Instance self-heal | ASG replaces unhealthy EC2 | VMSS auto-repair / rolling upgrade | MIG auto-healing |
-| DB failover (prod) | RDS Multi-AZ | PostgreSQL Flexible Server zone-redundant HA | Cloud SQL regional HA |
+| DB failover (prod) | RDS Multi-AZ | MySQL Flexible Server zone-redundant HA | Cloud SQL regional HA |
 | Automated backups | RDS automated backups + snapshots | automated backups + point-in-time restore | automated backups + PITR |
 | Secrets re-injection | Secrets Manager at boot | Key Vault at boot | Secret Manager at boot |
 | State safety | S3 versioned bucket + DynamoDB lock | S3 backend per `cloud/<cloud>/backend.hcl` (swap for azurerm/gcs if preferred) | same — swap for gcs backend if preferred |
@@ -109,3 +109,4 @@ The recovery mechanisms are cloud-generic; the names differ:
 ## Runbooks
 
 Detailed step-by-step recovery: [`docs/runbooks/`](../runbooks/).
+

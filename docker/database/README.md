@@ -1,14 +1,14 @@
 # Docker / database
 
 The `db` service in `docker/docker-compose.yml` builds this folder's
-`Dockerfile` instead of pulling a stock `postgres` image, so the application
-schema is already in place when Postgres first initializes a fresh volume.
+`Dockerfile` instead of pulling a stock `mysql` image, so the application
+schema is already in place when mysql first initializes a fresh volume.
 
 ## How initialisation works
 
 1. The image copies `application/database/init.sql` to
    `/docker-entrypoint-initdb.d/01-init.sql`.
-2. On the **first** start with an empty data volume, the official Postgres
+2. On the **first** start with an empty data volume, the official mysql
    entrypoint runs every `*.sql`/`*.sh` file in that directory before the
    server accepts connections.
 3. The schema is idempotent (`CREATE TABLE IF NOT EXISTS`), so it is safe for
@@ -27,8 +27,8 @@ schema is already in place when Postgres first initializes a fresh volume.
 
 ## Credentials
 
-The postgres container uses `POSTGRES_DB`, `POSTGRES_USER` and
-`POSTGRES_PASSWORD`. These map 1:1 to `DB_*` variables read by the backend,
+The mysql container uses `mysql_DB`, `mysql_USER` and
+`mysql_PASSWORD`. These map 1:1 to `DB_*` variables read by the backend,
 and both come from the same `docker/.env` (see `docker/.env.example`), so they
 can never drift apart.
 
@@ -39,7 +39,7 @@ Defaults for the local stack only:
 | `DB_NAME`      | `appdb`                     |
 | `DB_USER`      | `app_user`                  |
 | `DB_PASSWORD`  | `local-dev-password`        |
-| `DB_PORT_MAP`  | `5432`                      |
+| `DB_PORT_MAP`  | `3306`                      |
 
 ## Inspecting the database
 

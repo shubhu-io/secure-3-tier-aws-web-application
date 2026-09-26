@@ -1,6 +1,6 @@
 # Git
 
-Reference commands for Git version control. This project uses GitHub for source control with GitHub Actions CI/CD.
+Reference commands for Git version control. This project uses GitHub for source control with Jenkins CI/CD.
 
 ## Installation
 

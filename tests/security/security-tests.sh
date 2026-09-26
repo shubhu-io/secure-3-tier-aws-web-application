@@ -59,8 +59,8 @@ DB_SG_ID="$(aws ec2 describe-security-groups --region "$REGION" \
   --query 'SecurityGroups[0].GroupId' --output text 2>/dev/null)"
 DB_OPEN="$(aws ec2 describe-security-groups --region "$REGION" \
   --group-ids "$DB_SG_ID" \
-  --query 'SecurityGroups[0].IpPermissions[?FromPort==`5432`].IpRanges[?CidrIp==`0.0.0.0/0`]' --output text 2>/dev/null)"
-[ -z "$DB_OPEN" ]; check $? "No PostgreSQL (5432) open to 0.0.0.0/0 on DB SG"
+  --query 'SecurityGroups[0].IpPermissions[?FromPort==`3306`].IpRanges[?CidrIp==`0.0.0.0/0`]' --output text 2>/dev/null)"
+[ -z "$DB_OPEN" ]; check $? "No MySQL (3306) open to 0.0.0.0/0 on DB SG"
 
 echo "==> 6. Application responds on the health endpoint"
 CODE="$(curl -s -o /dev/null -w '%{http_code}' "$URL/health" 2>/dev/null)"
@@ -82,3 +82,4 @@ WAF_CODE="$(curl -s -o /dev/null -w '%{http_code}' "$URL/api/items?q=1'%20OR%20'
 echo ""
 echo "==> RESULT: $PASS passed, $FAIL failed"
 [ "$FAIL" = "0" ]
+

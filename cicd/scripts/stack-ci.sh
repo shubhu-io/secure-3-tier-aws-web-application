@@ -9,7 +9,7 @@
 #   3. trivy scan the image (fails on CRITICAL/HIGH)
 #
 # No AWS is needed - nothing is pushed or deployed. The same loop runs from
-# GitHub Actions (ci.yml), Jenkins (Jenkinsfile-ci) and locally.
+# Jenkins (ci.yml), Jenkins (Jenkinsfile-ci) and locally.
 #
 # Usage: bash cicd/scripts/stack-ci.sh [project]
 #   project defaults to stack.json's project (used for the local image tag).

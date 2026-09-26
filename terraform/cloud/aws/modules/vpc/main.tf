@@ -312,7 +312,7 @@ resource "aws_network_acl_association" "app" {
   network_acl_id = aws_network_acl.app.id
 }
 
-# --- DB NACL: 5432 (app -> db) in, ephemeral VPC in, ephemeral out ---
+# --- DB NACL: 3306 (app -> db) in, ephemeral VPC in, ephemeral out ---
 resource "aws_network_acl" "db" {
   vpc_id = aws_vpc.this.id
 
@@ -323,26 +323,26 @@ resource "aws_network_acl" "db" {
   }
 }
 
-resource "aws_network_acl_rule" "db_in_postgres" {
+resource "aws_network_acl_rule" "db_in_mysql" {
   network_acl_id = aws_network_acl.db.id
   rule_number    = 100
   egress         = false
   protocol       = "tcp"
   rule_action    = "allow"
   cidr_block     = join(",", var.app_subnet_cidrs) != "" ? var.app_subnet_cidrs[0] : "0.0.0.0/0"
-  from_port      = 5432
-  to_port        = 5432
+  from_port      = 3306
+  to_port        = 3306
 }
 
-resource "aws_network_acl_rule" "db_in_postgres_b" {
+resource "aws_network_acl_rule" "db_in_mysql_b" {
   network_acl_id = aws_network_acl.db.id
   rule_number    = 101
   egress         = false
   protocol       = "tcp"
   rule_action    = "allow"
   cidr_block     = length(var.app_subnet_cidrs) > 1 ? var.app_subnet_cidrs[1] : var.app_subnet_cidrs[0]
-  from_port      = 5432
-  to_port        = 5432
+  from_port      = 3306
+  to_port        = 3306
 }
 
 resource "aws_network_acl_rule" "db_in_ephemeral_vpc" {
@@ -453,3 +453,4 @@ resource "aws_flow_log" "this" {
     Environment = var.environment
   }
 }
+

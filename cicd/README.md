@@ -5,7 +5,7 @@ same shared shell scripts in `cicd/scripts/`:
 
 | Engine | Entry | Best for |
 | ------ | ----- | -------- |
-| **GitHub Actions** | `.github/workflows/*.yml` | GitHub-hosted, zero infrastructure |
+| **Jenkins** | `.github/workflows/*.yml` | GitHub-hosted, zero infrastructure |
 | **Jenkins** | `cicd/Jenkinsfile` + `cicd/Jenkinsfile-ci` + `cicd/jenkins/README.md` | self-hosted / existing Jenkins |
 
 > Pick one as your source of truth and keep it green — running both on `main`
@@ -96,3 +96,4 @@ the git SHA is traceable end to end.
 ```bash
 bash scripts/deploy.sh <tag> <region> <project> <env>
 ```
+

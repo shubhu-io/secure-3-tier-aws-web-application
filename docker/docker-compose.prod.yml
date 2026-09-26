@@ -25,7 +25,7 @@ services:
       PORT: "3000"
       NODE_ENV: production
       DB_HOST: ${DB_HOST:?DB_HOST is not set - point it at the managed database}
-      DB_PORT: ${DB_PORT:-5432}
+      DB_PORT: ${DB_PORT:-3306}
       DB_NAME: ${DB_NAME:?DB_NAME is not set}
       DB_USER: ${DB_USER:?DB_USER is not set}
       DB_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD is not set}

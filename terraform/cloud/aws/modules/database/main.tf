@@ -4,7 +4,7 @@
 # Creates: RDS instance in private DB subnets, DB subnet group, the secret in
 #          AWS Secrets Manager holding all runtime credentials for the app.
 #
-# The engine (postgres | mysql | mariadb), engine version and port come from
+# The engine (mysql | mysql | mariadb), engine version and port come from
 # stack.json (via the root module) so the whole stack follows the manifest.
 # ============================================================================
 
@@ -145,3 +145,4 @@ resource "aws_db_instance" "this" {
     Environment = var.environment
   }
 }
+

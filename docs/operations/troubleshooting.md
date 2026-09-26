@@ -137,7 +137,7 @@ aws secretsmanager get-secret-value --secret-id <secret> --region <region> --que
 aws rds describe-db-instances --region <region> --query 'DBInstances[0].DBInstanceStatus'
 ```
 
-- **Fix:** confirm the secret host matches `db_host`; confirm `db_sg` allows 5432 from `app_sg`; confirm the DB is in `available` state.
+- **Fix:** confirm the secret host matches `db_host`; confirm `db_sg` allows 3306 from `app_sg`; confirm the DB is in `available` state.
 - **Verification:** `/health` shows `db: "connected"`.
 - **Prevention:** the DB SG references the app SG by ID (not a CIDR), so a mis-IP'd instance can't connect.
 
@@ -145,14 +145,14 @@ aws rds describe-db-instances --region <region> --query 'DBInstances[0].DBInstan
 
 - **Symptoms:** `connect ETIMEDOUT` instead of `ECONNREFUSED`.
 - **Possible cause:** the DB subnet route/NACL or the app cannot reach the DB subnet at all.
-- **Diagnosis:** check VPC Flow Logs for `REJECT` on port 5432:
+- **Diagnosis:** check VPC Flow Logs for `REJECT` on port 3306:
 
 ```sql
 fields @timestamp, srcAddr, dstAddr, dstPort, action
-| filter dstPort = 5432 and action = "REJECT"
+| filter dstPort = 3306 and action = "REJECT"
 ```
 
-- **Fix:** verify NACL `db` allows 5432 from app CIDRs and the app route table routes to the DB subnet via `local`; ensure the app and DB are in the same VPC.
+- **Fix:** verify NACL `db` allows 3306 from app CIDRs and the app route table routes to the DB subnet via `local`; ensure the app and DB are in the same VPC.
 - **Verification:** flow logs stop showing REJECTs; `/health` connected.
 - **Prevention:** NACL + SG are both tested by [`tests/security/security-tests.sh`](../../tests/security/security-tests.sh).
 
@@ -191,9 +191,9 @@ aws ecr get-login-password --region <region> | docker login --username AWS --pas
 
 ## 13. CI/CD pipeline failed
 
-- **Symptoms:** GitHub Actions shows a red X; a stage has an error.
+- **Symptoms:** Jenkins shows a red X; a stage has an error.
 - **Possible cause:** test failure, scan finding, or AWS permission issue.
-- **Diagnosis:** open the failed step's logs in GitHub Actions.
+- **Diagnosis:** open the failed step's logs in Jenkins.
 - **Fix:** address the specific error — common ones: secrets not set, ECR policy missing, ASG name mismatch, smoke test timeout.
 - **Verification:** rerun; green pipeline.
 - **Prevention:** CI gates (tests + scans) catch most issues before deploy; the smoke test catches deploy issues.
@@ -225,7 +225,7 @@ wget -qO- http://backend:3000/health
 ## 16. Port already in use (local dev)
 
 - **Symptoms:** `docker compose up` fails with `port is already allocated`.
-- **Possible cause:** another container/process uses 80/5432/3000.
+- **Possible cause:** another container/process uses 80/3306/3000.
 - **Diagnosis:**
 
 ```bash
@@ -321,3 +321,4 @@ aws autoscaling describe-instance-refreshes --auto-scaling-group-name <asg> --re
 2. **Check alarms & logs** first (data beats guesses).
 3. **Make one change, verify it.** Rerun `terraform plan`/`apply` for infra changes.
 4. **Use the runbooks** in [`docs/runbooks/`](../runbooks/) for repeatable incidents.
+

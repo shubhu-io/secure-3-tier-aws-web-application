@@ -232,8 +232,9 @@ EC2 ASG  ─── App Subnets (10.0.11.0/24, 10.0.12.0/24)
 │ Images pulled from ECR via instance role
 │
 ▼
-RDS PostgreSQL  ─── DB Subnets (10.0.21.0/24, 10.0.22.0/24)
+RDS MySQL  ─── DB Subnets (10.0.21.0/24, 10.0.22.0/24)
 (Encrypted, no public access, credentials in Secrets Manager)
 ```
 
 All infrastructure is defined as code in `terraform/cloud/aws/`. Add resources by editing Terraform — never click in the AWS Console.
+

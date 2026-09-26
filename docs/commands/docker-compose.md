@@ -52,21 +52,21 @@ services:
       - "5000:5000"
     environment:
       - NODE_ENV=development
-      - DATABASE_URL=postgresql://postgres:postgres@db:5432/app_db
+      - DATABASE_URL=MySQL://mysql:mysql@db:3306/app_db
     volumes:
       - ./backend:/app
       - /app/node_modules
 
   db:
-    image: postgres:15
+    image: mysql:15
     environment:
-      - POSTGRES_DB=app_db
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
+      - mysql_DB=app_db
+      - mysql_USER=mysql
+      - mysql_PASSWORD=mysql
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - mysql_data:/var/lib/MySQL/data
     ports:
-      - "5432:5432"
+      - "3306:3306"
 
   # Optional: phpMyAdmin for visual DB management
   # pma:
@@ -78,7 +78,7 @@ services:
   #     - "8080:80"
 
 volumes:
-  postgres_data:
+  mysql_data:
 ```
 
 ## Services

@@ -1,16 +1,16 @@
-# Jenkins CI/CD (alternative to GitHub Actions)
+# Jenkins CI/CD (alternative to Jenkins)
 
 This project ships **two** CI/CD engines that do the same thing:
 
 | Engine | File | Best for |
 | ------ | ---- | -------- |
-| GitHub Actions | `.github/workflows/ci.yml` + `deploy.yml` | GitHub-hosted, zero infra |
+| Jenkins | `.github/workflows/ci.yml` + `deploy.yml` | GitHub-hosted, zero infra |
 | **Jenkins** | `cicd/Jenkinsfile` + `cicd/Jenkinsfile-ci` + this guide | self-hosted, existing Jenkins, on-prem |
 
 Both engines are thin wrappers around the **same** shell scripts in
 `cicd/scripts/`, which read the **`stack.json` manifest** (single source of
 truth for the tech stack). A deploy from Jenkins is byte-identical to one from
-GitHub Actions, and a new service needs **only a `stack.json` entry** — no
+Jenkins, and a new service needs **only a `stack.json` entry** — no
 pipeline edits.
 
 > Pick one and keep it green. Running both on the same branch will fight over
@@ -148,7 +148,7 @@ bash cicd/scripts/deploy-eks.sh 1a2b3c4d ap-south-1 dev secure-ntier
 ## 7. Pipeline-as-code hygiene
 
 - Keep the Jenkinsfiles **thin**: all real logic lives in `cicd/scripts/`
-  so it is shared with the GitHub Actions path and is testable locally.
+  so it is shared with the Jenkins path and is testable locally.
 - The pipeline **must** contain the security gates (npm audit, Trivy
   CRITICAL/HIGH) or it is not this pipeline — never delete them.
 - Version the Jenkinsfiles through Git review like any code.

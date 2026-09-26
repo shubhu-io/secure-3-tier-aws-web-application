@@ -100,19 +100,19 @@ gcloud artifacts repositories create my-repo \
 # This project would use Artifact Registry instead of ECR/ACR for container images
 ```
 
-## Cloud SQL (PostgreSQL)
+## Cloud SQL (MySQL)
 
 ```bash
-# Create Cloud SQL PostgreSQL instance
+# Create Cloud SQL MySQL instance
 gcloud sql instances create my-sql-instance \
-  --database-version=POSTGRES_15 \
+  --database-version=mysql_15 \
   --tier=db-f1-micro \
   --region us-central1
 
 # List instances
 gcloud sql instances list
 
-# This project supports Cloud SQL PostgreSQL on GCP (private IP)
+# This project supports Cloud SQL MySQL on GCP (private IP)
 ```
 
 ## Cloud Storage

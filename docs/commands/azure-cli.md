@@ -100,7 +100,7 @@ az network nsg create \
   --resource-group secure-ntier-rg \
   --name app-nsg
 
-# This project's Azure implementation uses App Gateway + WAF, VMSS, and PostgreSQL Flexible Server
+# This project's Azure implementation uses App Gateway + WAF, VMSS, and MySQL Flexible Server
 ```
 
 ## AKS (Azure Kubernetes Service)
@@ -166,23 +166,23 @@ az keyvault secret show \
 # This project could use Azure Key Vault instead of AWS Secrets Manager
 ```
 
-## PostgreSQL Flexible Server
+## MySQL Flexible Server
 
 ```bash
-# Create PostgreSQL Flexible Server
-az postgres flexible-server create \
+# Create MySQL Flexible Server
+az mysql flexible-server create \
   --resource-group secure-ntier-rg \
   --name securepg \
   --location westeurope \
-  --admin-user postgres \
+  --admin-user mysql \
   --admin-password <password> \
   --sku-name B_Standard_B1ms \
   --zone-redundancy Disabled
 
 # List servers
-az postgres flexible-server list --resource-group secure-ntier-rg
+az mysql flexible-server list --resource-group secure-ntier-rg
 
-# This project supports PostgreSQL Flexible Server on Azure (private access)
+# This project supports MySQL Flexible Server on Azure (private access)
 ```
 
 ## Storage

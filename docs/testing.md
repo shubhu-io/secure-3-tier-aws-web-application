@@ -275,7 +275,7 @@ Assertions (see `tests/security/security-tests.sh` for full list):
 | RDS public | `PubliclyAccessible == false` |
 | `PublicIp` on app instances | none |
 | ALB SG ports | only 80/443 exposed to `0.0.0.0/0` |
-| DB SG | 5432 allowed only from the app SG |
+| DB SG | 3306 allowed only from the app SG |
 | HTTPS | `:443` answers (when a domain is configured) |
 | WAF association | web ACL attached to the ALB |
 | Empty SSH/3389 | no public SSH anywhere |

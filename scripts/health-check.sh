@@ -30,7 +30,7 @@ echo -e "  HTTP Status: ${BOLD}${HTTP_CODE}${RESET} | Response Time: ${BOLD}${TI
 if [ "$HTTP_CODE" = "200" ]; then
   echo -e "  Response:    ${BODY}"
   if echo "$BODY" | grep -q '"db":"connected"'; then
-    echo -e "  ${GREEN}${BOLD}✔ RESULT: PASS${RESET} (Backend reachable, PostgreSQL connected)"
+    echo -e "  ${GREEN}${BOLD}✔ RESULT: PASS${RESET} (Backend reachable, MySQL connected)"
     exit 0
   else
     echo -e "  ${YELLOW}${BOLD}⚠ RESULT: WARN${RESET} (Backend up, but database is not connected)"
@@ -40,4 +40,5 @@ fi
 
 echo -e "  ${RED}${BOLD}✘ RESULT: FAIL${RESET} (Service unavailable or returned HTTP ${HTTP_CODE})"
 exit 1
+
 

@@ -12,7 +12,7 @@ must be bypassed for an attack to succeed.
 | 3 | Network ACLs | Stateless per-subnet rules | Traffic from outside allowed ranges |
 | 4 | ALB SG | Only 80/443 from the internet, to the ALB | Direct access to anything else |
 | 5 | App SG | Only port 80, only from the ALB SG; no SSH | SSH brute force, direct DB access |
-| 6 | DB SG | Only port 5432, only from the App SG | Database exposure |
+| 6 | DB SG | Only port 3306, only from the App SG | Database exposure |
 | 7 | Identity | IAM roles, least privilege, instance roles, no keys on EC2 | Credential theft / privilege escalation |
 
 ## Identity & Access Management (IAM)
@@ -23,7 +23,7 @@ must be bypassed for an attack to succeed.
 - **Least privilege:** the instance role can only `GetParameter` on the two
   image parameters, `GetSecretValue` on the DB secret, pull from ECR, and
   write to its log group. Nothing else.
-- **CI/CD identity:** GitHub Actions uses a dedicated IAM user whose policy
+- **CI/CD identity:** Jenkins uses a dedicated IAM user whose policy
   only allows ECR push, SSM parameter update, and instance refresh
   (`security/iam/cicd-policy.json`).
 - **Humans:** no SSH at all. Administrators connect with **AWS Systems Manager
@@ -36,7 +36,7 @@ must be bypassed for an attack to succeed.
 | ------ | -------------- | ------------------- |
 | DB password | AWS Secrets Manager | User-data reads it with the instance role, injects as env var |
 | JWT signing secret | AWS Secrets Manager (same secret) | Same mechanism |
-| AWS keys | Never on machines; GitHub Actions encrypted secrets | CI only |
+| AWS keys | Never on machines; Jenkins encrypted secrets | CI only |
 
 Nothing secret is committed to the repository. `.tfvars`, `.env`, and
 state files are gitignored; the S3 state backend is encrypted.
@@ -98,3 +98,4 @@ Run [`tests/security/security-tests.sh`](../../tests/security/security-tests.sh)
 ```bash
 bash tests/security/security-tests.sh <region> <project> <env> <url>
 ```
+

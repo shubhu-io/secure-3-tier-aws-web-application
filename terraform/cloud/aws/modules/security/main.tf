@@ -84,11 +84,11 @@ resource "aws_security_group" "app" {
 # --- Database security group: reachable ONLY from the App SG ---
 resource "aws_security_group" "db" {
   name        = "${local.name_prefix}-db-sg"
-  description = "RDS: PostgreSQL from the app security group only"
+  description = "RDS: MySQL from the app security group only"
   vpc_id      = var.vpc_id
 
   ingress {
-    description     = "PostgreSQL from the application security group"
+    description     = "MySQL from the application security group"
     from_port       = var.db_port
     to_port         = var.db_port
     protocol        = "tcp"
@@ -109,3 +109,4 @@ resource "aws_security_group" "db" {
     Environment = var.environment
   }
 }
+

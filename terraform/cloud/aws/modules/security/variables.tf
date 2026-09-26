@@ -24,9 +24,9 @@ variable "app_port" {
 }
 
 variable "db_port" {
-  description = "Database port (PostgreSQL default)"
+  description = "Database port (MySQL default)"
   type        = number
-  default     = 5432
+  default     = 3306
 }
 
 variable "db_ingress_extra_sg_ids" {
@@ -34,3 +34,4 @@ variable "db_ingress_extra_sg_ids" {
   type        = list(string)
   default     = []
 }
+

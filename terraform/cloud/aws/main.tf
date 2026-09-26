@@ -293,11 +293,11 @@ resource "aws_cloudtrail" "this" {
 }
 
 # ---------------------------------------------------------------------------
-# 10. CI/CD IAM policy - attach to the GitHub Actions IAM user
+# 10. CI/CD IAM policy - attach to the Jenkins IAM user
 # ---------------------------------------------------------------------------
 resource "aws_iam_policy" "cicd" {
   name        = "${var.project_name}-${var.environment}-cicd-policy"
-  description = "Least-privilege permissions for GitHub Actions to deploy the app"
+  description = "Least-privilege permissions for Jenkins to deploy the app"
 
   policy = jsonencode({
     Version = "2012-10-17"
@@ -373,6 +373,7 @@ resource "aws_iam_policy" "cicd" {
 }
 
 output "cicd_policy_arn" {
-  description = "ARN of the CI/CD IAM policy to attach to the GitHub Actions user"
+  description = "ARN of the CI/CD IAM policy to attach to the Jenkins user"
   value       = aws_iam_policy.cicd.arn
 }
+

@@ -29,9 +29,9 @@ variable "db_instance_class" {
 }
 
 variable "engine" {
-  description = "RDS engine: postgres | mysql | mariadb (from stack.json)"
+  description = "RDS engine: mysql | mysql | mariadb (from stack.json)"
   type        = string
-  default     = "postgres"
+  default     = "mysql"
 }
 
 variable "engine_version" {
@@ -41,9 +41,9 @@ variable "engine_version" {
 }
 
 variable "port" {
-  description = "Database port (5432 postgres, 3306 mysql/mariadb)"
+  description = "Database port (3306 mysql, 3306 mysql/mariadb)"
   type        = number
-  default     = 5432
+  default     = 3306
 }
 
 variable "db_name" {
@@ -105,3 +105,4 @@ variable "enhanced_monitoring_interval" {
   type        = number
   default     = 0
 }
+

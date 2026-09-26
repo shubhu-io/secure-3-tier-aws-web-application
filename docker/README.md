@@ -18,7 +18,7 @@ docker/
 ├── nginx/
 │   └── nginx.conf            # SPA serving, /api + /health proxy to backend
 ├── database/
-│   ├── Dockerfile            # postgres:16-alpine + init.sql schema
+│   ├── Dockerfile            # mysql:16-alpine + init.sql schema
 │   └── README.md             # how DB initialisation works
 └── scripts/                  # friendly wrappers around the common commands
     ├── common.sh             # shared env loading + helpers
@@ -43,7 +43,7 @@ bash docker/scripts/up.sh             # build + start + wait for health
 | --------- | ---------------------------------- |
 | Frontend  | http://localhost                   |
 | Backend   | http://localhost:3000/health       |
-| Postgres  | localhost:5432 (`app_user`/`appdb`)|
+| mysql  | localhost:3306 (`app_user`/`appdb`)|
 
 Use `--seed` to fill the app with sample data once it is healthy:
 
@@ -55,11 +55,11 @@ bash docker/scripts/up.sh --seed
 
 | Service    | Image                                              | Exposes | Notes                                    |
 | ---------- | -------------------------------------------------- | ------- | ---------------------------------------- |
-| `db`       | `docker/database/Dockerfile` (postgres:16-alpine)  | 5432    | schema auto-applied on first volume init |
+| `db`       | `docker/database/Dockerfile` (mysql:16-alpine)  | 3306    | schema auto-applied on first volume init |
 | `backend`  | `docker/backend/Dockerfile` (node:22-alpine)       | 3000    | runs as non-root, `restart: unless-stopped`, healthcheck |
 | `frontend` | `docker/frontend/Dockerfile` (nginx:1.29-alpine)   | 80      | serves the SPA + proxies `/api` → backend |
 
-Dependencies: `backend` starts only after `db` is healthy (Postgres ready);
+Dependencies: `backend` starts only after `db` is healthy (mysql ready);
 `frontend` starts after `backend`. Compose declares the volume `pgdata` for the
 database, so data survives restarts — `bash docker/scripts/reset.sh` wipes it.
 

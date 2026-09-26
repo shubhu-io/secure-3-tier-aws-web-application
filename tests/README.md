@@ -7,7 +7,7 @@ question and each runs at a different point in the lifecycle.
 
 - **Runner:** Node's built-in test runner (`node --test`).
 - **Approach:** the Express app is a factory (`createApp(deps)`) so tests
-  inject a **fake database** — no PostgreSQL required in CI.
+  inject a **fake database** — no MySQL required in CI.
 - **Coverage:** health endpoint (db up/down/missing), readiness probe, 404
   handling, register (validation, duplicates, normalization), login (success,
   wrong password), items (auth required, tampered tokens, CRUD).
@@ -70,7 +70,7 @@ Verifies the security model is actually enforced on a **deployed** stack:
 - RDS is not publicly accessible and is encrypted
 - WAF web ACL exists
 - No SSH open to the world on the app SG
-- No PostgreSQL open to the world on the DB SG
+- No MySQL open to the world on the DB SG
 - Health endpoint responds
 - HTTP → HTTPS redirect (when a domain is configured)
 - WAF blocks a SQL injection payload (`403`)
@@ -98,3 +98,4 @@ bash tests/integration/e2e.sh
 bash tests/security/security-tests.sh ap-south-1 secure-ntier dev https://app.example.com
 bash tests/application/integration.sh https://app.example.com
 ```
+

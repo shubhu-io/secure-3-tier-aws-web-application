@@ -1,7 +1,7 @@
 # 🚀 How to Deploy SecureNTier to AWS EC2
 ### *The Ultimate Beginner-Friendly, Step-by-Step Guide (Zero Prior Experience Needed!)*
 
-> 📖 **What this guide does:** Takes your code from your computer and deploys it live on the internet using Amazon Web Services (AWS). When you are done, your app will be running on real cloud servers with an **Application Load Balancer (ALB)**, an **Auto Scaling Group of EC2 servers**, and a **PostgreSQL RDS Database**!
+> 📖 **What this guide does:** Takes your code from your computer and deploys it live on the internet using Amazon Web Services (AWS). When you are done, your app will be running on real cloud servers with an **Application Load Balancer (ALB)**, an **Auto Scaling Group of EC2 servers**, and a **MySQL RDS Database**!
 >
 > ⏱️ **Total time needed:** ~20 to 30 minutes (about 5 minutes of typing, and 15–20 minutes of AWS doing all the building in the background).
 >
@@ -218,7 +218,7 @@ notification_email = "your-email@example.com"   # 👈 2. Set to your REAL email
 #### What are the other settings in this file?
 - `aws_instance_type = "t3.micro"`: The virtual server size. `t3.micro` has 2 vCPUs, 1 GB RAM, and is free-tier eligible.
 - `asg_min_size = 2`, `asg_max_size = 4`, `asg_desired_capacity = 2`: Keeps at least 2 servers running across different data centers (Availability Zones) for high availability.
-- `aws_db_instance_class = "db.t3.micro"`: PostgreSQL database size.
+- `aws_db_instance_class = "db.t3.micro"`: MySQL database size.
 - `skip_final_snapshot = true`: When we delete the database later, it won't waste time taking a 15-minute backup.
 
 Save the file (**Ctrl + S** or **Cmd + S**).
@@ -274,7 +274,7 @@ You will see clean, colored log output scrolling in your terminal. Here is exact
    - An **Internet Gateway** and **NAT Gateway** for routing traffic.
    - An **Application Load Balancer (ALB)** with Target Groups and Health Checks.
    - An **Auto Scaling Group (ASG)** with an EC2 Launch Template running Amazon Linux 2023.
-   - A managed **Amazon RDS PostgreSQL database** in the private database subnet.
+   - A managed **Amazon RDS MySQL database** in the private database subnet.
    - An **AWS Secrets Manager** secret for the database credentials.
    - **ECR Repositories** for storing container images.
    - **CloudWatch Alarms** and an **SNS Topic** connected to your email.
@@ -328,7 +328,7 @@ When the script finishes, you will see a banner like this:
    }
    ```
    - `"status": "ok"` means the web server and load balancer are communicating.
-   - `"db": "connected"` means the backend EC2 server successfully connected across private subnets to the PostgreSQL RDS database!
+   - `"db": "connected"` means the backend EC2 server successfully connected across private subnets to the MySQL RDS database!
 
 ---
 
@@ -533,7 +533,7 @@ This is what you built on AWS:
                                           │
                                           ▼
                         ┌───────────────────────────────────┐
-                        │      PostgreSQL RDS Database      │
+                        │      MySQL RDS Database      │
                         │      (Private Database Subnet)    │
                         └───────────────────────────────────┘
 ```
@@ -541,3 +541,4 @@ This is what you built on AWS:
 ---
 
 *Made with ❤️ for DevOps learners. If you ran into any unexpected errors, review the [Troubleshooting](#-part-8--troubleshooting--frequently-asked-questions) section above!*
+

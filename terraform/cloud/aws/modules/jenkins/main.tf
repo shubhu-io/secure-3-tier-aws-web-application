@@ -1,5 +1,5 @@
 # ============================================================================
-# Jenkins module - self-hosted CI/CD controller (alternative to GitHub Actions)
+# Jenkins module - self-hosted CI/CD controller (alternative to Jenkins)
 #
 # Creates: AMI lookup, security group (UI + agent ports), IAM instance role
 #          that reuses the CI/CD policy, EC2 instance running a Jenkins
@@ -150,3 +150,4 @@ resource "aws_instance" "jenkins" {
     Environment = var.environment
   }
 }
+

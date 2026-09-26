@@ -448,7 +448,7 @@ aws_enable_jenkins = false
 | `db_multi_az` | **MAY CHANGE** | Standby database replication | Provides instant failover if an AZ fails | `false` (dev) / `true` (prod) | Leaving `true` during quick testing (doubles database cost) |
 | `domain_name` | **MAY CHANGE** | Custom DNS domain for HTTPS | Connects Route 53 and creates an ACM SSL cert | `""` (leave empty for HTTP ALB) | Entering a domain you do not actually own in AWS Route 53 |
 | `aws_enable_eks` | **DO NOT CHANGE** | Amazon EKS Kubernetes cluster | Provisions managed Kubernetes control plane | `false` | Setting to `true` (EKS cluster control plane costs $0.10/hr) |
-| `aws_enable_jenkins` | **DO NOT CHANGE** | Self-hosted Jenkins EC2 server | Provisions a dedicated EC2 controller | `false` | Setting to `true` when using GitHub Actions |
+| `aws_enable_jenkins` | **DO NOT CHANGE** | Self-hosted Jenkins EC2 server | Provisions a dedicated EC2 controller | `false` | Setting to `true` when using Jenkins |
 
 ---
 
@@ -1270,4 +1270,5 @@ aws elbv2 describe-target-health --target-group-arn "$TG_ARN" --region ap-south-
 
 ### 🎉 Congratulations!
 You have successfully deployed a production-grade, highly available, secure 3-Tier Web Application on Amazon Web Services using modern Infrastructure as Code and automated container deployments!
+
 

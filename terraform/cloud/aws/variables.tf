@@ -201,14 +201,14 @@ variable "eks_node_max_size" {
 }
 
 variable "eks_ci_iam_arn" {
-  description = "IAM principal ARN granted cluster admin for CI/CD (GitHub Actions / Jenkins user or role). Leave empty to skip."
+  description = "IAM principal ARN granted cluster admin for CI/CD (Jenkins / Jenkins user or role). Leave empty to skip."
   type        = string
   default     = ""
 }
 
-# --- Jenkins (optional, alternative to GitHub Actions) ---
+# --- Jenkins (optional, alternative to Jenkins) ---
 variable "enable_jenkins" {
-  description = "Provision a self-hosted Jenkins controller on EC2 (costly; opt-in). Overlaps with GitHub Actions - run one engine per repo."
+  description = "Provision a self-hosted Jenkins controller on EC2 (costly; opt-in). Overlaps with Jenkins - run one engine per repo."
   type        = bool
   default     = false
 }
@@ -236,3 +236,4 @@ variable "jenkins_kubectl_version" {
   type        = string
   default     = "v1.31.0"
 }
+

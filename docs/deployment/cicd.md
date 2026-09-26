@@ -2,7 +2,7 @@
 
 ## Repository secrets
 
-GitHub Actions needs the following **secrets** (Settings → Secrets and
+Jenkins needs the following **secrets** (Settings → Secrets and
 variables → Actions → New repository secret):
 
 | Secret | Value |
@@ -94,3 +94,4 @@ Long-lived keys are fine for learning. In production, use **GitHub OIDC** so
 Actions requests short-lived, scoped credentials automatically. The workflow
 only needs to change the credential step. (Documented as a future
 improvement.)
+

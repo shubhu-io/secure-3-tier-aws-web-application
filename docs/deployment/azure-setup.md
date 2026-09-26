@@ -2,7 +2,7 @@
 
 > ⚠️ **COST WARNING** — Everything on this page is free or near-free, but the
 > **deployment** itself creates billable resources (VMSS, Application Gateway,
-> NAT Gateway, PostgreSQL Flexible Server, ACR, Azure Monitor). Read
+> NAT Gateway, MySQL Flexible Server, ACR, Azure Monitor). Read
 > [`docs/cost-guide.md`](../cost-guide.md) before you `terraform apply`, and
 > run `terraform destroy` when done.
 
@@ -32,7 +32,7 @@ Some providers are not registered by default on new subscriptions:
 ```bash
 az provider register --namespace Microsoft.Compute
 az provider register --namespace Microsoft.Network
-az provider register --namespace Microsoft.DBforPostgreSQL
+az provider register --namespace Microsoft.DBforMySQL
 az provider register --namespace Microsoft.ContainerRegistry
 az provider register --namespace Microsoft.KeyVault
 az provider register --namespace Microsoft.Insights
@@ -61,7 +61,7 @@ in [`terraform.md`](./terraform.md).
 
 ## 4. Create the CI/CD service principal
 
-GitHub Actions (or Jenkins) needs a non-interactive identity:
+Jenkins (or Jenkins) needs a non-interactive identity:
 
 ```bash
 az ad sp create-for-rbac \
@@ -93,3 +93,4 @@ output `lb_dns_name` / `app_url`) once deployed.
 ## Next step
 
 [Deploy infrastructure with Terraform](./terraform.md).
+

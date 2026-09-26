@@ -27,7 +27,7 @@ resource "aws_ecr_repository" "this" {
 }
 
 # Least-privilege repository policy: the app instances' role may pull the
-# image, the CI/CD principal (GitHub Actions / Jenkins role or user) may push.
+# image, the CI/CD principal (Jenkins / Jenkins role or user) may push.
 # Applied only when the caller supplies principals - otherwise access is
 # governed purely by the IAM policies in the root module.
 resource "aws_ecr_repository_policy" "this" {
@@ -117,3 +117,4 @@ output "repository_names" {
     key => aws_ecr_repository.this[key].name
   }
 }
+

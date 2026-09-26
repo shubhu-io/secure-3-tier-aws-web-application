@@ -3,10 +3,10 @@
 This guide provisions a self-hosted **Jenkins controller** on EC2 with
 Terraform and wires it up as the **alternative CI/CD engine** to GitHub
 Actions. Both engines run the exact same `cicd/scripts/` — so a build from
-Jenkins is byte-identical to one from GitHub Actions.
+Jenkins is byte-identical to one from Jenkins.
 
 > ⚠️ **COST WARNING** — a `t3.medium` Jenkins box is ~$15–25/month. It **overlaps**
-> GitHub Actions (both deploy the same branch). Pick **one** engine as your
+> Jenkins (both deploy the same branch). Pick **one** engine as your
 > source of truth. If you only want CI/CD and use GitHub, skip this guide.
 
 ## What you get
@@ -129,7 +129,7 @@ deploy-ec2.sh       for each service: update SSM image pointer → ASG instance 
 deploy-eks.sh       render k8s manifests per service → apply → roll → smoke test
 ```
 
-Adding a service = one `stack.json` entry. No GitHub Actions or Jenkinsfile
+Adding a service = one `stack.json` entry. No Jenkins or Jenkinsfile
 edits.
 
 ## Manual run (no Jenkins needed)

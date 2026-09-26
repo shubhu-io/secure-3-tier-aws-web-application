@@ -98,7 +98,7 @@ aws s3 ls | grep -i <YOUR-UNIQUE-BUCKET>
 3. After the infrastructure is deployed, attach the policy ARN printed by
    Terraform (`secure-ntier-dev-cicd-policy`) — or inline the JSON from
    [`security/iam/cicd-policy.json`](../../security/iam/cicd-policy.json).
-4. Store these keys as GitHub Actions secrets (see [cicd.md](./cicd.md)).
+4. Store these keys as Jenkins secrets (see [cicd.md](./cicd.md)).
 
 ## 5. (Optional) Own a domain for HTTPS + Route 53
 
@@ -118,3 +118,4 @@ dig NS example.com +short
 ## Next step
 
 [Deploy infrastructure with Terraform](./terraform.md).
+

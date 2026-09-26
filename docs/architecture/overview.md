@@ -9,7 +9,7 @@ identical on every cloud — only the managed services differ:
 ```text
 TIER 1 (Presentation)   React single-page app served by Nginx containers
 TIER 2 (Application)    Node.js/Express API in Docker containers
-TIER 3 (Data)           PostgreSQL managed by the cloud's managed database service
+TIER 3 (Data)           MySQL managed by the cloud's managed database service
 ```
 
 > **AWS is the reference implementation.** It is the battle-tested path this
@@ -45,7 +45,7 @@ For a hand-drawn walkthrough of the same design, see the annotated notes:
 | Network | VPC + subnets | Logical isolation of public/app/DB tiers |
 | Network | NAT Gateway | Outbound internet for private instances |
 | Compute | EC2 + ASG | Runs the app; replaces failed instances, scales |
-| Data | RDS PostgreSQL | Managed, encrypted, backed-up database |
+| Data | RDS MySQL | Managed, encrypted, backed-up database |
 | Image | ECR | Private Docker registry |
 | Secrets | Secrets Manager | DB credentials injected at runtime |
 | Observe | CloudWatch + SNS | Metrics, logs, alarms, notifications |
@@ -59,7 +59,7 @@ implementation with `-var="cloud=aws|azure|gcp"`:
 | Concern | AWS | Azure | GCP |
 | ------- | --- | ----- | --- |
 | Compute | EC2 + Auto Scaling Group | Virtual Machine Scale Sets (VMSS) | Managed Instance Group (MIG) |
-| Database | RDS PostgreSQL | Azure PostgreSQL Flexible Server | Cloud SQL for PostgreSQL |
+| Database | RDS MySQL | Azure MySQL Flexible Server | Cloud SQL for MySQL |
 | Registry | ECR | Azure Container Registry (ACR) | Artifact Registry |
 | LB / WAF | ALB + AWS WAF | Application Gateway + WAF policy | Global external HTTPS LB + Cloud Armor |
 | Monitoring | CloudWatch + SNS | Azure Monitor + Action Group | Cloud Monitoring + notification channel |
@@ -91,7 +91,7 @@ CI/CD, EC2 user-data, and Kubernetes manifest rendering all consume that one
 file, so the same image pushed to ECR (tagged with the git SHA) is deployed to
 whichever runtime is enabled. **What you tested is what you deploy.**
 
-Two engines run these pipelines — **GitHub Actions** (`.github/workflows/`) or
+Two engines run these pipelines — **Jenkins** (`.github/workflows/`) or
 **Jenkins** (`cicd/Jenkinsfile` + `cicd/Jenkinsfile-ci`) — sharing the exact
 same `cicd/scripts/`.
 
@@ -108,7 +108,7 @@ hardened production platform; you flip variables, not architecture:
 | Database | `db.t3.micro`, single-AZ | `db.t3.small` | `db.t3.medium`+, `multi_az=true`, deletion protection |
 | NAT | 1 (shared) | 1 | 2 (one per AZ) |
 | HTTPS / WAF | HTTP only (no domain) | ACM + WAF | ACM + WAF + rate limiting + OIDC |
-| CI/CD | GitHub Actions | GitHub Actions | GitHub Actions **OIDC** (or Jenkins) |
+| CI/CD | Jenkins | Jenkins | Jenkins **OIDC** (or Jenkins) |
 | Runtime | EC2 + Compose | EC2 + Compose | + EKS (`enable_eks`), HPA/PDB |
 | Jenkins | — | opt-in `enable_jenkins` | self-hosted (locked-down CIDRs) |
 
@@ -140,7 +140,7 @@ Each decision is recorded as an **Architecture Decision Record** in
 | Application Load Balancer | [ADR-003](../adr/ADR-003-alb.md) |
 | Auto Scaling Group | [ADR-004](../adr/ADR-004-autoscaling.md) |
 | Docker on EC2 | [ADR-005](../adr/ADR-005-docker.md) |
-| Managed RDS (not self-hosted Postgres) | [ADR-006](../adr/ADR-006-rds.md) |
+| Managed RDS (not self-hosted mysql) | [ADR-006](../adr/ADR-006-rds.md) |
 | Multi-AZ deployment | [ADR-007](../adr/ADR-007-multi-az.md) |
 | Managed Kubernetes (Amazon EKS) | [ADR-008](../adr/ADR-008-eks.md) |
 
@@ -162,5 +162,6 @@ environment variable (registry login, image push, and deploy scripts read it).
 
 | Engine | CI | Deploy | Notes |
 | ------ | -- | ------ | ----- |
-| **GitHub Actions** | `.github/workflows/ci.yml` | `.github/workflows/deploy.yml` | zero infrastructure |
+| **Jenkins** | `.github/workflows/ci.yml` | `.github/workflows/deploy.yml` | zero infrastructure |
 | **Jenkins** (opt-in, `enable_jenkins`) | `cicd/Jenkinsfile-ci` | `cicd/Jenkinsfile` | self-hosted module in `terraform/cloud/aws/modules/jenkins/` |
+

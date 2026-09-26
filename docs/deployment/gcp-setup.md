@@ -57,7 +57,7 @@ in [`terraform.md`](./terraform.md).
 
 ## 4. Create the CI/CD service account
 
-GitHub Actions (or Jenkins) needs a non-interactive identity:
+Jenkins (or Jenkins) needs a non-interactive identity:
 
 ```bash
 gcloud iam service-accounts create github-actions-cicd \
@@ -72,7 +72,7 @@ Before the first apply you will need enough to run Terraform itself (e.g.
 `roles/compute.admin`, `roles/cloudsql.admin`, `roles/iam.roleAdmin` on this
 learning project).
 
-For GitHub Actions, prefer **Workload Identity Federation** over downloading a
+For Jenkins, prefer **Workload Identity Federation** over downloading a
 JSON key:
 
 ```bash
@@ -101,3 +101,4 @@ once deployed.
 ## Next step
 
 [Deploy infrastructure with Terraform](./terraform.md).
+

@@ -1,6 +1,6 @@
 # Docker
 
-Reference commands for Docker. This project uses Docker for containerizing the React frontend, Node.js backend, and PostgreSQL database.
+Reference commands for Docker. This project uses Docker for containerizing the React frontend, Node.js backend, and MySQL database.
 
 ## Installation
 
@@ -101,7 +101,7 @@ docker run -d -p 8080:80 nginx:latest
 
 # This project's Docker usage:
 # - Frontend + backend in docker-compose
-# - PostgreSQL database container
+# - MySQL database container
 # - CI/CD uses Docker for builds (Trivy scan, ECR push)
 
 # List running containers
@@ -143,7 +143,7 @@ docker logs -f <container-id>
 # This project's container usage:
 # - Frontend React container (Nginx)
 # - Backend Node.js container
-# - PostgreSQL database container
+# - MySQL database container
 # - CI/CD build containers (Trivy scanner)
 ```
 
@@ -182,7 +182,7 @@ docker volume prune
 docker volume inspect my-volume
 
 # This project uses Docker volumes for:
-# - PostgreSQL data persistence
+# - MySQL data persistence
 # - Node_modules caching
 # - Log storage
 ```

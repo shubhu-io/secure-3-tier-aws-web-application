@@ -11,7 +11,7 @@
 #   stack-info.sh public-service       -> the single public (web) service
 #   stack-info.sh field <svc> <key>    -> any field of a service (raw)
 #   stack-info.sh ci-steps <svc>       -> ci_step commands (one per line)
-#   stack-info.sh db-engine            -> postgres | mysql | mariadb
+#   stack-info.sh db-engine            -> mysql | mysql | mariadb
 #   stack-info.sh db-port              -> database port
 #   stack-info.sh db-version           -> database engine version
 #   stack-info.sh clouds               -> supported clouds (one per line)
@@ -113,3 +113,4 @@ case "$cmd" in
     exit 2
     ;;
 esac
+

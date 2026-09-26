@@ -6,7 +6,7 @@ A small but real three-tier app:
 
 - **Frontend:** React (Vite) — login/register screen + an items CRUD list.
 - **Backend:** Node.js/Express — JWT auth, items API, `/health` endpoint.
-- **Database:** PostgreSQL — `users` and `items` tables.
+- **Database:** MySQL — `users` and `items` tables.
 
 ```
 Frontend (Nginx :80)
@@ -15,7 +15,7 @@ Frontend (Nginx :80)
 Backend (Node :3000)
    │
    ▼
-PostgreSQL (:5432)
+MySQL (:3306)
 ```
 
 ## Run locally (no AWS, free)
@@ -49,13 +49,13 @@ docker compose down
 
 ### Option B: bare Node
 
-1. Start PostgreSQL (Docker):
+1. Start MySQL (Docker):
 
 ```bash
 docker run -d --name pg \
-  -e POSTGRES_DB=appdb -e POSTGRES_USER=app_user \
-  -e POSTGRES_PASSWORD=local-dev-password -p 5432:5432 \
-  postgres:16-alpine
+  -e mysql_DB=appdb -e mysql_USER=app_user \
+  -e mysql_PASSWORD=local-dev-password -p 3306:3306 \
+  mysql:16-alpine
 ```
 
 2. Backend:
@@ -85,7 +85,7 @@ All backend configuration is via environment variables (`.env.example`):
 | -------- | ------- |
 | `PORT` | Backend port (3000) |
 | `NODE_ENV` | `development` / `production` |
-| `DB_HOST/DB_PORT/DB_NAME/DB_USER/DB_PASSWORD` | PostgreSQL connection |
+| `DB_HOST/DB_PORT/DB_NAME/DB_USER/DB_PASSWORD` | MySQL connection |
 | `JWT_SECRET` | Signs JWTs (required in production) |
 | `JWT_EXPIRES_IN` | Token lifetime (8h) |
 
@@ -119,3 +119,4 @@ See [`docs/testing.md`](../testing.md) for the full strategy.
 - **Manually (local deploy):** `bash scripts/deploy.sh <tag> <region> <project> <env>`.
 - **First deploy:** run the pipeline once so images exist in ECR and the SSM
   parameters point at them; then the ASG's instances become healthy.
+

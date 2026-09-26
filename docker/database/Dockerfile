@@ -1,7 +1,7 @@
 # ============================================================================
 # Database image for the LOCAL dev stack (NO AWS required).
 #
-# Official Postgres base plus the application schema (init.sql), which is
+# Official mysql base plus the application schema (init.sql), which is
 # executed automatically the first time a fresh data volume is created.
 # The application also applies the same schema idempotently at startup
 # (application/backend/src/initDb.js), so this copy is a convenience that

@@ -24,5 +24,5 @@ locals {
   stack = jsondecode(local.stack_file)
 
   services = local.stack.services
-  db_port  = local.stack.database.engine == "postgres" ? 5432 : 3306
+  db_port  = local.stack.database.engine == "mysql" ? 3306 : 3306
 }

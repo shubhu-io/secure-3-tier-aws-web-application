@@ -9,7 +9,7 @@
 #     actually exist in the repo
 #   - exactly ONE service is public (the web entry point on port 80)
 #   - each public service listens on a valid container port
-#   - database.engine is supported (postgres | mysql | mariadb)
+#   - database.engine is supported (mysql | mysql | mariadb)
 #
 # Runs in CI and locally. Exit code 0 = manifest is valid.
 # ============================================================================
@@ -73,8 +73,8 @@ jq -e '(.database | type) == "object"' "$STACK_FILE" >/dev/null \
 
 ENGINE=$("$INFO" db-engine)
 case "$ENGINE" in
-  postgres|mysql|mariadb) ;;
-  *) fail "database.engine '$ENGINE' not supported (postgres | mysql | mariadb)" ;;
+  mysql|mysql|mariadb) ;;
+  *) fail "database.engine '$ENGINE' not supported (mysql | mysql | mariadb)" ;;
 esac
 
 jq -e '(.database.port | type) == "number" and .database.port > 0' "$STACK_FILE" >/dev/null \
@@ -84,3 +84,4 @@ jq -e '(.database.engine_version | type) == "string" and .database.engine_versio
 
 echo ""
 echo "===== stack.json is valid ====="
+

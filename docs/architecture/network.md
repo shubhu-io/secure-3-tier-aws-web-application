@@ -92,7 +92,7 @@ firewall layer that keeps working even if a security group is misconfigured.
 | ---- | ----------------- | -------- |
 | Public | 80, 443 from anywhere; ephemeral return traffic | all |
 | App | 80 from public subnets (ALB); ephemeral VPC traffic | all |
-| DB | 5432 from app subnets only; ephemeral VPC | ephemeral |
+| DB | 3306 from app subnets only; ephemeral VPC | ephemeral |
 
 Because NACLs are stateless, each rule must be paired with its return-traffic
 counterpart (ephemeral ports 1024–65535).
@@ -144,3 +144,4 @@ Network isolation comes from **three independent mechanisms**: subnet routing
 (stateful instance firewall). Any one of them alone could be a misconfiguration
 away from an exposure; together they make a public database practically
 impossible.
+

@@ -3,7 +3,7 @@
 # local-up.sh  –  Start the full stack locally with Docker Compose
 #
 # Requires: docker, docker compose plugin
-# No AWS credentials needed — uses a local PostgreSQL container.
+# No AWS credentials needed — uses a local MySQL container.
 #
 # Usage:
 #   bash scripts/local-up.sh          # start in background
@@ -95,7 +95,7 @@ echo -e "${RESET}"
 info "Frontend:   http://localhost"
 info "Backend:    http://localhost:3000"
 info "Health:     http://localhost:3000/health"
-info "DB (local): localhost:5432  (user: app_user, db: appdb)"
+info "DB (local): localhost:3306  (user: app_user, db: appdb)"
 echo ""
 info "View logs:  docker compose -f docker/docker-compose.yml logs -f"
 info "Stop:       bash scripts/local-up.sh --down"
@@ -107,4 +107,5 @@ if [[ "$MODE" == "--seed" ]]; then
   info "Auto-seeding requested via --seed..."
   bash "$REPO_ROOT/scripts/seed-data.sh" "http://localhost"
 fi
+
 

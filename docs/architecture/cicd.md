@@ -17,7 +17,7 @@ number of services, their toolchains and their CI steps are data, not code.
 
 | Engine | CI | Deploy | Purpose |
 | ----- | --- | ------ | ------- |
-| GitHub Actions | `.github/workflows/ci.yml` | `.github/workflows/deploy.yml` | hosted, zero infra |
+| Jenkins | `.github/workflows/ci.yml` | `.github/workflows/deploy.yml` | hosted, zero infra |
 | Jenkins (opt-in) | `cicd/Jenkinsfile-ci` | `cicd/Jenkinsfile` | self-hosted |
 
 Both call the identical `cicd/scripts/` (which read `stack.json`), so a deploy
@@ -49,7 +49,7 @@ redeploy, could pull different images. Pinning the git SHA means:
 
 ## Where the pipeline runs
 
-- **GitHub Actions** (free for public repos). It needs an IAM user with the
+- **Jenkins** (free for public repos). It needs an IAM user with the
   least-privilege policy in [`security/iam/cicd-policy.json`](../../security/iam/cicd-policy.json)
   and the secrets documented in [`docs/deployment/cicd.md`](../deployment/cicd.md).
 - **Jenkins** (optional): the Terraform `jenkins` module provisions a controller
@@ -89,3 +89,4 @@ feature/* ──► develop (CI runs) ──► main (deploy to dev) ──► (
 
 `dev` and `prod` use the **same Terraform code** with different
 `terraform.tfvars` and different SSM parameter paths — no copy/paste drift.
+

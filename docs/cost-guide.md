@@ -33,7 +33,7 @@ This guide has three parts:
 | **Data transfer** | ~$1–3 | reasonable dev use | trivial in dev |
 | **CloudTrail** (to S3) | ~$0–2 | trail itself free; S3 storage tiny | keep |
 | **EKS** *(optional)* | ~$73 control plane + ~$50 node group (2 × t3.medium) | Only when `enable_eks=true`; the most expensive add-on | leave `enable_eks=false` unless actively learning Kubernetes |
-| **Jenkins** *(optional)* | ~$15–25 (1 × t3.medium + EBS) | Only when `enable_jenkins=true`; overlaps GitHub Actions | run one CI/CD engine per repo |
+| **Jenkins** *(optional)* | ~$15–25 (1 × t3.medium + EBS) | Only when `enable_jenkins=true`; overlaps Jenkins | run one CI/CD engine per repo |
 
 > **Rough dev running total: ≈ $95–$140/month** (≈ $220+/month with EKS,
 > ≈ $240+ with EKS **and** Jenkins enabled). "Running" = the resources exist.
