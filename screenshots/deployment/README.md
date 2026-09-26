@@ -15,14 +15,14 @@ This folder contains live operational verification screenshots confirming end-to
 
 ## 📋 Additional Verification Captures
 
-| Filename | Description | Context |
-|---|---|---|
-| `03-alb-targets-healthy.png` | AWS EC2 Target Group dashboard displaying healthy EC2 targets | Ingress Health |
-| `04-app-items-crud.png` | Web application item creation confirming PostgreSQL database writes | Data Persistence |
-| `05-rds-private.png` | AWS RDS console verifying Multi-AZ synchronous replication & private subnet residency | Data Tier Security |
-| `06-secrets-manager.png` | AWS Secrets Manager console showing automated database credential storage | Zero Secret Hardcoding |
-| `07-waf-webacl.png` | AWS WAF v2 console showing attached Web ACL rules on ALB | Edge Threat Mitigation |
-| `08-sg-chain.png` | EC2 Security Group rules showing chained ingress restriction (ALB → EC2 → RDS) | Least-Privilege Network |
+| Filename | Status | Description | Context |
+|---|---|---|---|
+| [`03-alb-targets-healthy.png`](./03-alb-targets-healthy.png) | ✅ Available | AWS EC2 Target Group dashboard displaying healthy EC2 targets | Ingress Health |
+| [`04-app-items-crud.png`](./04-app-items-crud.png) | ✅ Available | Web application item creation confirming MySQL database writes | Data Persistence |
+| [`05-rds-private.png`](./05-rds-private.png) | ✅ Available | AWS RDS console verifying Multi-AZ synchronous replication & private subnet residency | Data Tier Security |
+| [`06-secrets-manager.png`](./06-secrets-manager.png) | ✅ Available | AWS Secrets Manager console showing automated database credential storage | Zero Secret Hardcoding |
+| [`07-waf-webacl.png`](./07-waf-webacl.png) | ✅ Available | AWS WAF v2 console showing attached Web ACL rules on ALB | Edge Threat Mitigation |
+| [`08-sg-chain.png`](./08-sg-chain.png) | ✅ Available | EC2 Security Group rules showing chained ingress restriction (ALB → EC2 → RDS) | Least-Privilege Network |
 
 Refer to [`docs/deployment/application.md`](../../docs/deployment/application.md) for application runtime and endpoint specifications.
 
