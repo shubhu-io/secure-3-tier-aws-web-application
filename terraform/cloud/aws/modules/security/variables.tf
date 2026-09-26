@@ -30,7 +30,7 @@ variable "db_port" {
 }
 
 variable "db_ingress_extra_sg_ids" {
-  description = "Extra security groups allowed to reach the database (e.g. the EKS cluster security group)"
+  description = "Extra security groups allowed to reach the database (e.g. bastion or management security group)"
   type        = list(string)
   default     = []
 }

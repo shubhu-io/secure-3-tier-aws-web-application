@@ -41,17 +41,8 @@ notification_email = "you@example.com"   # <YOUR_EMAIL> for alarms
 
 repositories = ["backend", "frontend"]
 
-# --- Kubernetes (optional, costly) ---
-# Set to true to also provision an EKS cluster + managed node group.
-aws_enable_eks = false
-
-# IAM principal (user/role ARN) granted cluster admin for CI/CD kubectl.
-# Leave empty to skip; you can add the access entry manually later.
-# aws_eks_ci_iam_arn = "arn:aws:iam::123456789012:user/github-actions-cicd"
-
-# --- Jenkins (optional, alternative to Jenkins) ---
+# --- Jenkins (optional) ---
 # Set to true to provision a self-hosted Jenkins controller on EC2.
-# WARNING: costs ~$15-25/month and overlaps Jenkins - run ONE engine.
 aws_enable_jenkins = false
 
 # LOCK THIS DOWN in real use - only your IP(s):
@@ -59,7 +50,4 @@ aws_enable_jenkins = false
 
 # Optional SSH key pair for the box; empty = use SSM Session Manager.
 # aws_jenkins_key_name = "my-key"
-
-# kubectl version pinned in the controller image (match your EKS cluster):
-# aws_jenkins_kubectl_version = "v1.31.0"
 

@@ -58,22 +58,6 @@ output "web_acl_arn" {
   value       = module.alb.web_acl_arn
 }
 
-# --- Kubernetes (only populated when enable_eks = true) ---
-output "eks_cluster_name" {
-  description = "EKS cluster name (used by `aws eks update-kubeconfig`)"
-  value       = var.enable_eks ? module.eks[0].cluster_name : ""
-}
-
-output "eks_cluster_endpoint" {
-  description = "EKS control plane endpoint"
-  value       = var.enable_eks ? module.eks[0].cluster_endpoint : ""
-  sensitive   = true
-}
-
-output "eks_connect_command" {
-  description = "Command to connect kubectl to the EKS cluster"
-  value       = var.enable_eks ? "aws eks update-kubeconfig --name ${module.eks[0].cluster_name} --region ${var.aws_region}" : ""
-}
 
 # --- Jenkins (only populated when enable_jenkins = true) ---
 output "jenkins_url" {
@@ -114,16 +98,6 @@ output "topic_arn" {
   value       = module.monitoring.sns_topic_arn
 }
 
-output "kubeconfig_command" {
-  description = "Command to fetch the EKS kubeconfig (empty when EKS disabled)"
-  value       = var.enable_eks ? "aws eks update-kubeconfig --name ${module.eks[0].cluster_name} --region ${var.aws_region}" : ""
-}
-
-output "cluster_endpoint" {
-  description = "EKS cluster endpoint (empty when EKS disabled)"
-  value       = var.enable_eks ? module.eks[0].cluster_endpoint : ""
-  sensitive   = true
-}
 
 output "cicd_policy_json" {
   description = "JSON document of the least-privilege CI/CD IAM policy"

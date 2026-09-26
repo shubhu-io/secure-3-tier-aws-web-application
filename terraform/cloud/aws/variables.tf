@@ -166,49 +166,9 @@ variable "ecr_push_principal_arns" {
   default     = []
 }
 
-# --- Kubernetes (EKS) ---
-variable "enable_eks" {
-  description = "Provision an EKS cluster + managed node group (costly; opt-in)"
-  type        = bool
-  default     = false
-}
-
-variable "eks_cluster_version" {
-  description = "Kubernetes version for the EKS control plane"
-  type        = string
-  default     = "1.31"
-}
-
-variable "eks_node_instance_types" {
-  description = "EC2 instance types for the EKS managed node group"
-  type        = list(string)
-  default     = ["t3.medium"]
-}
-
-variable "eks_node_min_size" {
-  type    = number
-  default = 2
-}
-
-variable "eks_node_desired_size" {
-  type    = number
-  default = 2
-}
-
-variable "eks_node_max_size" {
-  type    = number
-  default = 4
-}
-
-variable "eks_ci_iam_arn" {
-  description = "IAM principal ARN granted cluster admin for CI/CD (Jenkins / Jenkins user or role). Leave empty to skip."
-  type        = string
-  default     = ""
-}
-
-# --- Jenkins (optional, alternative to Jenkins) ---
+# --- Jenkins (optional) ---
 variable "enable_jenkins" {
-  description = "Provision a self-hosted Jenkins controller on EC2 (costly; opt-in). Overlaps with Jenkins - run one engine per repo."
+  description = "Provision a self-hosted Jenkins controller on EC2 (opt-in)."
   type        = bool
   default     = false
 }
@@ -229,12 +189,6 @@ variable "jenkins_key_name" {
   description = "Optional EC2 key pair for SSH to the Jenkins box. Empty = SSM Session Manager instead."
   type        = string
   default     = ""
-}
-
-variable "jenkins_kubectl_version" {
-  description = "kubectl version pinned inside the Jenkins controller image (match the EKS cluster version)"
-  type        = string
-  default     = "v1.31.0"
 }
 
 

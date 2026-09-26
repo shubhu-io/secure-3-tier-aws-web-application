@@ -13,10 +13,8 @@ screenshots/
 ├── IMAGE_IDEAS.md    # Master catalog of recommended deployment captures
 ├── terraform/        # Terraform lifecycle: init, plan, apply, outputs, and validation
 ├── jenkins/          # Jenkins CI/CD controller: unlock, plugins, multi-stage pipeline runs
-├── cicd/             # GitHub Actions workflows: PR automated checks, security scans, ECR push
 ├── deployment/       # Live application verification: ALB endpoints, health probes, login UI
-├── monitoring/       # AWS CloudWatch dashboards, metric alarms, and SNS notifications
-└── kubernetes/       # Optional EKS verification: worker nodes, pods, and ingress services
+└── monitoring/       # AWS CloudWatch dashboards, metric alarms, and SNS notifications
 ```
 
 ---
@@ -30,10 +28,10 @@ screenshots/
 | **Security** | Security Group Chaining | AWS Console → EC2 → Security Groups | Confirms least-privilege ingress (ALB → EC2 → RDS) |
 | **Compute & Ingress** | ALB Target Group Health | AWS Console → EC2 → Target Groups | Confirms 2× healthy EC2 instances passing `/health` checks |
 | **Auto Scaling** | ASG Capacity & Activity | AWS Console → EC2 → Auto Scaling Groups | Verifies desired capacity (2–6 instances) and auto-replacement |
-| **Database** | RDS Multi-AZ PostgreSQL | AWS Console → RDS → Databases | Confirms private subnet residency and synchronous replication |
+| **Database** | RDS Multi-AZ MySQL | AWS Console → RDS → Databases | Confirms private subnet residency and synchronous replication |
 | **Secrets Management** | AWS Secrets Manager | AWS Console → Secrets Manager | Proves credentials are dynamically injected (zero git secrets) |
 | **Observability** | CloudWatch Metrics & Alarms | AWS Console → CloudWatch → Alarms | Confirms proactive threshold alerts (CPU > 70%, 5xx errors) |
-| **CI/CD Automation** | Pipeline Execution | GitHub Actions / Jenkins Dashboard | Demonstrates automated linting, testing, Trivy scans, and release |
+| **CI/CD Automation** | Pipeline Execution | Jenkins Dashboard | Demonstrates automated linting, testing, Trivy scans, and release |
 | **Application Layer** | Public Web Application | Browser → `http://<ALB-DNS-NAME>` | Verifies end-to-end user request and response flow |
 
 ---
@@ -83,10 +81,5 @@ screenshots/
 
 ---
 
-### 5. GitHub Actions Automated CI/CD Pipeline
-![GitHub Actions Pipeline](./cicd/01-actions-pipeline.png)
-
----
-
-### 6. Jenkins Pipeline Controller Execution
+### 5. Jenkins Pipeline Controller Execution
 ![Jenkins Pipeline](./jenkins/07-jenkins-deploy-pipeline.png)

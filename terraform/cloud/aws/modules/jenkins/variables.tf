@@ -56,9 +56,5 @@ variable "key_name" {
   default     = ""
 }
 
-variable "kubectl_version" {
-  description = "kubectl version pinned inside the controller image (should match the EKS cluster version)"
-  type        = string
-  default     = "v1.31.0"
-}
+
 

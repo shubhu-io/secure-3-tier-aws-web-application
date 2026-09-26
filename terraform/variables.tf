@@ -166,43 +166,6 @@ variable "aws_ecr_push_principal_arns" {
   default     = []
 }
 
-variable "aws_enable_eks" {
-  description = "Provision an EKS cluster + managed node group (OPTIONAL — everything runs on EC2 by default; set true only if you want K8s alongside EC2)"
-  type        = bool
-  default     = false
-}
-
-variable "aws_eks_cluster_version" {
-  type    = string
-  default = "1.31"
-}
-
-variable "aws_eks_node_instance_types" {
-  type    = list(string)
-  default = ["t3.medium"]
-}
-
-variable "aws_eks_node_min_size" {
-  type    = number
-  default = 2
-}
-
-variable "aws_eks_node_desired_size" {
-  type    = number
-  default = 2
-}
-
-variable "aws_eks_node_max_size" {
-  type    = number
-  default = 4
-}
-
-variable "aws_eks_ci_iam_arn" {
-  description = "IAM principal ARN granted cluster access for CI/CD"
-  type        = string
-  default     = ""
-}
-
 variable "aws_enable_jenkins" {
   description = "Provision a self-hosted Jenkins controller on EC2"
   type        = bool
@@ -222,9 +185,4 @@ variable "aws_jenkins_ingress_cidrs" {
 variable "aws_jenkins_key_name" {
   type    = string
   default = ""
-}
-
-variable "aws_jenkins_kubectl_version" {
-  type    = string
-  default = "v1.31.0"
 }

@@ -1,7 +1,7 @@
 # Terraform — Secure n-tier AWS Infrastructure
 
 Infrastructure-as-Code for the whole platform: VPC, security groups, ALB + WAF,
-EC2 ASG, ECR, RDS + Secrets Manager, CloudWatch monitoring, optional EKS and
+EC2 ASG, ECR, RDS + Secrets Manager, CloudWatch monitoring, and
 Jenkins. Everything is driven by the repo's `stack.json` manifest (services,
 database engine/version/port) and the environment tfvars.
 
@@ -15,7 +15,7 @@ terraform/
 ├── main.tf         wires every module together + CloudTrail + CI/CD IAM policy
 ├── variables.tf    root variables (all configurable)
 ├── locals.tf       derived values (AZs, stack.json decode)
-├── outputs.tf      useful outputs (URL, db host, secret ARN, EKS/Jenkins)
+├── outputs.tf      useful outputs (URL, db host, secret ARN, Jenkins)
 ├── modules/
 │   ├── vpc/        VPC, subnets, IGW, NAT, route tables, NACLs, flow logs
 │   ├── security/   ALB / app / DB security groups (least privilege)
@@ -24,7 +24,6 @@ terraform/
 │   ├── ecr/        ECR repos (scan, encryption, lifecycle, repo policy)
 │   ├── database/   RDS (private, encrypted, backups) + Secrets Manager
 │   ├── monitoring/ SNS + CloudWatch alarms + dashboard
-│   ├── eks/        optional EKS cluster + managed node group
 │   └── jenkins/    optional self-hosted Jenkins controller on EC2
 ├── environments/
 │   ├── dev/        dev tfvars + backend.hcl

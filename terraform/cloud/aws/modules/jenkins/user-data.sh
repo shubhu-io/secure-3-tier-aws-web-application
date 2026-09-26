@@ -28,7 +28,6 @@ set -euo pipefail
 REGION="{{ region }}"
 ENVIRONMENT="{{ environment }}"
 PROJECT_NAME="{{ project_name }}"
-KUBECTL_VERSION="{{ kubectl_version }}"
 
 exec > >(tee -a /var/log/user-data.log) 2>&1
 echo "[$$(date -Is)] Starting Jenkins user-data ($PROJECT_NAME-$ENVIRONMENT)"
@@ -51,26 +50,19 @@ FROM jenkins/jenkins:lts-jdk17
 USER root
 RUN apt-get update && apt-get install -y curl jq unzip \
     && rm -rf /var/lib/apt/lists/*
-# AWS CLI v2 - the pipeline talks to AWS (ECR, SSM, ASG, EKS). Credentials
+# AWS CLI v2 - the pipeline talks to AWS (ECR, SSM, ASG). Credentials
 # come from the EC2 instance role via IMDSv2, so no keys are baked in.
 RUN curl -fsSL "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o /tmp/awscliv2.zip \
     && unzip -q /tmp/awscliv2.zip -d /tmp/aws \
     && /tmp/aws/aws/install \
     && rm -rf /tmp/awscliv2.zip /tmp/aws
-# kubectl - only exercised when DEPLOY_EKS=true. Pinned to the EKS cluster.
-ARG KUBECTL_VERSION
-RUN curl -fsSL -o /usr/local/bin/kubectl \
-    "https://dl.k8s.io/release/$${KUBECTL_VERSION}/bin/linux/amd64/kubectl" \
-    && chmod +x /usr/local/bin/kubectl
 # Docker CLI - builds images through the host socket mounted at run time.
 RUN curl -fsSL https://get.docker.com/builds/Linux/x86_64/docker-latest.tgz | tar -xz -C /tmp \
     && mv /tmp/docker/docker /usr/local/bin/docker
 USER jenkins
 DOCKER_EOF
 
-docker build \
-  --build-arg KUBECTL_VERSION="$${KUBECTL_VERSION}" \
-  -t jenkins-controller:latest /opt/jenkins
+docker build -t jenkins-controller:latest /opt/jenkins
 
 # ---------------------------------------------------------------------------
 # 3. Run the controller. The container reaches IMDSv2 (instance role) because

@@ -33,16 +33,8 @@ module "aws" {
   notification_email           = var.notification_email
   repositories                 = var.repositories
   ecr_push_principal_arns      = var.aws_ecr_push_principal_arns
-  enable_eks                   = var.aws_enable_eks
-  eks_cluster_version          = var.aws_eks_cluster_version
-  eks_node_instance_types      = var.aws_eks_node_instance_types
-  eks_node_min_size            = var.aws_eks_node_min_size
-  eks_node_desired_size        = var.aws_eks_node_desired_size
-  eks_node_max_size            = var.aws_eks_node_max_size
-  eks_ci_iam_arn               = var.aws_eks_ci_iam_arn
   enable_jenkins               = var.aws_enable_jenkins
   jenkins_instance_type        = var.aws_jenkins_instance_type
   jenkins_ingress_cidrs        = var.aws_jenkins_ingress_cidrs
   jenkins_key_name             = var.aws_jenkins_key_name
-  jenkins_kubectl_version      = var.aws_jenkins_kubectl_version
 }

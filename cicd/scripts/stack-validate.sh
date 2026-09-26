@@ -73,8 +73,8 @@ jq -e '(.database | type) == "object"' "$STACK_FILE" >/dev/null \
 
 ENGINE=$("$INFO" db-engine)
 case "$ENGINE" in
-  mysql|mysql|mariadb) ;;
-  *) fail "database.engine '$ENGINE' not supported (mysql | mysql | mariadb)" ;;
+  mysql|mariadb) ;;
+  *) fail "database.engine '$ENGINE' not supported (mysql | mariadb)" ;;
 esac
 
 jq -e '(.database.port | type) == "number" and .database.port > 0' "$STACK_FILE" >/dev/null \

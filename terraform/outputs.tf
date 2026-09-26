@@ -53,16 +53,7 @@ output "web_acl_arn" {
   value       = module.aws.web_acl_arn
 }
 
-output "kubeconfig_command" {
-  description = "Command to update kubeconfig for EKS (empty if EKS disabled)"
-  value       = module.aws.kubeconfig_command
-}
 
-output "cluster_endpoint" {
-  description = "EKS cluster endpoint (empty if EKS disabled)"
-  value       = module.aws.cluster_endpoint
-  sensitive   = true
-}
 
 output "cicd_policy_json" {
   description = "CI/CD IAM policy document that the pipeline principal should be granted"

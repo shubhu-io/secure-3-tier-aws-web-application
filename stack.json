@@ -35,9 +35,9 @@
     "engine_version": "8.0",
     "port": 3306
   },
-  "runtime": ["ec2-compose", "k8s"],
+  "runtime": ["ec2-compose"],
   "clouds": ["aws"],
   "cloud_config": {
-    "aws": { "region": "ap-south-1", "registry": "ecr", "kubernetes": "eks" }
+    "aws": { "region": "ap-south-1", "registry": "ecr" }
   }
 }

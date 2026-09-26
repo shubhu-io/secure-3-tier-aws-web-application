@@ -121,19 +121,15 @@ Detailed operational runbooks, architectural deep dives, and disaster recovery s
 | Technical Area | Guide Link | Focus |
 |---|---|---|
 | **Step-by-Step Deployment** | [`DEPLOY_STEPS.md`](./DEPLOY_STEPS.md) | Complete zero-to-live AWS walkthrough with screenshots |
-| **Architecture Blueprints** | [`diagrams/README.md`](./diagrams/README.md) | 10 high-resolution Full HD architecture diagrams & Mermaid sources |
+| **Architecture Blueprints** | [`diagrams/README.md`](./diagrams/README.md) | 9 high-resolution Full HD architecture diagrams & explanations |
 | **VPC & Networking** | [`docs/architecture/network.md`](./docs/architecture/network.md) | Subnet CIDRs, NAT gateways, route tables & security groups |
 | **Security Architecture** | [`docs/architecture/security.md`](./docs/architecture/security.md) | 5-layer Defence-in-Depth model & CIS AWS Benchmark alignment |
-| **CI/CD Pipelines** | [`docs/architecture/cicd.md`](./docs/architecture/cicd.md) | Jenkins & Jenkins automation with Trivy security gates |
+| **CI/CD Pipelines** | [`docs/architecture/cicd.md`](./docs/architecture/cicd.md) | Jenkins automation pipeline with Trivy security gates |
 | **Disaster Recovery** | [`docs/architecture/disaster-recovery.md`](./docs/architecture/disaster-recovery.md) | Multi-AZ failover, PITR backups, RTO < 60s & RPO = 0s |
 | **Auto-Recovery Lifecycle** | [`docs/architecture/overview.md`](./docs/architecture/overview.md) | Self-healing timeline for EC2 instance termination |
-| **Kubernetes (EKS)** | [`docs/deployment/eks.md`](./docs/deployment/eks.md) | Optional EKS cluster configuration and Helm charts |
 | **Monitoring & Alarms** | [`docs/operations/monitoring.md`](./docs/operations/monitoring.md) | CloudWatch metrics, alarms inventory & SNS alert routing |
-| **Troubleshooting Runbooks**| [`docs/runbooks/`](./docs/runbooks/) | Step-by-step resolution for deployment, host, or database faults |
+| **Troubleshooting Guide** | [`docs/operations/troubleshooting.md`](./docs/operations/troubleshooting.md) | Step-by-step resolution for deployment, host, or database faults |
 | **Cost & Budget Guide** | [`docs/cost-guide.md`](./docs/cost-guide.md) | AWS pricing calculator, free tier maximization & cleanup steps |
-| **Interview Preparation** | [`docs/interview-questions.md`](./docs/interview-questions.md) | 25+ real-world DevOps & Cloud architecture interview Q&A |
-| **Simple Explanation** | [`docs/explain-like-im-five.md`](./docs/explain-like-im-five.md) | Non-technical, analogy-driven walkthrough for beginners |
-| **Architecture Decisions** | [`docs/adr/`](./docs/adr/) | ADR-001 through ADR-008 architectural decision records |
 
 ---
 

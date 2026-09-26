@@ -75,18 +75,5 @@ MULTI-CLOUD-DEPLOYMENT.md
 SETUP-GUIDE.md
 __pycache__/
 *.pyc
+.pytest_cache/
 dist-test/
-examples/programming/typescript/dist/
-examples/programming/typescript/dist-test/
-
-# --- Programming examples build artifacts -----------------------------------
-examples/programming/csharp/bin/
-examples/programming/csharp/obj/
-examples/programming/kotlin/.gradle/
-examples/programming/kotlin/build/
-examples/programming/java-gradle/.gradle/
-examples/programming/java-gradle/build/
-examples/programming/rust/target/
-examples/programming/rust/Cargo.lock
-examples/programming/scala/target/
-examples/programming/swift/.build/

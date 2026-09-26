@@ -179,24 +179,6 @@ module "monitoring" {
   db_allocated_storage_gb = var.db_allocated_storage
 }
 
-# ---------------------------------------------------------------------------
-# 8b. Kubernetes (optional) - EKS cluster + managed node group
-# ---------------------------------------------------------------------------
-module "eks" {
-  count = var.enable_eks ? 1 : 0
-
-  source = "./modules/eks"
-
-  project_name        = var.project_name
-  environment         = var.environment
-  app_subnet_ids      = module.vpc.app_subnet_ids
-  cluster_version     = var.eks_cluster_version
-  node_instance_types = var.eks_node_instance_types
-  node_min_size       = var.eks_node_min_size
-  node_desired_size   = var.eks_node_desired_size
-  node_max_size       = var.eks_node_max_size
-  ci_iam_arn          = var.eks_ci_iam_arn
-}
 
 # ---------------------------------------------------------------------------
 # 8c. Jenkins (optional) - self-hosted CI/CD controller (alternative engine)
@@ -215,7 +197,6 @@ module "jenkins" {
   ingress_cidrs     = var.jenkins_ingress_cidrs
   instance_type     = var.jenkins_instance_type
   key_name          = var.jenkins_key_name
-  kubectl_version   = var.jenkins_kubectl_version
 }
 
 # ---------------------------------------------------------------------------
@@ -345,13 +326,6 @@ resource "aws_iam_policy" "cicd" {
           "autoscaling:DescribeAutoScalingGroups",
           "autoscaling:DescribeInstanceRefreshes"
         ]
-        Resource = ["*"]
-      },
-      {
-        Sid    = "KubernetesAccess"
-        Effect = "Allow"
-        Action = [
-          ]
         Resource = ["*"]
       },
       {

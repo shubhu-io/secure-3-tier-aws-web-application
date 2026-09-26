@@ -29,7 +29,7 @@ export default function AuthView({ onAuthed }) {
     <div className="card auth-card">
       <h1>Secure n-Tier App</h1>
       <p className="muted">
-        React + Express + PostgreSQL running on an automated AWS platform.
+        React + Express + MySQL running on an automated AWS platform.
       </p>
 
       <form onSubmit={handleSubmit}>

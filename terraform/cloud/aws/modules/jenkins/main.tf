@@ -126,10 +126,9 @@ resource "aws_instance" "jenkins" {
   iam_instance_profile        = aws_iam_instance_profile.jenkins.name
 
   user_data = base64encode(templatefile("${path.module}/user-data.sh", {
-    region          = var.region
-    environment     = var.environment
-    project_name    = var.project_name
-    kubectl_version = var.kubectl_version
+    region       = var.region
+    environment  = var.environment
+    project_name = var.project_name
   }))
 
   root_block_device {
