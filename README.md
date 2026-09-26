@@ -1,15 +1,15 @@
 # Secure 3-Tier AWS Web Application
 
-> Production-ready, automated **AWS 3-Tier Cloud Platform** deployed in **AWS Region `ap-south-1` (Mumbai)** using **Terraform (IaC)**, containerized with **Docker**, automated with **GitHub Actions & Jenkins CI/CD**, and secured with **AWS WAF v2, Multi-AZ RDS PostgreSQL, and least-privilege IAM**.
+> Production-ready, automated **AWS 3-Tier Cloud Platform** deployed in **AWS Region `ap-south-1` (Mumbai)** using **Terraform (IaC)**, containerized with **Docker**, automated with **Jenkins & Jenkins CI/CD**, and secured with **AWS WAF v2, Multi-AZ RDS MySQL, and least-privilege IAM**.
 
 [![AWS](https://img.shields.io/badge/AWS-ap--south--1-orange.svg?logo=amazonwebservices&logoColor=white)](https://aws.amazon.com)
 [![Terraform](https://img.shields.io/badge/Terraform-%235835CC.svg?logo=terraform&logoColor=white)](https://www.terraform.io)
 [![Docker](https://img.shields.io/badge/Docker-%232496ED.svg?logo=docker&logoColor=white)](https://www.docker.com)
-[![GitHub Actions](https://img.shields.io/badge/GitHub%20Actions-%232088FF.svg?logo=githubactions&logoColor=white)](https://github.com/features/actions)
+[![Jenkins](https://img.shields.io/badge/GitHub%20Actions-%232088FF.svg?logo=githubactions&logoColor=white)](https://github.com/features/actions)
 [![Jenkins](https://img.shields.io/badge/Jenkins-%23D24939.svg?logo=jenkins&logoColor=white)](https://www.jenkins.io)
 [![Node.js](https://img.shields.io/badge/Node.js-v22-green.svg?logo=nodedotjs&logoColor=white)](https://nodejs.org)
 [![React](https://img.shields.io/badge/React-18-blue.svg?logo=react&logoColor=white)](https://react.dev)
-[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-blue.svg?logo=postgresql&logoColor=white)](https://www.postgresql.org)
+[![MySQL](https://img.shields.io/badge/MySQL-16-blue.svg?logo=MySQL&logoColor=white)](https://www.MySQL.org)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
 
 ---
@@ -38,8 +38,8 @@ The platform implements a strict **Multi-AZ 3-Tier Defence-in-Depth Architecture
    - **Containerized Stack:** Docker containers running React Frontend (Nginx reverse proxy on port 80) and Node.js Express REST API (port 3000).
    - **Outbound Connectivity:** NAT Gateway provides secure outbound internet access for package updates and container pulls.
 3. **Database Tier (Private Isolated DB Subnets):**
-   - **Amazon RDS PostgreSQL 16:** Synchronous Multi-AZ standby replica with automated sub-60-second DNS failover.
-   - **Security:** Accessible exclusively from Application EC2 security groups on port 5432; strictly isolated from internet routes.
+   - **Amazon RDS MySQL 16:** Synchronous Multi-AZ standby replica with automated sub-60-second DNS failover.
+   - **Security:** Accessible exclusively from Application EC2 security groups on port 3306; strictly isolated from internet routes.
 
 ---
 
@@ -49,9 +49,9 @@ The platform implements a strict **Multi-AZ 3-Tier Defence-in-Depth Architecture
 |---|---|---|
 | **Presentation** | React 18, Vite, Nginx | Responsive SPA, static asset caching, API proxying |
 | **Application** | Node.js 22 LTS, Express.js | REST APIs, JWT authentication, bcrypt hashing, rate limiting |
-| **Database** | PostgreSQL 16, AWS RDS Multi-AZ | ACID relational store, automated daily snapshots, KMS encryption |
+| **Database** | MySQL 16, AWS RDS Multi-AZ | ACID relational store, automated daily snapshots, KMS encryption |
 | **Infrastructure** | Terraform v1.9+, AWS Cloud (`ap-south-1`) | Declarative IaC, S3 remote state, DynamoDB state locking |
-| **CI/CD Automation** | GitHub Actions, Jenkins | Automated linting, unit testing, Trivy CVE scanning, rolling deployments |
+| **CI/CD Automation** | Jenkins, Jenkins | Automated linting, unit testing, Trivy CVE scanning, rolling deployments |
 | **Containerization** | Docker, Amazon ECR | Multi-stage slim container builds, immutable SHA image tagging |
 | **Security & IAM** | AWS WAF, KMS, Secrets Manager, SSM | Dynamic secret injection, IMDSv2 enforcement, zero open SSH (Port 22) |
 | **Observability** | CloudWatch Metrics, Alarms, SNS | Automated health checking, CPU tracking, email incident notifications |
@@ -69,7 +69,7 @@ Test the complete 3-tier microservice stack locally with Docker Compose:
 git clone https://github.com/shubhu-io/secure-3-tier-aws-web-application.git
 cd secure-3-tier-aws-web-application
 
-# Launch frontend, backend API, and PostgreSQL
+# Launch frontend, backend API, and MySQL
 make local-up
 ```
 
@@ -124,7 +124,7 @@ Detailed operational runbooks, architectural deep dives, and disaster recovery s
 | **Architecture Blueprints** | [`diagrams/README.md`](./diagrams/README.md) | 10 high-resolution Full HD architecture diagrams & Mermaid sources |
 | **VPC & Networking** | [`docs/architecture/network.md`](./docs/architecture/network.md) | Subnet CIDRs, NAT gateways, route tables & security groups |
 | **Security Architecture** | [`docs/architecture/security.md`](./docs/architecture/security.md) | 5-layer Defence-in-Depth model & CIS AWS Benchmark alignment |
-| **CI/CD Pipelines** | [`docs/architecture/cicd.md`](./docs/architecture/cicd.md) | GitHub Actions & Jenkins automation with Trivy security gates |
+| **CI/CD Pipelines** | [`docs/architecture/cicd.md`](./docs/architecture/cicd.md) | Jenkins & Jenkins automation with Trivy security gates |
 | **Disaster Recovery** | [`docs/architecture/disaster-recovery.md`](./docs/architecture/disaster-recovery.md) | Multi-AZ failover, PITR backups, RTO < 60s & RPO = 0s |
 | **Auto-Recovery Lifecycle** | [`docs/architecture/overview.md`](./docs/architecture/overview.md) | Self-healing timeline for EC2 instance termination |
 | **Kubernetes (EKS)** | [`docs/deployment/eks.md`](./docs/deployment/eks.md) | Optional EKS cluster configuration and Helm charts |
@@ -152,3 +152,4 @@ terraform destroy -var="cloud=aws" -var-file="environments/dev/terraform.tfvars"
 
 * **License:** Distributed under the [MIT License](./LICENSE).
 * **Contributing:** Pull requests and improvements are welcome! Please read [CONTRIBUTING.md](./CONTRIBUTING.md).
+
