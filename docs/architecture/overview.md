@@ -146,9 +146,11 @@ Each decision is recorded as an **Architecture Decision Record** in
 
 ## Deployment runtimes
 
-The same images can run on either runtime (see [`kubernetes.md`](./kubernetes.md)).
-Manifests are **rendered from `stack.json`** at deploy time, never hand-maintained
-per service:
+The platform architecture supports container runtimes ranging from lightweight EC2 Docker Compose instances to enterprise Kubernetes (AWS EKS):
+
+![Kubernetes EKS Architecture](../../diagrams/kubernetes.png)
+
+Manifests and container definitions are driven by the unified stack configuration:
 
 | Runtime | Provisioned by | Deploy trigger | Rollback |
 | ------- | -------------- | -------------- | -------- |
