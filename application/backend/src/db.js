@@ -1,17 +1,14 @@
-import pg from "pg";
+import mysql from "mysql2/promise";
 import config from "./config.js";
 
-const { Pool } = pg;
-
-const pool = new Pool({
+const pool = mysql.createPool({
   host: config.db.host,
   port: config.db.port,
   database: config.db.name,
   user: config.db.user,
   password: config.db.password,
-  max: config.db.max,
-  connectionTimeoutMillis: 5000,
-  idleTimeoutMillis: 30000,
+  connectionLimit: config.db.max,
+  connectTimeout: 5000,
 });
 
 export default pool;

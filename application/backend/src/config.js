@@ -7,7 +7,7 @@ const config = {
   nodeEnv: process.env.NODE_ENV || "development",
   db: {
     host: process.env.DB_HOST || "localhost",
-    port: parseInt(process.env.DB_PORT || "5432", 10),
+    port: parseInt(process.env.DB_PORT || "3306", 10),
     name: process.env.DB_NAME || "appdb",
     user: process.env.DB_USER || "app_user",
     password: process.env.DB_PASSWORD || "",

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ============================================================================
-# End-to-end test: local stack -> backend API through nginx -> PostgreSQL.
+# End-to-end test: local stack -> backend API through nginx -> MySQL.
 # Requires the local docker compose stack to be running.
 # Usage:
 #   docker compose up -d --build   (in docker/)

@@ -16,11 +16,11 @@ export default function itemsRouter({ db, jwtSecret }) {
   // GET /api/items - list current user's items
   router.get("/", async (req, res, next) => {
     try {
-      const result = await db.query(
-        "SELECT id, title, description, created_at FROM items WHERE user_id = $1 ORDER BY created_at DESC",
+      const [rows] = await db.query(
+        "SELECT id, title, description, created_at FROM items WHERE user_id = ? ORDER BY created_at DESC",
         [req.userId]
       );
-      res.json({ items: result.rows });
+      res.json({ items: rows });
     } catch (err) {
       next(err);
     }
@@ -35,12 +35,13 @@ export default function itemsRouter({ db, jwtSecret }) {
         return res.status(400).json({ error: "title is required" });
       }
 
-      const result = await db.query(
-        "INSERT INTO items (user_id, title, description) VALUES ($1, $2, $3) RETURNING id, title, description, created_at",
+      const [result] = await db.query(
+        "INSERT INTO items (user_id, title, description) VALUES (?, ?, ?)",
         [req.userId, title, description || null]
       );
 
-      res.status(201).json({ item: result.rows[0] });
+      const [rows] = await db.query("SELECT id, title, description, created_at FROM items WHERE id = ?", [result.insertId]);
+      res.status(201).json({ item: rows[0] });
     } catch (err) {
       next(err);
     }
@@ -55,16 +56,16 @@ export default function itemsRouter({ db, jwtSecret }) {
         return res.status(400).json({ error: "invalid item id" });
       }
 
-      const result = await db.query(
-        "DELETE FROM items WHERE id = $1 AND user_id = $2 RETURNING id",
+      const [result] = await db.query(
+        "DELETE FROM items WHERE id = ? AND user_id = ?",
         [id, req.userId]
       );
 
-      if (result.rows.length === 0) {
+      if (result.affectedRows === 0) {
         return res.status(404).json({ error: "item not found" });
       }
 
-      res.json({ deleted: result.rows[0].id });
+      res.json({ deleted: id });
     } catch (err) {
       next(err);
     }

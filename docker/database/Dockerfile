@@ -11,9 +11,7 @@
 #   docker build -f docker/database/Dockerfile .
 # ============================================================================
 
-FROM postgres:16-alpine
-
-RUN apk upgrade --no-cache
+FROM mysql:8.0
 
 # docker-entrypoint-initdb.d/*.sql runs once on first init of an empty data dir
 COPY application/database/init.sql /docker-entrypoint-initdb.d/01-init.sql

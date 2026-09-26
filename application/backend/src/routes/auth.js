@@ -28,20 +28,22 @@ export default function authRouter({ db, jwtSecret, jwtExpiresIn }) {
       const normalizedEmail = String(email).toLowerCase().trim();
       const hash = await bcrypt.hash(password, 12);
 
-      const result = await db.query(
-        "INSERT INTO users (email, password) VALUES ($1, $2) RETURNING id, email, created_at",
+      const [result] = await db.query(
+        "INSERT INTO users (email, password) VALUES (?, ?)",
         [normalizedEmail, hash]
       );
 
-      const user = result.rows[0];
+      const userId = result.insertId;
+      const [rows] = await db.query("SELECT id, email, created_at FROM users WHERE id = ?", [userId]);
+      const user = rows[0];
       const token = jwt.sign({ sub: user.id, email: user.email }, jwtSecret, {
         expiresIn: jwtExpiresIn,
       });
 
       res.status(201).json({ token, user });
     } catch (err) {
-      // 23505 = unique constraint violation, means email already exists
-      if (err.code === "23505") {
+      // ER_DUP_ENTRY = unique constraint violation, means email already exists
+      if (err.code === "ER_DUP_ENTRY") {
         return res.status(409).json({ error: "email already registered" });
       }
       next(err);
@@ -58,13 +60,13 @@ export default function authRouter({ db, jwtSecret, jwtExpiresIn }) {
       }
 
       const normalizedEmail = String(email).toLowerCase().trim();
-      const result = await db.query("SELECT * FROM users WHERE email = $1", [normalizedEmail]);
+      const [rows] = await db.query("SELECT * FROM users WHERE email = ?", [normalizedEmail]);
 
-      if (result.rows.length === 0) {
+      if (rows.length === 0) {
         return res.status(401).json({ error: "invalid credentials" });
       }
 
-      const user = result.rows[0];
+      const user = rows[0];
       const valid = await bcrypt.compare(password, user.password);
 
       if (!valid) {

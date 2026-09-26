@@ -17,18 +17,19 @@ services:
       context: ..
       dockerfile: docker/database/Dockerfile
     environment:
-      POSTGRES_DB: ${DB_NAME:-appdb}
-      POSTGRES_USER: ${DB_USER:-app_user}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-local-dev-password}
+      MYSQL_DATABASE: ${DB_NAME:-appdb}
+      MYSQL_USER: ${DB_USER:-app_user}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-local-dev-password}
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-local-dev-password}
     ports:
-      - "${DB_PORT_MAP:-5432}:5432"
+      - "${DB_PORT_MAP:-3306}:3306"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-app_user} -d ${DB_NAME:-appdb}"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       interval: 5s
       timeout: 3s
       retries: 10
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - mysqldata:/var/lib/mysql
 
   backend:
     build:
@@ -38,7 +39,7 @@ services:
       PORT: "3000"
       NODE_ENV: ${NODE_ENV:-development}
       DB_HOST: db
-      DB_PORT: "5432"
+      DB_PORT: "3306"
       DB_NAME: ${DB_NAME:-appdb}
       DB_USER: ${DB_USER:-app_user}
       DB_PASSWORD: ${DB_PASSWORD:-local-dev-password}
@@ -66,4 +67,4 @@ services:
       - "${FRONTEND_PORT_MAP:-80}:80"
 
 volumes:
-  pgdata:
+  mysqldata:

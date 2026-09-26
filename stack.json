@@ -31,9 +31,9 @@
     }
   ],
   "database": {
-    "engine": "postgres",
-    "engine_version": "16.4",
-    "port": 5432
+    "engine": "mysql",
+    "engine_version": "8.0",
+    "port": 3306
   },
   "runtime": ["ec2-compose", "k8s"],
   "clouds": ["aws"],
