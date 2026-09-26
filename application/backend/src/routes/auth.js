@@ -5,6 +5,7 @@ import { Router } from "express";
 export default function authRouter({ db, jwtSecret, jwtExpiresIn }) {
   const router = Router();
 
+  // if db isn't ready yet, return 503 for all auth routes
   if (!db) {
     router.use((req, res) =>
       res.status(503).json({ error: "Database not configured" })
@@ -12,7 +13,7 @@ export default function authRouter({ db, jwtSecret, jwtExpiresIn }) {
     return router;
   }
 
-  // POST /api/auth/register  { email, password }
+  // register a new user
   router.post("/register", async (req, res, next) => {
     try {
       const { email, password } = req.body || {};
@@ -39,6 +40,7 @@ export default function authRouter({ db, jwtSecret, jwtExpiresIn }) {
 
       res.status(201).json({ token, user });
     } catch (err) {
+      // 23505 = unique constraint violation, means email already exists
       if (err.code === "23505") {
         return res.status(409).json({ error: "email already registered" });
       }
@@ -46,7 +48,7 @@ export default function authRouter({ db, jwtSecret, jwtExpiresIn }) {
     }
   });
 
-  // POST /api/auth/login  { email, password }
+  // login
   router.post("/login", async (req, res, next) => {
     try {
       const { email, password } = req.body || {};

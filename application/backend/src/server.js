@@ -4,11 +4,11 @@ import { initDb } from "./initDb.js";
 import { createApp } from "./app.js";
 
 async function start() {
-  // Create tables if they do not exist yet (simple, idempotent migration)
+  // run db migrations first, but don't crash if db is slow to start
   try {
     await initDb(pool);
   } catch (err) {
-    console.error("Database init failed (continuing - health check will report it):", err.message);
+    console.error("db init failed, continuing anyway:", err.message);
   }
 
   const app = createApp({
@@ -18,11 +18,11 @@ async function start() {
   });
 
   app.listen(config.port, () => {
-    console.log(`[${new Date().toISOString()}] backend listening on :${config.port} (${config.nodeEnv})`);
+    console.log(`server started on port ${config.port} (${config.nodeEnv})`);
   });
 }
 
 start().catch((err) => {
-  console.error("Fatal startup error:", err);
+  console.error("startup failed:", err);
   process.exit(1);
 });

@@ -3,10 +3,7 @@ import healthRouter from "./routes/health.js";
 import authRouter from "./routes/auth.js";
 import itemsRouter from "./routes/items.js";
 
-/**
- * Application factory. `deps` allows tests to inject a fake database and a
- * fixed JWT secret. In production server.js passes the real pool.
- */
+// factory fn so tests can inject a fake db
 export function createApp(deps = {}) {
   const app = express();
 
@@ -16,6 +13,7 @@ export function createApp(deps = {}) {
 
   app.use(express.json());
 
+  // hide default x-powered-by header, add our own
   app.use((req, res, next) => {
     res.set("X-Powered-By", "secure-ntier-backend");
     next();
@@ -25,12 +23,14 @@ export function createApp(deps = {}) {
   app.use("/api/auth", authRouter({ db, jwtSecret, jwtExpiresIn }));
   app.use("/api/items", itemsRouter({ db, jwtSecret }));
 
+  // 404 handler
   app.use((req, res) => {
     res.status(404).json({ error: "Not found" });
   });
 
+  // generic error handler - logs it and returns 500
   app.use((err, req, res, next) => {
-    console.error("Unhandled error:", err);
+    console.error("unhandled error:", err);
     res.status(500).json({ error: "Internal server error" });
   });
 
