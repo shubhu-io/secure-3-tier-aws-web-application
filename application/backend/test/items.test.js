@@ -4,15 +4,20 @@ import { test, assert, startServer, createApp } from "./helpers.js";
 const db = {
   query: async (sql) => {
     if (sql.includes("FROM items WHERE user_id")) {
-      return { rows: [{ id: 2, title: "task 1", description: null, created_at: "2026-01-01" }] };
+      return [[{ id: 2, title: "task 1", description: null, created_at: "2026-01-01" }], []];
     }
     if (sql.includes("INSERT INTO items")) {
-      return { rows: [{ id: 3, title: "new task", description: "d", created_at: "2026-01-01" }] };
+      const result = { insertId: 3 };
+      return [result, []];
+    }
+    if (sql.includes("SELECT id, title, description, created_at FROM items WHERE id = ?")) {
+      return [[{ id: 3, title: "new task", description: "d", created_at: "2026-01-01" }], []];
     }
     if (sql.includes("DELETE FROM items")) {
-      return { rows: [{ id: 1 }] };
+      const result = { affectedRows: 1 };
+      return [result, []];
     }
-    return { rows: [] };
+    return [[], []];
   },
 };
 

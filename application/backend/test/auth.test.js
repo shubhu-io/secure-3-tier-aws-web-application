@@ -8,16 +8,29 @@ function fakeDb(overrides = {}) {
   return {
     query: async (sql, params) => {
       if (sql.includes("INSERT INTO users")) {
-        return {
-          rows: [{ id: 1, email: params[0], created_at: new Date().toISOString() }],
+        // Return format: [result, fields] where result has insertId
+        const result = {
+          insertId: 1,
         };
+        return [result, []];
       }
-      if (sql.includes("SELECT * FROM users")) {
-        return {
-          rows: [{ id: 1, email: params[0], password: hash }],
-        };
+      if (sql.includes("SELECT id, email, created_at FROM users WHERE id = ?")) {
+        // Return format: [rows, fields] for getting the newly created user
+        // The email should match what was inserted: "User@Test.com" -> "user@test.com"
+        const rows = [{ id: 1, email: "user@test.com", created_at: new Date().toISOString() }];
+        return [rows, []];
       }
-      return { rows: [] };
+      if (sql.includes("SELECT * FROM users WHERE email = ?")) {
+        // Return format: [rows, fields] for login
+        const rows = [{ id: 1, email: params[0], password: hash }];
+        return [rows, []];
+      }
+      // For duplicate email simulation in the last test
+      if (sql.includes("INSERT INTO users") && overrides.query) {
+        return overrides.query(sql, params);
+      }
+      // Return format: [rows, fields]
+      return [[], []];
     },
     ...overrides,
   };
@@ -93,10 +106,14 @@ test("login returns 401 with wrong password", async () => {
 
 test("duplicate email returns 409", async () => {
   const db = fakeDb({
-    query: async () => {
-      const err = new Error("duplicate key");
-      err.code = "23505";
-      throw err;
+    query: async (sql, params) => {
+      if (sql.includes("INSERT INTO users")) {
+        const err = new Error("duplicate key");
+        err.code = "23505";
+        throw err;
+      }
+      // For all other queries, use the default fakeDb behavior
+      return fakeDb().query(sql, params);
     },
   });
   const app = createApp({ db, jwtSecret: "test-secret" });

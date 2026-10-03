@@ -43,7 +43,8 @@ export default function authRouter({ db, jwtSecret, jwtExpiresIn }) {
       res.status(201).json({ token, user });
     } catch (err) {
       // ER_DUP_ENTRY = unique constraint violation, means email already exists
-      if (err.code === "ER_DUP_ENTRY") {
+      // MySQL2 returns error code 23505 for duplicate entry
+      if (err.code === "ER_DUP_ENTRY" || err.code === "23505") {
         return res.status(409).json({ error: "email already registered" });
       }
       next(err);
