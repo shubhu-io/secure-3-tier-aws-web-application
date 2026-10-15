@@ -69,19 +69,25 @@ resource "aws_iam_role_policy" "instance" {
         ]
       },
       {
-        Sid    = "ReadDbSecret"
+        Sid    = "ReadDbCredentials"
         Effect = "Allow"
         Action = [
-          "secretsmanager:GetSecretValue",
-          "secretsmanager:DescribeSecret"
+          "ssm:GetParameter"
         ]
         Resource = [var.db_secret_arn]
+      },
+      {
+        Sid      = "DecryptDbCredentials"
+        Effect   = "Allow"
+        Action   = ["kms:Decrypt"]
+        Resource = ["*"]
       },
       {
         Sid    = "EcrPull"
         Effect = "Allow"
         Action = [
           "ecr:GetAuthorizationToken",
+          "ecr:BatchCheckLayerAvailability",
           "ecr:BatchGetImage",
           "ecr:GetDownloadUrlForLayer"
         ]
@@ -122,6 +128,12 @@ resource "aws_ssm_parameter" "image" {
   name  = local.image_params[each.key]
   type  = "String"
   value = "pending"
+
+  # CI/CD owns the value after first deploy (deploy-ec2.sh overwrites it).
+  # Without this, every terraform apply resets pushed image URIs to "pending".
+  lifecycle {
+    ignore_changes = [value]
+  }
 
   tags = {
     Environment = var.environment
@@ -175,10 +187,12 @@ resource "aws_launch_template" "this" {
     }
   }
 
-  # IMDSv2 required - blocks SSRF-style token stealing
+  # IMDSv2 required - blocks SSRF-style token stealing.
+  # Hop limit 2 so Docker containers using the awslogs driver can still
+  # reach IMDS for credentials (limit 1 breaks creds inside containers).
   metadata_options {
     http_tokens                 = "required"
-    http_put_response_hop_limit = 1
+    http_put_response_hop_limit = 2
   }
 
   monitoring {

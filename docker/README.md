@@ -76,8 +76,8 @@ DB_PORT_MAP / BACKEND_PORT_MAP / FRONTEND_PORT_MAP   # host ports
 
 `docker/.env` is gitignored. Compose uses it for `${VAR}` interpolation and
 every value falls back to a safe local-development default, so the stack also
-runs with **no `.env` at all**. In production, secrets are injected from
-Secrets Manager / SSM by the instance `user-data` scripts — never from a file
+runs with **no `.env` at all**. In production, secrets are injected from the
+SSM SecureString parameter by the instance `user-data` scripts — never from a file
 (see `terraform/cloud/aws/modules/compute/user-data.sh`).
 
 ## Commands cheat-sheet
@@ -142,6 +142,6 @@ Push them to your registry when you are ready to deploy (see
 - Frontend nginx config enables gzip + long cache headers and proxies only the
   expected routes (`/api`, `/health`, `/health/ready`).
 - The local DB uses a password from `.env` (dev-only); production credentials
-  come from Secrets Manager.
+  come from the SSM SecureString parameter.
 - Images are scanned with **Trivy** (CRITICAL/HIGH fail) in CI
   (`.github/workflows/ci.yml`) and locally via `docker/scripts/scan.sh`.

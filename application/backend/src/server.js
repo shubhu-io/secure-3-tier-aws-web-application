@@ -4,11 +4,22 @@ import { initDb } from "./initDb.js";
 import { createApp } from "./app.js";
 
 async function start() {
-  // run db migrations first, but don't crash if db is slow to start
-  try {
-    await initDb(pool);
-  } catch (err) {
-    console.error("db init failed, continuing anyway:", err.message);
+  // On EC2 first boot RDS/SG may lag behind the app - retry migrations
+  // instead of serving a permanently degraded API until the next restart.
+  const attempts = Number(process.env.DB_INIT_RETRIES ?? 12);
+  const delayMs = Number(process.env.DB_INIT_RETRY_MS ?? 10000);
+  for (let i = 1; i <= attempts; i++) {
+    try {
+      await initDb(pool);
+      break;
+    } catch (err) {
+      console.error(`db init attempt ${i}/${attempts} failed:`, err.message);
+      if (i === attempts) {
+        console.error("db init failed, continuing anyway (API will 503 until DB is reachable)");
+      } else {
+        await new Promise((r) => setTimeout(r, delayMs));
+      }
+    }
   }
 
   const app = createApp({

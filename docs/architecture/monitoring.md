@@ -1,19 +1,36 @@
 # Monitoring & Observability Design
 
-## The monitoring story
+## The monitoring story (new architecture)
+
+Dual path — AWS-native **CloudWatch** stays the source of truth on AWS,
+self-hosted **Prometheus + Grafana + Loki + Blackbox** is the local-first
+overlay defined in `monitoring/` and `docker/docker-compose.monitoring.yml`.
 
 ```mermaid
 flowchart LR
-    EC2[AWS/EC2] --> CW[CloudWatch]
-    ALB[AWS/ApplicationELB] --> CW
+    EC2[AWS/EC2 + /metrics] --> PROM[Prometheus :9090]
+    ALB[AWS/ApplicationELB] --> CW[CloudWatch]
+    ALB --> BB[Blackbox :9115 probe /health]
+    BB --> PROM
     RDS[AWS/RDS] --> CW
     ASG[AWS/AutoScaling] --> CW
-    APP[Application logs] --> CW[CloudWatch Logs]
-    CW --> ALARM[CloudWatch Alarms]
+    NE[node-exporter + cAdvisor] --> PROM
+    APP[Docker logs via Promtail] --> LOKI[Loki :3100]
+    LOKI --> GRAF[Grafana :3001]
+    PROM --> GRAF
+    CW --> ALARM[CloudWatch Alarms x9]
+    GRAF --> SNS2[Grafana alerts]
     ALARM --> SNS[SNS Topic]
-    SNS --> EMAIL[ops email]
+    SNS2 --> SNS
+    SNS --> EMAIL[ops email + Slack]
     CW --> DASH[CloudWatch Dashboard]
+    GRAF --> GDASH[Grafana overview dashboard]
 ```
+
+Source: [`diagrams/observability.mmd`](../../diagrams/observability.mmd).
+Configs: `monitoring/prometheus/prometheus.yml`, `monitoring/loki/loki.yml`,
+`monitoring/loki/promtail.yml`, `monitoring/blackbox/blackbox.yml`,
+`monitoring/grafana/provisioning/`, `docker/docker-compose.monitoring.yml`.
 
 ## What we monitor
 
@@ -47,7 +64,11 @@ flowchart LR
 
 ## Logs
 
-- **Application logs** stream to CloudWatch via the Docker `awslogs` driver
+- **Self-hosted:** Docker logs → Promtail → Loki (`:3100`) → Grafana Explore.
+  Queries ported from [`monitoring/logs/patterns.md`](../../monitoring/logs/patterns.md)
+  to LogQL, e.g. `{container=~"backend|frontend"} |= "error"`.
+- **AWS-native (unchanged):**
+  Application logs stream to CloudWatch via the Docker `awslogs` driver
   (log group `/secure-ntier-<env>/app`).
 - **VPC Flow Logs** capture network traffic.
 - **ALB access logs** (optional S3 bucket) capture every request.
@@ -55,10 +76,13 @@ flowchart LR
 
 Useful log queries: [`monitoring/logs/patterns.md`](../../monitoring/logs/patterns.md).
 
-## Dashboard
+## Dashboards
 
-A CloudWatch dashboard shows CPU, requests/errors, and healthy hosts at a
-glance. Dashboard JSON lives in
+- **Grafana (new default locally):** `http://localhost:3001` — CPU, up/blackbox,
+  HTTP rate, Loki error logs. Provisioned from
+  [`monitoring/grafana/dashboards/observability-overview.json`](../../monitoring/grafana/dashboards/observability-overview.json).
+- **CloudWatch (AWS):** CPU, requests/errors, healthy hosts.
+Dashboard JSON lives in
 [`monitoring/dashboards/overview-dashboard.json`](../../monitoring/dashboards/overview-dashboard.json)
 and is created by Terraform.
 

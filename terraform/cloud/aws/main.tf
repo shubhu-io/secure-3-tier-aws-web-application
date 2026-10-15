@@ -19,8 +19,8 @@ module "vpc" {
   public_subnet_cidrs      = var.public_subnet_cidrs
   app_subnet_cidrs         = var.app_subnet_cidrs
   db_subnet_cidrs          = var.db_subnet_cidrs
-  nat_gateway_count        = var.nat_gateway_count
-  enable_flow_logs         = true
+  nat_gateway_count      = var.nat_gateway_count
+  enable_flow_logs         = var.enable_flow_logs
   flow_logs_retention_days = var.environment == "prod" ? 90 : 14
 }
 
@@ -98,7 +98,7 @@ module "alb" {
   alb_sg_id                  = module.security.alb_sg_id
   app_port                   = 80
   certificate_arn            = var.domain_name != "" ? aws_acm_certificate.this[0].arn : ""
-  enable_waf                 = true
+  enable_waf                 = var.enable_waf
   enable_access_logs         = var.enable_alb_access_logs
   enable_deletion_protection = var.alb_deletion_protection
 }

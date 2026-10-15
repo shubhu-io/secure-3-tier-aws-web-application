@@ -1,0 +1,45 @@
+{
+  "title": "secure-ntier observability overview",
+  "tags": ["secure-ntier", "prometheus", "loki", "blackbox"],
+  "timezone": "browser",
+  "panels": [
+    {
+      "id": 1,
+      "title": "CPU (node-exporter)",
+      "type": "timeseries",
+      "datasource": "Prometheus",
+      "targets": [
+        { "expr": "avg(rate(node_cpu_seconds_total{mode=\"idle\"}[5m]))", "refId": "A" }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "ALB / backend up (blackbox)",
+      "type": "stat",
+      "datasource": "Prometheus",
+      "targets": [
+        { "expr": "probe_success", "refId": "A" }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "HTTP requests (backend /metrics)",
+      "type": "timeseries",
+      "datasource": "Prometheus",
+      "targets": [
+        { "expr": "sum(rate(http_requests_total[5m]))", "refId": "A" }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "Backend errors (Loki)",
+      "type": "logs",
+      "datasource": "Loki",
+      "targets": [
+        { "expr": "{container=~\"backend|frontend\"} |= \"error\" or \"ERROR\" or \"Fatal\"", "refId": "A" }
+      ]
+    }
+  ],
+  "schemaVersion": 39,
+  "version": 1
+}

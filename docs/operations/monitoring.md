@@ -4,11 +4,25 @@
 
 | Concern | Tool |
 | ------- | ---- |
-| Live metrics (CPU, requests, hosts) | CloudWatch dashboard `secure-ntier-<env>-overview` |
-| App logs | CloudWatch Logs → log group `/secure-ntier-<env>/app` |
+| Live metrics (CPU, requests, hosts) | CloudWatch dashboard `secure-ntier-<env>-overview` + Grafana `http://localhost:3001` (Prometheus datasource) |
+| App logs | CloudWatch Logs → log group `/secure-ntier-<env>/app` + Loki/Grafana Explore (`{container=~"backend|frontend"}`) |
+| Uptime probes | Blackbox-exporter `:9115` (`probe_success`) + ALB target health |
 | Network traffic | VPC Flow Logs → `/aws/vpc-flow-log/<project>-<env>` |
-| Alarm state | CloudWatch → Alarms (or the SNS emails you receive) |
+| Alarm state | CloudWatch → Alarms + Grafana Alerts (both → SNS emails you receive) |
 | Who did what | CloudTrail → Event history |
+
+## New stack quickstart
+
+```bash
+docker compose -f docker/docker-compose.yml \
+  -f docker/docker-compose.monitoring.yml up --build -d
+# Grafana http://localhost:3001 (admin/admin)
+# Prometheus http://localhost:9090
+# Loki http://localhost:3100
+```
+
+Full architecture: [`diagrams/observability.mmd`](../../diagrams/observability.mmd),
+[`docs/architecture/monitoring.md`](../architecture/monitoring.md).
 
 ## Dashboard
 

@@ -33,7 +33,7 @@ variable "target_group_arn" {
 }
 
 variable "db_secret_arn" {
-  description = "Secrets Manager ARN with the DB credentials"
+  description = "SSM Parameter ARN holding the DB credentials (SecureString)"
   type        = string
 }
 

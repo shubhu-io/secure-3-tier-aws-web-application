@@ -65,9 +65,9 @@ variable "db_allocated_storage" {
 }
 
 variable "db_max_allocated_storage" {
-  description = "Upper limit for storage autoscaling (GiB). 0 disables autoscaling."
+  description = "Upper limit for storage autoscaling (GiB). 0 disables autoscaling. Keep 20 on Free Tier (autoscaling past 20GB bills)."
   type        = number
-  default     = 50
+  default     = 20
 }
 
 variable "db_multi_az" {

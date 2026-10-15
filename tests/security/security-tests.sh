@@ -40,9 +40,15 @@ ENC="$(aws rds describe-db-instances \
 [ "$ENC" = "true" ]; check $? "RDS StorageEncrypted=true (got: ${ENC:-unknown})"
 
 echo "==> 3. WAF web ACL exists and is associated with the ALB"
-ACL_COUNT="$(aws wafv2 list-web-acls --scope REGIONAL --region "$REGION" \
-  --query "length(WebACLs[?contains(Name, '${PROJECT}-${ENV_NAME}')])" --output text 2>/dev/null)"
-[ "$ACL_COUNT" -ge 1 ] 2>/dev/null; check $? "WAF web ACL present (count: ${ACL_COUNT:-0})"
+# WAF is a paid opt-in (enable_waf, off on Free Tier defaults).
+#   WAF_EXPECTED=1 bash tests/security/security-tests.sh ...   to enforce it.
+if [ "${WAF_EXPECTED:-0}" = "1" ]; then
+  ACL_COUNT="$(aws wafv2 list-web-acls --scope REGIONAL --region "$REGION" \
+    --query "length(WebACLs[?contains(Name, '${PROJECT}-${ENV_NAME}')])" --output text 2>/dev/null)"
+  [ "$ACL_COUNT" -ge 1 ] 2>/dev/null; check $? "WAF web ACL present (count: ${ACL_COUNT:-0})"
+else
+  echo "  [SKIP] WAF is opt-in (enable_waf=false); set WAF_EXPECTED=1 to enforce"
+fi
 
 echo "==> 4. Security groups: app SG does NOT allow SSH from the internet"
 SG_ID="$(aws ec2 describe-security-groups --region "$REGION" \
@@ -76,8 +82,12 @@ else
 fi
 
 echo "==> 8. WAF blocks a SQL injection attempt"
-WAF_CODE="$(curl -s -o /dev/null -w '%{http_code}' "$URL/api/items?q=1'%20OR%20'1'='1" 2>/dev/null)"
-[ "$WAF_CODE" = "403" ]; check $? "SQLi payload blocked (got: $WAF_CODE)"
+if [ "${WAF_EXPECTED:-0}" = "1" ]; then
+  WAF_CODE="$(curl -s -o /dev/null -w '%{http_code}' "$URL/api/items?q=1'%20OR%20'1'='1" 2>/dev/null)"
+  [ "$WAF_CODE" = "403" ]; check $? "SQLi payload blocked (got: $WAF_CODE)"
+else
+  echo "  [SKIP] WAF is opt-in (enable_waf=false); set WAF_EXPECTED=1 to enforce"
+fi
 
 echo ""
 echo "==> RESULT: $PASS passed, $FAIL failed"

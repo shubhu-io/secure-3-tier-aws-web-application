@@ -19,14 +19,23 @@ exists and what each one means.
 ## Alert path
 
 ```text
-CloudWatch Metric
-   ↓
-Metric Alarm (threshold breach)
-   ↓
-SNS Topic (<project>-<env>-alerts)
-   ↓
-Email subscription (ops@example.com)
+CloudWatch Metric                 Prometheus / Blackbox / Loki
+    ↓                                  ↓
+Metric Alarm (threshold breach)   Grafana alert rule
+    ↓                                  ↓
+SNS Topic (<project>-<env>-alerts) ←──┘
+    ↓
+Email subscription (ops@example.com) + Slack (optional)
 ```
+
+New self-hosted rules (Grafana provisioning, see
+`monitoring/grafana/dashboards/observability-overview.json`):
+
+| Grafana alert | PromQL/LogQL | Condition |
+| ------------- | ------------ | --------- |
+| `BlackboxDown` | `probe_success == 0` | ≥2m — ALB/backend unreachable |
+| `BackendErrorsHigh` | `sum(rate(http_requests_total{status=~"5.."}[5m]))` | > 0.05 rps for 5m |
+| `LokiErrorBurst` | `{container=~"backend|frontend"} \|= "error"` | > 20 lines / 5m |
 
 ## Adding your own
 

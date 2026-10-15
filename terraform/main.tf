@@ -16,6 +16,8 @@ module "aws" {
   nat_gateway_count            = var.nat_gateway_count
   alb_deletion_protection      = var.alb_deletion_protection
   enable_alb_access_logs       = var.enable_alb_access_logs
+  enable_waf                   = var.enable_waf
+  enable_flow_logs             = var.enable_flow_logs
   instance_type                = var.aws_instance_type
   asg_min_size                 = var.asg_min_size
   asg_max_size                 = var.asg_max_size

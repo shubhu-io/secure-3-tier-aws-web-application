@@ -24,7 +24,7 @@ output "db_host" {
 }
 
 output "db_secret_arn" {
-  description = "Secrets Manager ARN with DB credentials"
+  description = "SSM SecureString parameter ARN with DB credentials"
   value       = module.database.db_secret_arn
 }
 
@@ -79,7 +79,7 @@ output "lb_dns_name" {
 }
 
 output "db_secret_ref" {
-  description = "Secret Manager/Secrets Manager reference holding DB credentials"
+  description = "SSM Parameter Store reference holding DB credentials"
   value       = module.database.db_secret_arn
 }
 

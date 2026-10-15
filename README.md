@@ -1,6 +1,6 @@
 # Secure 3-Tier AWS Web Application
 
-> Production-ready, automated **AWS 3-Tier Cloud Platform** deployed in **AWS Region `ap-south-1` (Mumbai)** using **Terraform (IaC)**, containerized with **Docker**, automated with **Jenkins & Jenkins CI/CD**, and secured with **AWS WAF v2, Multi-AZ RDS MySQL, and least-privilege IAM**.
+> Production-ready, automated **AWS 3-Tier Cloud Platform** deployed in **AWS Region `ap-south-1` (Mumbai)** using **Terraform (IaC)**, containerized with **Docker**, automated with **Jenkins & Jenkins CI/CD**, and secured with **least-privilege IAM, single-AZ RDS MySQL, and optional AWS WAF v2** (Free Tier defaults).
 
 [![AWS](https://img.shields.io/badge/AWS-ap--south--1-orange.svg?logo=amazonwebservices&logoColor=white)](https://aws.amazon.com)
 [![Terraform](https://img.shields.io/badge/Terraform-%235835CC.svg?logo=terraform&logoColor=white)](https://www.terraform.io)
@@ -31,7 +31,7 @@ The platform implements a strict **Multi-AZ 3-Tier Defence-in-Depth Architecture
 ### 3-Tier Architecture Highlights
 
 1. **Presentation Tier (Public Web Subnets):**
-   - **Route 53 + AWS WAF v2:** DDoS mitigation, SQLi & XSS inspection, and bad bot blocking.
+   - **Route 53 + AWS WAF v2 (opt-in via `enable_waf`):** DDoS mitigation, SQLi & XSS inspection, and bad bot blocking.
    - **Application Load Balancer (ALB):** Multi-AZ public entry point terminating HTTPS/TLS traffic and routing requests to private application targets.
 2. **Application Tier (Private App Subnets — Zero Public IPs):**
    - **Auto Scaling Group (ASG):** Elastic EC2 instances distributed across `ap-south-1a` and `ap-south-1b`.
@@ -53,7 +53,7 @@ The platform implements a strict **Multi-AZ 3-Tier Defence-in-Depth Architecture
 | **Infrastructure** | Terraform v1.9+, AWS Cloud (`ap-south-1`) | Declarative IaC, S3 remote state, DynamoDB state locking |
 | **CI/CD Automation** | Jenkins, Jenkins | Automated linting, unit testing, Trivy CVE scanning, rolling deployments |
 | **Containerization** | Docker, Amazon ECR | Multi-stage slim container builds, immutable SHA image tagging |
-| **Security & IAM** | AWS WAF, KMS, Secrets Manager, SSM | Dynamic secret injection, IMDSv2 enforcement, zero open SSH (Port 22) |
+| **Security & IAM** | AWS WAF (opt-in), KMS, SSM Parameter Store | Dynamic secret injection, IMDSv2 enforcement, zero open SSH (Port 22) |
 | **Observability** | CloudWatch Metrics, Alarms, SNS | Automated health checking, CPU tracking, email incident notifications |
 
 ---
@@ -68,6 +68,9 @@ Test the complete 3-tier microservice stack locally with Docker Compose:
 # Clone the repository
 git clone https://github.com/shubhu-io/secure-3-tier-aws-web-application.git
 cd secure-3-tier-aws-web-application
+
+# Install all dependencies (backend, frontend, terraform)
+bash scripts/install-deps.sh
 
 # Launch frontend, backend API, and MySQL
 make local-up

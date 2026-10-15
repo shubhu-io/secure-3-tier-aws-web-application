@@ -10,7 +10,12 @@ export default function ItemsView({ onLogout }) {
 
   useEffect(() => {
     api.listItems().then(({ items }) => setItems(items)).catch((e) => setError(e.message));
-    api.health().then(setHealth).catch(() => {});
+    api.health()
+      .then(setHealth)
+      .catch((err) => {
+        // Set health to error state so we know the backend is unreachable
+        setHealth({ status: "error", db: "unknown", error: err.message });
+      });
   }, []);
 
   async function addItem(e) {
@@ -45,7 +50,17 @@ export default function ItemsView({ onLogout }) {
       </header>
 
       <p className="muted">
-        Backend health: <strong>{health ? `${health.status} · db ${health.db}` : "checking..."}</strong>
+        Backend health: <strong>
+          {health ? (
+            health.error ? (
+              <span className="error">error: {health.error}</span>
+            ) : (
+              `${health.status} · db ${health.db}`
+            )
+          ) : (
+            "checking..."
+          )}
+        </strong>
       </p>
 
       <form onSubmit={addItem} className="add-form">

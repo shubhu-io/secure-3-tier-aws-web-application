@@ -6,20 +6,25 @@ async function request(path, options = {}) {
   const token = localStorage.getItem("token");
   if (token) headers.Authorization = `Bearer ${token}`;
 
-  const res = await fetch(`${API_BASE}${path}`, { ...options, headers });
-
-  let body = null;
   try {
-    body = await res.json();
-  } catch {
-    // non-JSON response
-  }
+    const res = await fetch(`${API_BASE}${path}`, { ...options, headers });
 
-  if (!res.ok) {
-    throw new Error(body?.error || `Request failed (${res.status})`);
-  }
+    let body = null;
+    try {
+      body = await res.json();
+    } catch {
+      // non-JSON response
+    }
 
-  return body;
+    if (!res.ok) {
+      throw new Error(body?.error || `Request failed (${res.status})`);
+    }
+
+    return body;
+  } catch (err) {
+    // Handle network errors or fetch failures
+    throw new Error(`Network error: ${err.message}`);
+  }
 }
 
 export const api = {

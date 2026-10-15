@@ -6,18 +6,19 @@
 -- ============================================================================
 
 CREATE TABLE IF NOT EXISTS users (
-  id          SERIAL PRIMARY KEY,
+  id          INT AUTO_INCREMENT PRIMARY KEY,
   email       VARCHAR(255) NOT NULL UNIQUE,
   password    VARCHAR(255) NOT NULL,
-  created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+  created_at  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS items (
-  id          SERIAL PRIMARY KEY,
-  user_id     INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  id          INT AUTO_INCREMENT PRIMARY KEY,
+  user_id     INTEGER NOT NULL,
   title       VARCHAR(255) NOT NULL,
   description TEXT,
-  created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+  created_at  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
 CREATE INDEX IF NOT EXISTS idx_items_user_id ON items(user_id);

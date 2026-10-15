@@ -43,7 +43,9 @@ bash tests/infrastructure/stack-validate.sh        # manifest scripts: stack-val
 ```
 
 `tfplan-check.sh` greps the plan JSON to prove the VPC, subnets, NAT, SGs,
-ALB, ASG, RDS, ECR, WAF, alarms, flow logs and CloudTrail are all created.
+ALB, ASG, RDS, ECR, SSM credential parameter, alarms and CloudTrail are all
+created. Paid opt-ins (WAF, flow logs — off on Free Tier defaults) are asserted
+ABSENT unless you pass `EXPECT_WAF=1` / `EXPECT_FLOW_LOGS=1`.
 `stack-validate.sh` runs the manifest-driven scripts: the repo `stack.json`
 passes `stack-validate.sh`, every `stack-info.sh` subcommand returns the expected
 value, and malformed manifests are rejected. Needs `jq` on PATH (skips if missing).
@@ -59,12 +61,12 @@ unauthorized → delete. Requires a running stack (local compose or deployed).
 Verifies the security model is actually enforced on a **deployed** stack:
 
 - RDS is not publicly accessible and is encrypted
-- WAF web ACL exists
+- WAF web ACL exists (only with `WAF_EXPECTED=1`, i.e. `enable_waf=true`)
 - No SSH open to the world on the app SG
 - No MySQL open to the world on the DB SG
 - Health endpoint responds
 - HTTP → HTTPS redirect (when a domain is configured)
-- WAF blocks a SQL injection payload (`403`)
+- WAF blocks a SQL injection payload (`403`, only with `WAF_EXPECTED=1`)
 
 ## 7. Failure tests — manual runbooks
 

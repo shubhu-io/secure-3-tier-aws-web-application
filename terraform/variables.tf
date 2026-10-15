@@ -63,6 +63,18 @@ variable "enable_alb_access_logs" {
   default     = false
 }
 
+variable "enable_waf" {
+  description = "Attach an AWS WAF web ACL to the ALB (~$5/mo + request fees - off for Free Tier, on for prod)"
+  type        = bool
+  default     = false
+}
+
+variable "enable_flow_logs" {
+  description = "VPC Flow Logs to CloudWatch Logs (ingestion billed - off for Free Tier, on for prod)"
+  type        = bool
+  default     = false
+}
+
 variable "domain_name" {
   description = "Domain/subdomain for the app (optional TLS). Leave empty to skip."
   type        = string
@@ -118,21 +130,21 @@ variable "skip_final_snapshot" {
 }
 
 variable "asg_min_size" {
-  description = "Minimum number of EC2 instances in the ASG"
+  description = "Minimum number of EC2 instances in the ASG (1 keeps a t3.micro dev inside the 750h/mo Free Tier)"
   type        = number
-  default     = 2
+  default     = 1
 }
 
 variable "asg_max_size" {
   description = "Maximum number of EC2 instances in the ASG"
   type        = number
-  default     = 4
+  default     = 2
 }
 
 variable "asg_desired_capacity" {
   description = "Desired number of EC2 instances in the ASG"
   type        = number
-  default     = 2
+  default     = 1
 }
 
 # --- AWS-specific ------------------------------------------------------------

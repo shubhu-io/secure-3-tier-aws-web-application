@@ -47,13 +47,19 @@ REQUIRED=(
   "aws_launch_template.this"
   "aws_autoscaling_group.this"
   "aws_db_instance.this"
+  "aws_ssm_parameter.db_credentials"
   "aws_ecr_repository.this"
-  "aws_wafv2_web_acl.this"
   "aws_cloudwatch_metric_alarm.asg_cpu_high"
   "aws_sns_topic.alerts"
-  "aws_flow_log.this"
   "aws_cloudtrail.this"
 )
+
+# Paid opt-ins - only required when enabled (Free Tier defaults are off).
+#   EXPECT_WAF=1 EXPECT_FLOW_LOGS=1 bash tests/infrastructure/tfplan-check.sh
+OPTIONAL_PRESENT=()
+OPTIONAL_ABSENT=()
+[ "${EXPECT_WAF:-0}" = "1" ] && OPTIONAL_PRESENT+=("aws_wafv2_web_acl.this") || OPTIONAL_ABSENT+=("aws_wafv2_web_acl.this")
+[ "${EXPECT_FLOW_LOGS:-0}" = "1" ] && OPTIONAL_PRESENT+=("aws_flow_log.this") || OPTIONAL_ABSENT+=("aws_flow_log.this")
 
 FAIL=0
 for addr in "${REQUIRED[@]}"; do
@@ -62,6 +68,24 @@ for addr in "${REQUIRED[@]}"; do
   else
     echo "  [MISS] $addr"
     FAIL=1
+  fi
+done
+for addr in "${OPTIONAL_PRESENT[@]:-}"; do
+  [ -z "$addr" ] && continue
+  if rg -q "\"type\":\"${addr%%.*}\".*\"name\":\"${addr##*.}\"" /tmp/tfplan.json; then
+    echo "  [OK]   $addr (opt-in enabled)"
+  else
+    echo "  [MISS] $addr (expected: enabled)"
+    FAIL=1
+  fi
+done
+for addr in "${OPTIONAL_ABSENT[@]:-}"; do
+  [ -z "$addr" ] && continue
+  if rg -q "\"type\":\"${addr%%.*}\".*\"name\":\"${addr##*.}\"" /tmp/tfplan.json; then
+    echo "  [MISS] $addr present but should be OFF (Free Tier default)"
+    FAIL=1
+  else
+    echo "  [OK]   $addr absent (Free Tier default)"
   fi
 done
 

@@ -9,7 +9,7 @@
 #     -f docker/docker-compose.prod.yml up -d
 #
 # The real EC2/VMSS bootstraps emit an equivalent compose at first boot from
-# stack.json + SSM image URIs + Secrets Manager DB credentials (see
+# stack.json + SSM image URIs + SSM Parameter Store DB credentials (see
 # terraform/cloud/aws/modules/compute/user-data.sh). This file is the
 # human-readable reference for the same contract.
 #

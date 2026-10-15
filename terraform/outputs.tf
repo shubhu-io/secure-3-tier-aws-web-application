@@ -19,7 +19,7 @@ output "db_host" {
 }
 
 output "db_secret_ref" {
-  description = "ARN of the Secrets Manager secret holding DB credentials"
+  description = "ARN of the SSM SecureString parameter holding DB credentials"
   value       = module.aws.db_secret_ref
 }
 

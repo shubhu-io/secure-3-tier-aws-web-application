@@ -69,6 +69,18 @@ variable "enable_alb_access_logs" {
   default     = false
 }
 
+variable "enable_waf" {
+  description = "Attach an AWS WAF web ACL to the ALB (~$5/mo + request fees - off for Free Tier, on for prod)"
+  type        = bool
+  default     = false
+}
+
+variable "enable_flow_logs" {
+  description = "VPC Flow Logs to CloudWatch Logs (ingestion billed - off for Free Tier, on for prod)"
+  type        = bool
+  default     = false
+}
+
 # --- Compute ---
 variable "instance_type" {
   description = "EC2 instance type"
@@ -77,18 +89,19 @@ variable "instance_type" {
 }
 
 variable "asg_min_size" {
-  type    = number
-  default = 2
+  description = "Minimum EC2 instances (1 keeps a t3.micro dev inside the 750h/mo Free Tier)"
+  type        = number
+  default     = 1
 }
 
 variable "asg_max_size" {
   type    = number
-  default = 4
+  default = 2
 }
 
 variable "asg_desired_capacity" {
   type    = number
-  default = 2
+  default = 1
 }
 
 # --- Database ---

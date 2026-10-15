@@ -1,0 +1,37 @@
+%% Secure N-Tier - Observability Architecture (replaces CloudWatch-only view)
+%% Rendered natively by GitHub. Source of truth for diagrams/README.md #11.
+flowchart TB
+    Users --> R53[Route 53 DNS]
+    R53 --> WAF[AWS WAF v2]
+    WAF --> ALB[ALB public subnets]
+    ALB --> TG[Target Group HTTP/HTTPS]
+    TG --> ASG1[ASG AZ-a: EC2 + Docker<br/>backend:3000 /metrics<br/>frontend:80]
+    TG --> ASG2[ASG AZ-b: EC2 + Docker<br/>backend:3000 /metrics<br/>frontend:80]
+    ASG1 --> RDS[(RDS MySQL Multi-AZ)]
+    ASG2 --> RDS
+
+    subgraph CloudWatch path - AWS native
+      ALB --> CW[CloudWatch Metrics]
+      ASG1 --> CW
+      RDS --> CW
+      CW --> AL[CloudWatch Alarms x9]
+      AL --> SNS[SNS Topic]
+      SNS --> Email[ops email]
+      CW --> CWD[CloudWatch Dashboard]
+    end
+
+    subgraph Self-hosted observability - NEW
+      ASG1 -. scrape /metrics .-> PROM[Prometheus :9090]
+      ASG2 -. scrape /metrics .-> PROM
+      NE[node-exporter :9100<br/>cAdvisor :8080] --> PROM
+      BB[blackbox :9115<br/>probe frontend/health<br/>backend:3000/health] --> PROM
+      PROM --> GRAF[Grafana :3001<br/>dashboards + alerts]
+      DOCKER[Docker logs] --> PT[Promtail]
+      PT --> LOKI[Loki :3100]
+      LOKI --> GRAF
+      GRAF --> SNS
+    end
+
+    S3[(S3 state + ALB logs)] -.-> CW
+    SM[Secrets Manager] -.-> ASG1
+    SM -.-> ASG2

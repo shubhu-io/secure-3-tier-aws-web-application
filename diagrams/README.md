@@ -20,6 +20,7 @@ All diagrams are standardized to showcase **AWS Region `ap-south-1` (Mumbai)**.
 | **8** | **Disaster Recovery & Multi-AZ** | [**`disaster-recovery.png`**](./disaster-recovery.png) | Multi-AZ synchronous replication, automated RDS snapshots, and RTO/RPO target metrics. |
 | **9** | **Kubernetes (AWS EKS) Architecture** | [**`kubernetes.png`**](./kubernetes.png) | AWS EKS cluster, Ingress ALB controller, Worker Nodes, Pods, HPA, and native cloud integrations. |
 | **10**| **Technology Stack** | [**`stack.png`**](./stack.png) | Decoupled 3-tier specification across Presentation, Application, Database, and DevOps tiers. |
+| **11**| **Observability Architecture (NEW)** | [**`observability.mmd`**](./observability.mmd) | Replaces CloudWatch-only view: Prometheus + Grafana + Loki + Blackbox overlay + SNS fan-out. GitHub-rendered Mermaid. |
 
 ---
 
@@ -72,6 +73,29 @@ All diagrams are standardized to showcase **AWS Region `ap-south-1` (Mumbai)**.
 
 ### 10. End-to-End User Request Flow
 ![User Request Flow](./request-flow.png)
+
+---
+
+### 11. Observability Architecture (NEW — replaces CloudWatch-only)
+```mermaid
+flowchart TB
+    Users --> R53[Route 53 DNS]
+    R53 --> WAF[AWS WAF v2]
+    WAF --> ALB[ALB public subnets]
+    ALB --> ASG1[ASG AZ-a: EC2 + Docker]
+    ALB --> ASG2[ASG AZ-b: EC2 + Docker]
+    ASG1 --> RDS[(RDS MySQL Multi-AZ)]
+    ASG2 --> RDS
+    ALB --> CW[CloudWatch Metrics -> Alarms -> SNS -> Email]
+    ASG1 -. /metrics .-> PROM[Prometheus :9090]
+    ASG2 -. /metrics .-> PROM
+    BB[Blackbox /health] --> PROM
+    PROM --> GRAF[Grafana :3001]
+    PT[Promtail] --> LOKI[Loki :3100]
+    LOKI --> GRAF
+    GRAF --> SNS
+```
+Full source: [`observability.mmd`](./observability.mmd). Configs in `../monitoring/` + `../docker/docker-compose.monitoring.yml`.
 
 ---
 

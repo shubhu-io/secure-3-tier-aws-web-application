@@ -1,8 +1,12 @@
 # ============================================================================
-# Database module - managed RDS + Secrets Manager
+# Database module - managed RDS + SSM Parameter Store (SecureString)
 #
-# Creates: RDS instance in private DB subnets, DB subnet group, the secret in
-#          AWS Secrets Manager holding all runtime credentials for the app.
+# Creates: RDS instance in private DB subnets, DB subnet group, one SSM
+#          SecureString parameter holding all runtime credentials for the app.
+#
+# Free Tier note: SSM standard parameters are free; AWS Secrets Manager
+# ($0.40/secret/mo) was deliberately removed - same JSON shape, same keys,
+# read with `aws ssm get-parameter --with-decryption` in user-data.sh.
 #
 # The engine (mysql | mysql | mariadb), engine version and port come from
 # stack.json (via the root module) so the whole stack follows the manifest.
@@ -13,7 +17,7 @@ locals {
 }
 
 # ---------------------------------------------------------------------------
-# Credentials - generated here, stored ONLY in Secrets Manager.
+# Credentials - generated here, stored ONLY in SSM Parameter Store.
 # random_password is stored in Terraform state; keep state in the encrypted
 # S3 backend (see terraform/backend.tf) - never in the git repository.
 # ---------------------------------------------------------------------------
@@ -32,19 +36,13 @@ resource "random_password" "jwt_secret" {
   special = false
 }
 
-resource "aws_secretsmanager_secret" "db_credentials" {
-  name        = "${local.name_prefix}-db-credentials"
-  description = "Database credentials + runtime secrets for the application"
+resource "aws_ssm_parameter" "db_credentials" {
+  name        = "/${local.name_prefix}/db-credentials"
+  description = "Database credentials + runtime secrets for the application (SecureString, standard tier = free)"
+  type        = "SecureString"
+  tier        = "Standard"
 
-  tags = {
-    Environment = var.environment
-  }
-}
-
-resource "aws_secretsmanager_secret_version" "db_credentials" {
-  secret_id = aws_secretsmanager_secret.db_credentials.id
-
-  secret_string = jsonencode({
+  value = jsonencode({
     username   = var.db_username
     password   = random_password.db_password.result
     host       = aws_db_instance.this.address
@@ -52,6 +50,10 @@ resource "aws_secretsmanager_secret_version" "db_credentials" {
     dbname     = var.db_name
     jwt_secret = random_password.jwt_secret.result
   })
+
+  tags = {
+    Environment = var.environment
+  }
 }
 
 # ---------------------------------------------------------------------------

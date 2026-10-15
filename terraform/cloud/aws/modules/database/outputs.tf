@@ -18,8 +18,8 @@ output "db_name" {
 }
 
 output "db_secret_arn" {
-  description = "Secrets Manager ARN holding DB credentials + app secrets"
-  value       = aws_secretsmanager_secret.db_credentials.arn
+  description = "SSM Parameter ARN holding DB credentials + app secrets (SecureString, standard tier)"
+  value       = aws_ssm_parameter.db_credentials.arn
 }
 
 output "db_instance_id" {

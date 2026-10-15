@@ -105,14 +105,14 @@ sudo docker compose -f /opt/app/docker-compose.yml logs backend
 sudo journalctl -u docker 2>/dev/null | tail -20
 ```
 
-- **Fix:** read the stack trace. Typical: `JWT_SECRET must be set` → check the secret was written to Secrets Manager; `ECONNREFUSED` → check DB SG/security group and the `host` value.
+- **Fix:** read the stack trace. Typical: `JWT_SECRET must be set` → check the SSM parameter `/secure-ntier-<env>/db-credentials` was created with all 6 keys; `ECONNREFUSED` → check DB SG/security group and the `host` value.
 - **Verification:** container reports `healthy`; `/health` returns 200.
 - **Prevention:** the container has a HEALTHCHECK; the ASG replaces unhealthy instances.
 
 ## 8. Application not reachable at all
 
 - **Symptoms:** no HTTP response from ALB URL; DNS resolves but connection refused.
-- **Possible cause:** ALB not created/exposed, WAF blocking, or SG issue.
+- **Possible cause:** ALB not created/exposed, WAF blocking (only when `enable_waf=true`), or SG issue.
 - **Diagnosis:**
 
 ```bash
@@ -120,7 +120,7 @@ aws elbv2 describe-load-balancers --region <region>
 curl -sv http://<ALB_DNS>/health
 ```
 
-- **Fix:** confirm ALB is `active`; confirm the ALB SG has 80/443 ingress; confirm WAF ACL default action is `allow` (it blocks only matched rules).
+- **Fix:** confirm ALB is `active`; confirm the ALB SG has 80/443 ingress; if WAF is enabled, confirm the ACL default action is `allow` (it blocks only matched rules).
 - **Verification:** curl returns a health JSON.
 - **Prevention:** add a CloudWatch alarm on ALB `RequestCount`.
 
@@ -304,13 +304,13 @@ aws autoscaling describe-instance-refreshes --auto-scaling-group-name <asg> --re
 - **Verification:** refresh completes with `Successful`.
 - **Prevention:** launch templates and images are tested by CI before refresh.
 
-## 22. `docker compose` inside the instance can't reach Secrets Manager / SSM
+## 22. `docker compose` inside the instance can't reach the SSM credential parameter
 
-- **Symptoms:** `An error occurred (AccessDeniedException) when calling the GetSecretValue operation`.
-- **Possible cause:** the instance role lacks `secretsmanager:GetSecretValue` on that secret (or wrong region).
+- **Symptoms:** `An error occurred (AccessDeniedException) when calling the GetParameter operation`.
+- **Possible cause:** the instance role lacks `ssm:GetParameter` (+ `kms:Decrypt`) on that parameter (or wrong region).
 - **Diagnosis:** on the instance run the same command the user-data runs and check the policy ARN attached to the role.
 - **Fix:** add the permission to the instance role policy in the compute module; re-apply; refresh.
-- **Verification:** `aws secretsmanager get-secret-value --secret-id <arn> --region <region>` returns the JSON from the instance.
+- **Verification:** `aws ssm get-parameter --name "/secure-ntier-<env>/db-credentials" --with-decryption --region <region>` returns the JSON from the instance.
 - **Prevention:** keep the instance role policy in sync with what user-data needs (review in code).
 
 ---

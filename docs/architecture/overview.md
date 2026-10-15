@@ -40,16 +40,36 @@ For a hand-drawn walkthrough of the same design, see the annotated notes:
 | Layer | Component | Responsibility |
 | ----- | --------- | -------------- |
 | Edge | Route 53 | DNS: maps your domain to the ALB |
-| Edge | AWS WAF | Blocks SQLi, XSS, bad bots before they reach the ALB |
+| Edge | AWS WAF (opt-in via `enable_waf`) | Blocks SQLi, XSS, bad bots before they reach the ALB |
 | Load | ALB | TLS termination, routing, health checks |
 | Network | VPC + subnets | Logical isolation of public/app/DB tiers |
 | Network | NAT Gateway | Outbound internet for private instances |
 | Compute | EC2 + ASG | Runs the app; replaces failed instances, scales |
 | Data | RDS MySQL | Managed, encrypted, backed-up database |
 | Image | ECR | Private Docker registry |
-| Secrets | Secrets Manager | DB credentials injected at runtime |
-| Observe | CloudWatch + SNS | Metrics, logs, alarms, notifications |
+| Secrets | SSM Parameter Store (SecureString) | DB credentials injected at runtime |
+| Observe | CloudWatch + SNS + Prometheus/Grafana/Loki/Blackbox | AWS alarms + self-hosted metrics, logs, uptime probes (see `diagrams/observability.mmd`) |
 | Audit | CloudTrail | Record of every API call in the account |
+
+## Observability architecture (new)
+
+Replaces the CloudWatch-only view. AWS path unchanged; new self-hosted overlay
+runs via `docker/docker-compose.monitoring.yml`:
+
+```mermaid
+flowchart TB
+    ALB[ALB] --> CW[CloudWatch -> Alarms -> SNS]
+    EC2[EC2 + Docker /metrics] -.-> PROM[Prometheus]
+    BB[Blackbox /health] --> PROM
+    PROM --> GRAF[Grafana]
+    PT[Promtail] --> LOKI[Loki]
+    LOKI --> GRAF
+    GRAF --> SNS
+```
+
+Full source: [`diagrams/observability.mmd`](../../diagrams/observability.mmd).
+Run locally: `docker compose -f docker/docker-compose.yml -f docker/docker-compose.monitoring.yml up -d`
+— Grafana `http://localhost:3001`, Prometheus `:9090`.
 
 ## Cloud service mapping
 
@@ -63,7 +83,7 @@ implementation with `-var="cloud=aws|azure|gcp"`:
 | Registry | ECR | Azure Container Registry (ACR) | Artifact Registry |
 | LB / WAF | ALB + AWS WAF | Application Gateway + WAF policy | Global external HTTPS LB + Cloud Armor |
 | Monitoring | CloudWatch + SNS | Azure Monitor + Action Group | Cloud Monitoring + notification channel |
-| Secrets | Secrets Manager | Key Vault | Secret Manager |
+| Secrets | SSM Parameter Store (SecureString) | Key Vault | Secret Manager |
 | Kubernetes | EKS | AKS | GKE |
 | Audit trail | CloudTrail | Activity Log | Cloud Audit Logs |
 
